@@ -1,0 +1,207 @@
+{
+  "tools": [
+    {
+      "id": 1,
+      "name": "Nmap",
+      "description": "网络扫描和安全评估工具",
+      "path": "C:\\Program Files\\Nmap\\nmap.exe",
+      "category_id": 101,
+      "subcategory_id": 101,
+      "command_template": "{path} {target} {options}",
+      "icon": "nmap.png",
+      "background_image": "background1.png",
+      "priority": 3,
+      "tags": [
+        "扫描",
+        "网络",
+        "端口"
+      ],
+      "is_favorite": true,
+      "usage_count": 15,
+      "last_used": "2023-11-01T10:30:00Z",
+      "arguments": [
+        {
+          "name": "target",
+          "description": "扫描目标",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "options",
+          "description": "附加选项",
+          "required": false,
+          "default": "-sV"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Burp Suite",
+      "description": "Web应用安全测试工具",
+      "path": "C:\\Program Files\\BurpSuite\\BurpSuiteCommunity.exe",
+      "category_id": 7,
+      "subcategory_id": 701,
+      "command_template": "{path}",
+      "icon": "burp.png",
+      "background_image": "background2.png",
+      "priority": 5,
+      "tags": [
+        "代理",
+        "Web安全",
+        "渗透"
+      ],
+      "is_favorite": true,
+      "usage_count": 20,
+      "last_used": "2023-11-02T14:20:00Z",
+      "arguments": []
+    },
+    {
+      "id": 3,
+      "name": "SQLmap",
+      "description": "自动化SQL注入工具",
+      "path": "C:\\tools\\sqlmap\\sqlmap.py",
+      "category_id": 3,
+      "subcategory_id": 301,
+      "command_template": "python {path} -u {url} {options}",
+      "icon": "sqlmap.png",
+      "background_image": "",
+      "priority": 4,
+      "tags": [
+        "SQL注入",
+        "数据库",
+        "渗透"
+      ],
+      "is_favorite": false,
+      "usage_count": 10,
+      "last_used": "2023-10-28T09:15:00Z",
+      "arguments": [
+        {
+          "name": "url",
+          "description": "目标URL",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "options",
+          "description": "附加选项",
+          "required": false,
+          "default": "--batch"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Hydra",
+      "description": "密码破解工具",
+      "path": "C:\\tools\\hydra\\hydra.exe",
+      "category_id": 6,
+      "subcategory_id": 602,
+      "command_template": "{path} -l {username} -P {password_file} {target} {service}",
+      "icon": "hydra.png",
+      "background_image": "background3.png",
+      "priority": 3,
+      "tags": [
+        "密码破解",
+        "暴力破解",
+        "认证"
+      ],
+      "is_favorite": false,
+      "usage_count": 8,
+      "last_used": "2023-10-25T16:45:00Z",
+      "arguments": [
+        {
+          "name": "username",
+          "description": "用户名",
+          "required": true,
+          "default": "admin"
+        },
+        {
+          "name": "password_file",
+          "description": "密码文件路径",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "target",
+          "description": "目标主机",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "service",
+          "description": "服务类型",
+          "required": true,
+          "default": "ssh"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "John the Ripper",
+      "description": "密码哈希破解工具",
+      "path": "C:\\tools\\john\\john.exe",
+      "category_id": 6,
+      "subcategory_id": 602,
+      "command_template": "{path} {hash_file} {options}",
+      "icon": "john.png",
+      "background_image": "",
+      "priority": 2,
+      "tags": [
+        "哈希破解",
+        "密码",
+        "安全"
+      ],
+      "is_favorite": false,
+      "usage_count": 5,
+      "last_used": "2023-10-20T11:30:00Z",
+      "arguments": [
+        {
+          "name": "hash_file",
+          "description": "哈希文件路径",
+          "required": true,
+          "default": ""
+        },
+        {
+          "name": "options",
+          "description": "附加选项",
+          "required": false,
+          "default": "--wordlist=rockyou.txt"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Updated Test Tool",
+      "icon": "test.exe",
+      "preview": "This tool has been updated",
+      "path": "Test Category",
+      "description": "Test Subcategory",
+      "command_params": "",
+      "working_directory": "",
+      "priority": 0,
+      "is_favorite": false,
+      "tags": [],
+      "usage_count": 0,
+      "last_used": null
+    },
+    {
+      "id": 7,
+      "name": "hh",
+      "path": "S:\\\\",
+      "description": "",
+      "category_id": 1,
+      "subcategory_id": 101,
+      "background_image": "",
+      "icon": "S:\\\\",
+      "tags": [],
+      "priority": 0,
+      "is_favorite": false,
+      "arguments": "",
+      "working_directory": "S:\\",
+      "run_in_terminal": false,
+      "is_web_tool": false,
+      "usage_count": 0,
+      "last_used": null
+    }
+  ]
+}
