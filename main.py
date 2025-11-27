@@ -4,8 +4,8 @@
 子非鱼工具箱 - 主入口
 """
 
-import sys
 import os
+import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon, QFont
 from core.app import PentestToolManager
@@ -16,22 +16,8 @@ def setup_fonts():
     font.setFamily("Microsoft YaHei")
     return font
 
-# 确保配置目录存在
-def ensure_config_dir():
-    # 获取用户目录
-    home_dir = os.path.expanduser("~")
-    config_dir = os.path.join(home_dir, ".pentest_tool_manager")
-    
-    # 创建配置目录
-    if not os.path.exists(config_dir):
-        os.makedirs(config_dir)
-    
-    # 创建图片目录
-    image_dir = os.path.join(config_dir, "images")
-    if not os.path.exists(image_dir):
-        os.makedirs(image_dir)
-    
-    return config_dir
+# NOTE: 统一使用当前工作目录作为配置目录（config_dir = os.path.abspath('.')），
+# 所有程序数据和 images 路径都存放在当前目录下的 data/ 和 images/ 中。
 
 def main():
     # 设置高DPI支持
@@ -48,8 +34,14 @@ def main():
     # 设置字体
     app.setFont(setup_fonts())
     
-    # 使用当前目录作为配置目录
-    config_dir = os.path.abspath(".")
+    # 获取可执行文件所在目录作为配置目录
+    # 当作为脚本运行时，使用当前目录；当作为exe运行时，使用exe所在目录
+    if hasattr(sys, 'frozen'):
+        # PyInstaller打包后的exe
+        config_dir = os.path.dirname(os.path.abspath(sys.executable))
+    else:
+        # 正常Python脚本运行
+        config_dir = os.path.abspath(".")
     
     # 确保图片目录存在
     images_dir = os.path.join(config_dir, "images")
@@ -58,6 +50,11 @@ def main():
     
     # 创建主窗口
     window = PentestToolManager(config_dir=config_dir)
+    
+    # 设置窗口图标
+    icon_path = os.path.join(config_dir, "resources", "icons", "new_default_icon.svg")
+    if os.path.exists(icon_path):
+        window.setWindowIcon(QIcon(icon_path))
     
     # 显示窗口
     window.show()

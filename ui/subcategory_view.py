@@ -15,6 +15,7 @@ class SubcategoryView(QWidget):
         self.data_manager = data_manager
         self.current_category = None
         self.current_subcategory = None
+        self.current_theme = 'dark_green'  # 默认深色主题
         self.init_ui()
     
     def init_ui(self):
@@ -24,48 +25,97 @@ class SubcategoryView(QWidget):
         
         # 创建标题标签
         self.title_label = QLabel("子分类")
-        self.title_label.setStyleSheet("padding: 10px; background-color: #2d2d2d; font-weight: 600; border-bottom: 1px solid #2d5016; color: #90ee90; font-size: 14px;")
-        layout.addWidget(self.title_label)
         
         # 创建子分类列表
         self.subcategory_list = QListWidget()
+        # 给子分类列表设置最小宽度，保证长名称能完整显示
+        self.subcategory_list.setMinimumWidth(200)
         self.subcategory_list.setMinimumWidth(150)
         self.subcategory_list.itemClicked.connect(self.on_item_clicked)
         # 设置右键菜单
         self.subcategory_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.subcategory_list.customContextMenuRequested.connect(self.show_context_menu)
         
-        # 添加样式表，美化子分类列表
-        self.subcategory_list.setStyleSheet("""
-            QListWidget {
-                background-color: transparent;
-                border: none;
-                padding: 5px;
-            }
-            
-            QListWidget::item {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                padding: 12px;
-                margin-bottom: 5px;
-                color: #ffffff;
-                font-weight: 500;
-            }
-            
-            QListWidget::item:hover {
-                background: rgba(255, 255, 255, 0.1);
-                border-color: rgba(103, 232, 249, 0.5);
-            }
-            
-            QListWidget::item:selected {
-                background: rgba(103, 232, 249, 0.15);
-                color: #ffffff;
-                border-color: rgba(103, 232, 249, 0.5);
-            }
-        """)
-        
+        layout.addWidget(self.title_label)
         layout.addWidget(self.subcategory_list)
+
+        # 设置子分类视图最小宽度，避免 splitter 缩得太窄
+        self.setMinimumWidth(300)
+        
+        # 应用初始主题样式
+        self.apply_theme_styles()
+        
+    def set_theme(self, theme_name):
+        """设置主题"""
+        self.current_theme = theme_name
+        self.apply_theme_styles()
+        
+    def apply_theme_styles(self):
+        """根据当前主题应用样式"""
+        if self.current_theme == 'blue_white':
+            # 蓝白主题样式
+            self.title_label.setStyleSheet("padding: 10px; background-color: #e6f2ff; font-weight: 600; border-bottom: 1px solid #99ccff; color: #003366; font-size: 14px;")
+            
+            self.subcategory_list.setStyleSheet("""
+                QListWidget {
+                    background-color: transparent;
+                    border: none;
+                    padding: 5px;
+                }
+                
+                QListWidget::item {
+                    background: rgba(240, 248, 255, 0.9);
+                    border: 1px solid rgba(135, 206, 250, 0.3);
+                    border-radius: 10px;
+                    padding: 12px;
+                    margin-bottom: 5px;
+                    color: #000000;
+                    font-weight: 500;
+                }
+                
+                QListWidget::item:hover {
+                    background: rgba(240, 248, 255, 1);
+                    border-color: rgba(65, 105, 225, 0.5);
+                }
+                
+                QListWidget::item:selected {
+                    background: rgba(135, 206, 250, 0.2);
+                    color: #000000;
+                    border-color: rgba(65, 105, 225, 0.5);
+                }
+            """)
+        else:  # dark_green 主题
+            # 深色主题样式
+            self.title_label.setStyleSheet("padding: 10px; background-color: #2d2d2d; font-weight: 600; border-bottom: 1px solid #2d5016; color: #90ee90; font-size: 14px;")
+            
+            self.subcategory_list.setStyleSheet("""
+                QListWidget {
+                    background-color: transparent;
+                    border: none;
+                    padding: 5px;
+                }
+                
+                QListWidget::item {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                    padding: 12px;
+                    margin-bottom: 5px;
+                    color: #ffffff;
+                    font-weight: 500;
+                }
+                
+                QListWidget::item:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(103, 232, 249, 0.5);
+                }
+                
+                QListWidget::item:selected {
+                    background: rgba(103, 232, 249, 0.15);
+                    color: #ffffff;
+                    border-color: rgba(103, 232, 249, 0.5);
+                }
+            """)
     
     def load_subcategories(self, category_id):
         """加载指定分类下的子分类"""

@@ -15,6 +15,7 @@ class CategoryView(QWidget):
         super().__init__(parent)
         self.data_manager = data_manager
         self.current_category = None
+        self.current_theme = 'dark_green'  # 默认主题
         self.init_ui()
     
     def init_ui(self):
@@ -23,43 +24,17 @@ class CategoryView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         
         # 分类标题
-        title_label = QLabel("分类")
-        title_label.setStyleSheet("font-weight: 600; padding: 10px; border-bottom: 1px solid #2d5016; background-color: #2d2d2d; color: #90ee90; font-size: 14px;")
-        layout.addWidget(title_label)
+        self.title_label = QLabel("分类")
+        layout.addWidget(self.title_label)
         
         # 创建分类列表控件
         self.category_list = QListWidget()
+        # 确保列表有足够宽度显示完整的分类名称
+        self.category_list.setMinimumWidth(260)
         self.category_list.setSelectionMode(QListWidget.SingleSelection)
         
-        # 设置列表控件样式，增加间距和整体美观度
-        self.category_list.setStyleSheet("""
-            QListWidget {
-                background-color: transparent;
-                border: none;
-                padding: 5px;
-            }
-            
-            QListWidget::item {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                padding: 12px;
-                margin-bottom: 5px;
-                color: #ffffff;
-                font-weight: 500;
-            }
-            
-            QListWidget::item:hover {
-                background: rgba(255, 255, 255, 0.1);
-                border-color: rgba(103, 232, 249, 0.5);
-            }
-            
-            QListWidget::item:selected {
-                background: rgba(103, 232, 249, 0.15);
-                color: #ffffff;
-                border-color: rgba(103, 232, 249, 0.5);
-            }
-        """)
+        # 应用当前主题样式
+        self.apply_theme_styles()
         
         # 连接信号
         self.category_list.itemClicked.connect(self.on_item_clicked)
@@ -69,6 +44,9 @@ class CategoryView(QWidget):
         
         layout.addWidget(self.category_list)
         
+        # 确保组件最小宽度，避免被 splitter 收缩过小
+        self.setMinimumWidth(260)
+
         # 加载分类数据
         self.load_categories()
     
@@ -163,6 +141,81 @@ class CategoryView(QWidget):
     def refresh(self):
         """刷新分类列表"""
         self.load_categories()
+        
+    def set_theme(self, theme):
+        """设置当前主题并应用样式"""
+        self.current_theme = theme
+        self.apply_theme_styles()
+        
+    def apply_theme_styles(self):
+        """根据当前主题应用样式"""
+        if self.current_theme == 'blue_white':
+            # 蓝白配色主题样式 — 白色背景，黑色标题文字，分类项为淡蓝卡片
+            self.title_label.setStyleSheet("font-weight: 600; padding: 12px; border-bottom: 1px solid #e6f2ff; background-color: #ffffff; color: #000000; font-size: 14px;")
+            self.category_list.setStyleSheet("""
+                QListWidget {
+                    background-color: transparent;
+                    border: none;
+                    padding: 8px;
+                }
+                
+                QListWidget::item {
+                    background: #f0f9ff;
+                    border: 1px solid #bae6fd;
+                    border-radius: 10px;
+                    padding: 12px 14px;
+                    margin-bottom: 6px;
+                    color: #0369a1;
+                    font-weight: 600;
+                    font-size: 13px;
+                }
+                
+                QListWidget::item:hover {
+                    background: #e0f2fe;
+                    border-color: #7dd3fc;
+                }
+                
+                QListWidget::item:selected {
+                    background: #e0f2fe;
+                    color: #0369a1;
+                    border-color: #7dd3fc;
+                }
+            """)
+        else:
+            # 默认深色主题样式
+            self.title_label.setStyleSheet("font-weight: 600; padding: 12px; border-bottom: 1px solid rgba(144, 238, 144, 0.3); background-color: rgba(26, 28, 43, 1); color: #90ee90; font-size: 14px;")
+            self.category_list.setStyleSheet("""
+                QListWidget {
+                    background-color: transparent;
+                    border: none;
+                    padding: 8px;
+                }
+                
+                QListWidget::item {
+                    background: rgba(32, 33, 54, 0.8);
+                    border: 1px solid rgba(144, 238, 144, 0.2);
+                    border-radius: 8px;
+                    padding: 12px 14px;
+                    margin-bottom: 4px;
+                    color: #ffffff;
+                    font-weight: 500;
+                    font-size: 13px;
+                    /* removed: transition not supported in Qt QSS */
+                }
+                
+                QListWidget::item:hover {
+                    background: rgba(40, 42, 66, 0.9);
+                    border-color: rgba(144, 238, 144, 0.5);
+                    /* removed: box-shadow not supported in Qt QSS */
+                }
+                
+                QListWidget::item:selected {
+                    background: rgba(144, 238, 144, 0.2);
+                    color: #ffffff;
+                    border-color: rgba(144, 238, 144, 0.7);
+                    /* removed: box-shadow not supported in Qt QSS */
+                }
+            """)
     
     def select_category(self, category_id):
         """手动选择分类"""

@@ -124,6 +124,52 @@ class DataManager:
                             tools = data['tools']
                         else:
                             tools = data
+
+                        # 规范化工具的 category_id / subcategory_id：
+                        # 有些 tools.json 会把子分类 id 当作 category_id（例如 101），
+                        # 这里尝试根据 categories.json 的结构把它们映射到父分类（一级分类）
+                        try:
+                            categories = self.load_categories()
+                            top_level_ids = {cat.get('id') for cat in categories if isinstance(cat, dict)}
+                            sub_to_parent = {}
+                            for cat in categories:
+                                if isinstance(cat, dict):
+                                    for sub in cat.get('subcategories', []) or []:
+                                        # 子分类字典应包含 id 和 parent_id
+                                        sid = sub.get('id')
+                                        pid = sub.get('parent_id', cat.get('id'))
+                                        if sid is not None:
+                                            sub_to_parent[sid] = pid
+
+                            normalized_tools = []
+                            for tool in tools:
+                                # Defensive copy to avoid mutating original structures on disk
+                                normalized = dict(tool)
+
+                                cid = normalized.get('category_id')
+                                sid = normalized.get('subcategory_id')
+
+                                # 如果 category_id 指向一个子分类 id，则修正
+                                if cid is not None and cid not in top_level_ids:
+                                    # 如果该 id 对应子分类，则将 category_id 设为父 id，sub_id 设为原 cid（如果没有）
+                                    if cid in sub_to_parent:
+                                        parent = sub_to_parent[cid]
+                                        normalized['subcategory_id'] = sid or cid
+                                        normalized['category_id'] = parent
+
+                                # 如果 subcategory_id 存在但 category_id 不匹配它的 parent，则修正 category_id
+                                if sid is not None and sid in sub_to_parent:
+                                    parent = sub_to_parent[sid]
+                                    if normalized.get('category_id') != parent:
+                                        normalized['category_id'] = parent
+
+                                normalized_tools.append(normalized)
+
+                            tools = normalized_tools
+                        except Exception:
+                            # 如果规范化过程出现问题，不影响基础加载，返回原始数据
+                            pass
+
                         return tools
                     except json.JSONDecodeError:
                         print("工具数据格式错误，返回空列表")

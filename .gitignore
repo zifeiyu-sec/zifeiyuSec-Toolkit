@@ -28,4 +28,5 @@ Thumbs.db
 *~
 
 # User data
-.pentest_tool_manager/
+# user-level config dir is not used anymore; configs live in project working directory
+#.pentest_tool_manager/

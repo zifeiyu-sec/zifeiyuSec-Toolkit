@@ -1,188 +1,572 @@
-{
-  "tools": [
-    {
-      "id": 1,
-      "name": "Nmap",
-      "description": "网络扫描和安全评估工具",
-      "path": "C:\\Program Files\\Nmap\\nmap.exe",
-      "category_id": 101,
-      "subcategory_id": 101,
-      "command_template": "{path} {target} {options}",
-      "icon": "nmap.png",
-      "background_image": "background1.png",
-      "priority": 3,
-      "tags": [
-        "扫描",
-        "网络",
-        "端口"
-      ],
-      "is_favorite": true,
-      "usage_count": 15,
-      "last_used": "2023-11-01T10:30:00Z",
-      "arguments": [
-        {
-          "name": "target",
-          "description": "扫描目标",
-          "required": true,
-          "default": ""
-        },
-        {
-          "name": "options",
-          "description": "附加选项",
-          "required": false,
-          "default": "-sV"
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "name": "Burp Suite",
-      "description": "Web应用安全测试工具",
-      "path": "C:\\Program Files\\BurpSuite\\BurpSuiteCommunity.exe",
-      "category_id": 7,
-      "subcategory_id": 701,
-      "command_template": "{path}",
-      "icon": "burp.png",
-      "background_image": "background2.png",
-      "priority": 5,
-      "tags": [
-        "代理",
-        "Web安全",
-        "渗透"
-      ],
-      "is_favorite": true,
-      "usage_count": 20,
-      "last_used": "2023-11-02T14:20:00Z",
-      "arguments": []
-    },
-    {
-      "id": 3,
-      "name": "SQLmap",
-      "description": "自动化SQL注入工具",
-      "path": "C:\\tools\\sqlmap\\sqlmap.py",
-      "category_id": 3,
-      "subcategory_id": 301,
-      "command_template": "python {path} -u {url} {options}",
-      "icon": "sqlmap.png",
-      "background_image": "",
-      "priority": 4,
-      "tags": [
-        "SQL注入",
-        "数据库",
-        "渗透"
-      ],
-      "is_favorite": false,
-      "usage_count": 10,
-      "last_used": "2023-10-28T09:15:00Z",
-      "arguments": [
-        {
-          "name": "url",
-          "description": "目标URL",
-          "required": true,
-          "default": ""
-        },
-        {
-          "name": "options",
-          "description": "附加选项",
-          "required": false,
-          "default": "--batch"
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "name": "Hydra",
-      "description": "密码破解工具",
-      "path": "C:\\tools\\hydra\\hydra.exe",
-      "category_id": 6,
-      "subcategory_id": 602,
-      "command_template": "{path} -l {username} -P {password_file} {target} {service}",
-      "icon": "hydra.png",
-      "background_image": "background3.png",
-      "priority": 3,
-      "tags": [
-        "密码破解",
-        "暴力破解",
-        "认证"
-      ],
-      "is_favorite": false,
-      "usage_count": 8,
-      "last_used": "2023-10-25T16:45:00Z",
-      "arguments": [
-        {
-          "name": "username",
-          "description": "用户名",
-          "required": true,
-          "default": "admin"
-        },
-        {
-          "name": "password_file",
-          "description": "密码文件路径",
-          "required": true,
-          "default": ""
-        },
-        {
-          "name": "target",
-          "description": "目标主机",
-          "required": true,
-          "default": ""
-        },
-        {
-          "name": "service",
-          "description": "服务类型",
-          "required": true,
-          "default": "ssh"
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "name": "John the Ripper",
-      "description": "密码哈希破解工具",
-      "path": "C:\\tools\\john\\john.exe",
-      "category_id": 6,
-      "subcategory_id": 602,
-      "command_template": "{path} {hash_file} {options}",
-      "icon": "john.png",
-      "background_image": "",
-      "priority": 2,
-      "tags": [
-        "哈希破解",
-        "密码",
-        "安全"
-      ],
-      "is_favorite": false,
-      "usage_count": 5,
-      "last_used": "2023-10-20T11:30:00Z",
-      "arguments": [
-        {
-          "name": "hash_file",
-          "description": "哈希文件路径",
-          "required": true,
-          "default": ""
-        },
-        {
-          "name": "options",
-          "description": "附加选项",
-          "required": false,
-          "default": "--wordlist=rockyou.txt"
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "name": "Updated Test Tool",
-      "icon": "test.exe",
-      "preview": "This tool has been updated",
-      "path": "Test Category",
-      "description": "Test Subcategory",
-      "command_params": "",
-      "working_directory": "",
-      "priority": 0,
-      "is_favorite": false,
-      "tags": [],
-      "usage_count": 0,
-      "last_used": null
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "name": "Nmap",
+    "path": "C:\\",
+    "description": "https://github.com/nmap/nmap",
+    "category_id": 1,
+    "subcategory_id": 103,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "端口扫描",
+      "网络发现"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 1,
+    "last_used": "2025-11-28T01:03:41.075422Z"
+  },
+  {
+    "id": 2,
+    "name": "Amass",
+    "path": "C:\\",
+    "description": "https://github.com/OWASP/Amass",
+    "category_id": 1,
+    "subcategory_id": 101,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "子域名枚举"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 1,
+    "last_used": "2025-11-28T01:00:53.880478Z"
+  },
+  {
+    "id": 3,
+    "name": "Dirsearch",
+    "path": "C:\\",
+    "description": "https://github.com/maurosoria/dirsearch",
+    "category_id": 1,
+    "subcategory_id": 105,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "目录扫描"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 4,
+    "name": "Shodan",
+    "path": "C:\\",
+    "description": "https://www.shodan.io",
+    "category_id": 1,
+    "subcategory_id": 109,
+    "background_image": "",
+    "icon": "shodan.io_favicon_homepage.png",
+    "tags": [
+      "云资产",
+      "设备识别"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": true,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 5,
+    "name": "Fofa",
+    "path": "C:\\",
+    "description": "https://fofa.info",
+    "category_id": 1,
+    "subcategory_id": 109,
+    "background_image": "",
+    "icon": "fofa.info_favicon.ico",
+    "tags": [
+      "云资产",
+      "资产发现"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": true,
+    "usage_count": 1,
+    "last_used": "2025-11-28T01:00:50.533661Z"
+  },
+  {
+    "id": 6,
+    "name": "Sqlmap",
+    "path": "C:\\",
+    "description": "https://github.com/sqlmapproject/sqlmap",
+    "category_id": 2,
+    "subcategory_id": 203,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "SQL注入",
+      "自动扫描"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 7,
+    "name": "Burp Suite",
+    "path": "C:\\",
+    "description": "https://portswigger.net/burp",
+    "category_id": 2,
+    "subcategory_id": 205,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "代理",
+      "流量分析"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 1,
+    "last_used": "2025-11-28T01:00:47.386502Z"
+  },
+  {
+    "id": 8,
+    "name": "OWASP ZAP",
+    "path": "C:\\",
+    "description": "https://www.zaproxy.org",
+    "category_id": 2,
+    "subcategory_id": 201,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "通用扫描",
+      "Web安全"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 9,
+    "name": "Nikto",
+    "path": "C:\\",
+    "description": "https://github.com/sullo/nikto",
+    "category_id": 2,
+    "subcategory_id": 202,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "Web扫描",
+      "漏洞检测"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 10,
+    "name": "Metasploit Framework",
+    "path": "C:\\",
+    "description": "https://www.metasploit.com",
+    "category_id": 2,
+    "subcategory_id": 206,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "漏洞验证",
+      "渗透测试"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 11,
+    "name": "Mimikatz",
+    "path": "C:\\",
+    "description": "https://github.com/gentilkiwi/mimikatz",
+    "category_id": 3,
+    "subcategory_id": 301,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "权限提升",
+      "凭据窃取"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 12,
+    "name": "Empire",
+    "path": "C:\\",
+    "description": "https://github.com/BC-SECURITY/Empire",
+    "category_id": 3,
+    "subcategory_id": 302,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "横向移动",
+      "持久化"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 13,
+    "name": "John the Ripper",
+    "path": "C:\\",
+    "description": "https://www.openwall.com/john",
+    "category_id": 4,
+    "subcategory_id": 401,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "密码破解",
+      "哈希破解"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 14,
+    "name": "Hydra",
+    "path": "C:\\",
+    "description": "https://github.com/vanhauser-thc/thc-hydra",
+    "category_id": 4,
+    "subcategory_id": 402,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "在线破解",
+      "暴力破解"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 15,
+    "name": "BloodHound",
+    "path": "C:\\",
+    "description": "https://github.com/BloodHoundAD/BloodHound",
+    "category_id": 5,
+    "subcategory_id": 502,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "域环境",
+      "活动目录"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 16,
+    "name": "Cobalt Strike",
+    "path": "C:\\",
+    "description": "https://www.cobaltstrike.com",
+    "category_id": 5,
+    "subcategory_id": 503,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "内网横向",
+      "命令控制"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 17,
+    "name": "Wazuh",
+    "path": "C:\\",
+    "description": "https://wazuh.com",
+    "category_id": 7,
+    "subcategory_id": 701,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "SIEM",
+      "安全监控"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 18,
+    "name": "IDA Pro",
+    "path": "C:\\",
+    "description": "https://www.hex-rays.com/products/ida",
+    "category_id": 9,
+    "subcategory_id": 901,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "反汇编",
+      "静态分析"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 19,
+    "name": "Ghidra",
+    "path": "C:\\",
+    "description": "https://github.com/NationalSecurityAgency/ghidra",
+    "category_id": 9,
+    "subcategory_id": 901,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "反汇编",
+      "逆向工程"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 20,
+    "name": "Wireshark",
+    "path": "C:\\",
+    "description": "https://www.wireshark.org",
+    "category_id": 7,
+    "subcategory_id": 703,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "流量分析",
+      "数据包捕获"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 21,
+    "name": "Visual Studio Code",
+    "path": "C:\\",
+    "description": "https://code.visualstudio.com",
+    "category_id": 6,
+    "subcategory_id": 604,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "代码编辑器",
+      "开发环境"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 22,
+    "name": "Git",
+    "path": "C:\\",
+    "description": "https://git-scm.com",
+    "category_id": 6,
+    "subcategory_id": 604,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "版本控制",
+      "代码管理"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 23,
+    "name": "Python",
+    "path": "C:\\",
+    "description": "https://www.python.org",
+    "category_id": 6,
+    "subcategory_id": 604,
+    "background_image": "",
+    "icon": "www.python.org_favicon.ico",
+    "tags": [
+      "编程语言",
+      "脚本工具"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 24,
+    "name": "PuTTY",
+    "path": "C:\\",
+    "description": "https://www.putty.org",
+    "category_id": 6,
+    "subcategory_id": 605,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "SSH客户端",
+      "远程连接"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 25,
+    "name": "Xshell",
+    "path": "C:\\",
+    "description": "https://www.netsarang.com/zh/xshell/",
+    "category_id": 6,
+    "subcategory_id": 605,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "SSH客户端",
+      "终端工具"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  },
+  {
+    "id": 26,
+    "name": "远程桌面连接",
+    "path": "C:\\",
+    "description": "Windows内置",
+    "category_id": 6,
+    "subcategory_id": 605,
+    "background_image": "",
+    "icon": "new_default_icon.svg",
+    "tags": [
+      "RDP",
+      "远程控制"
+    ],
+    "priority": 0,
+    "is_favorite": false,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": false,
+    "is_web_tool": false,
+    "usage_count": 0,
+    "last_used": null
+  }
+]

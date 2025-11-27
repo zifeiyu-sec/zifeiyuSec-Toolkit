@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <!-- 背景圆 -->
+  <circle cx="24" cy="24" r="22" fill="#2E3A59" stroke="#4A6FA5" stroke-width="2"/>
+  
+  <!-- 主体图形：六边形工具 -->
+  <path d="M16 28L14 24L16 20L24 16L32 20L34 24L32 28L24 32L16 28Z" fill="#4A6FA5" stroke="#FFFFFF" stroke-width="1.5"/>
+  
+  <!-- 工具内部细节 -->
+  <path d="M24 18V28" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  <path d="M18 24H30" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="24" cy="24" r="4" stroke="#FFFFFF" stroke-width="1"/>
+  
+  <!-- 装饰元素 -->
+  <path d="M12 12L16 16" stroke="#4A6FA5" stroke-width="1" stroke-linecap="round"/>
+  <path d="M32 12L36 16" stroke="#4A6FA5" stroke-width="1" stroke-linecap="round"/>
+  <path d="M12 36L16 32" stroke="#4A6FA5" stroke-width="1" stroke-linecap="round"/>
+  <path d="M32 36L36 32" stroke="#4A6FA5" stroke-width="1" stroke-linecap="round"/>
+</svg>
