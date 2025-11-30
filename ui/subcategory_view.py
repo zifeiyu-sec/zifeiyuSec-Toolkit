@@ -1,7 +1,5 @@
-import os
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QIcon
 
 class SubcategoryView(QWidget):
     """子分类视图，显示指定分类下的子分类列表"""

@@ -1,27 +1,5 @@
 [
   {
-    "id": 1,
-    "name": "Nmap",
-    "path": "C:\\",
-    "description": "https://github.com/nmap/nmap",
-    "category_id": 1,
-    "subcategory_id": 103,
-    "background_image": "",
-    "icon": "new_default_icon.svg",
-    "tags": [
-      "端口扫描",
-      "网络发现"
-    ],
-    "priority": 0,
-    "is_favorite": false,
-    "arguments": "",
-    "working_directory": "C:\\",
-    "run_in_terminal": true,
-    "is_web_tool": false,
-    "usage_count": 1,
-    "last_used": "2025-11-28T01:03:41.075422Z"
-  },
-  {
     "id": 2,
     "name": "Amass",
     "path": "C:\\",
@@ -39,8 +17,8 @@
     "working_directory": "C:\\",
     "run_in_terminal": true,
     "is_web_tool": false,
-    "usage_count": 1,
-    "last_used": "2025-11-28T01:00:53.880478Z"
+    "usage_count": 2,
+    "last_used": "2025-11-30T20:32:33.560834Z"
   },
   {
     "id": 3,
@@ -60,8 +38,8 @@
     "working_directory": "C:\\",
     "run_in_terminal": true,
     "is_web_tool": false,
-    "usage_count": 0,
-    "last_used": null
+    "usage_count": 5,
+    "last_used": "2025-11-30T20:35:20.008553Z"
   },
   {
     "id": 4,
@@ -82,30 +60,27 @@
     "working_directory": "C:\\",
     "run_in_terminal": false,
     "is_web_tool": true,
-    "usage_count": 0,
-    "last_used": null
+    "usage_count": 1,
+    "last_used": "2025-11-30T20:35:16.551647Z"
   },
   {
     "id": 5,
     "name": "Fofa",
-    "path": "C:\\",
+    "path": "https://fofa.info",
     "description": "https://fofa.info",
     "category_id": 1,
     "subcategory_id": 109,
     "background_image": "",
     "icon": "fofa.info_favicon.ico",
-    "tags": [
-      "云资产",
-      "资产发现"
-    ],
+    "tags": [],
     "priority": 0,
     "is_favorite": false,
     "arguments": "",
-    "working_directory": "C:\\",
+    "working_directory": "",
     "run_in_terminal": false,
     "is_web_tool": true,
-    "usage_count": 1,
-    "last_used": "2025-11-28T01:00:50.533661Z"
+    "usage_count": 5,
+    "last_used": "2025-11-30T21:06:54.440968Z"
   },
   {
     "id": 6,
@@ -126,8 +101,8 @@
     "working_directory": "C:\\",
     "run_in_terminal": true,
     "is_web_tool": false,
-    "usage_count": 0,
-    "last_used": null
+    "usage_count": 1,
+    "last_used": "2025-11-30T20:21:40.887927Z"
   },
   {
     "id": 7,
@@ -148,8 +123,8 @@
     "working_directory": "C:\\",
     "run_in_terminal": false,
     "is_web_tool": false,
-    "usage_count": 1,
-    "last_used": "2025-11-28T01:00:47.386502Z"
+    "usage_count": 2,
+    "last_used": "2025-11-30T20:24:54.605246Z"
   },
   {
     "id": 8,
@@ -236,8 +211,8 @@
     "working_directory": "C:\\",
     "run_in_terminal": true,
     "is_web_tool": false,
-    "usage_count": 0,
-    "last_used": null
+    "usage_count": 1,
+    "last_used": "2025-11-30T20:38:07.097349Z"
   },
   {
     "id": 12,
