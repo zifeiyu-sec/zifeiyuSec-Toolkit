@@ -1,10 +1,11 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QGridLayout, QFileDialog, QScrollArea, QWidget, QMessageBox
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtCore import Qt
 import os
 import datetime
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QGridLayout, QFileDialog, QScrollArea, QWidget, QMessageBox, QApplication
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 
 class ImageSelectorDialog(QDialog):
+    """图片选择对话框，用于选择工具卡片的背景图片"""
     def __init__(self, image_manager, current_image=None, parent=None):
         super().__init__(parent)
         self.image_manager = image_manager
@@ -235,8 +236,10 @@ class ImageSelectorDialog(QDialog):
 
 if __name__ == "__main__":
     import sys
+    # 添加项目根目录到Python路径
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from PyQt5.QtWidgets import QApplication
-    from ..core.image_manager import ImageManager
+    from core.image_manager import ImageManager
     
     # 获取当前脚本所在目录
     script_dir = os.path.dirname(os.path.abspath(__file__))

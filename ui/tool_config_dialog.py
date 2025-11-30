@@ -1,3 +1,8 @@
+import os
+import re
+import socket
+from urllib.parse import urlparse
+import urllib.request
 from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -13,15 +18,13 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QFileDialog,
     QMessageBox,
+    QApplication
 )
 from PyQt5.QtGui import QPixmap
-from urllib.parse import urlparse
-import urllib.request
-import socket
 from PyQt5.QtCore import Qt
-import os
 
 class ToolConfigDialog(QDialog):
+    """工具配置对话框，用于添加或编辑工具信息"""
     def __init__(self, tool_data=None, categories=None, parent=None, theme_name=None):
         super().__init__(parent)
         # 支持主题传入，默认深色主题
@@ -304,16 +307,10 @@ class ToolConfigDialog(QDialog):
             "图标文件 (*.png *.jpg *.jpeg *.svg *.ico);;所有文件 (*.*)",
         )
         if file_path:
-            if not os.path.abspath(file_path).startswith(os.path.abspath(self.icon_dir)):
-                QMessageBox.warning(self, "提示", "请选择当前项目 resources/icons 目录下的图标文件。")
-                return
-            self.selected_icon_name = os.path.basename(file_path)
+            # 允许选择任意目录下的图标文件
+            self.selected_icon_name = file_path
             self._update_icon_preview()
-    
 
-    
-
-    
     def on_category_changed(self, index):
         """处理分类变更事件"""
         # 清空子分类列表
@@ -374,6 +371,19 @@ class ToolConfigDialog(QDialog):
             except Exception:
                 # 保存前尝试抓取失败，告知用户（但仍允许保存使用默认图标）
                 QMessageBox.information(self, "图标获取失败", "保存前尝试获取站点图标失败，工具将使用默认图标或您选择的图标。")
+        # 若为本地工具且未选择图标，尝试使用工具根目录的favicon.ico
+        elif not is_web_tool and not self.selected_icon_name:
+            try:
+                # 获取工具根目录
+                tool_dir = os.path.dirname(os.path.abspath(path))
+                # 检查工具根目录是否存在favicon.ico
+                favicon_path = os.path.join(tool_dir, "favicon.ico")
+                if os.path.exists(favicon_path):
+                    # 使用工具根目录的favicon.ico
+                    self.selected_icon_name = favicon_path
+            except Exception:
+                # 忽略错误，使用默认图标
+                pass
 
         # 更新工具数据
         self.tool_data.update({
@@ -401,13 +411,18 @@ class ToolConfigDialog(QDialog):
     def _normalize_icon_name(self, value):
         if not value:
             return ""
+        # 支持绝对路径和相对路径
         if os.path.isabs(value):
-            if value.startswith(self.icon_dir):
-                return os.path.basename(value)
+            # 如果是绝对路径且文件存在，直接返回
+            if os.path.exists(value):
+                return value
             return ""
         # value 可能是相对路径
         candidate = os.path.join(self.icon_dir, value)
         if os.path.exists(candidate):
+            return value
+        # 检查相对路径是否存在
+        if os.path.exists(value):
             return value
         return ""
 
@@ -491,7 +506,6 @@ class ToolConfigDialog(QDialog):
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 html = resp.read().decode('utf-8', errors='ignore')
                 # naive parse for common link rel patterns
-                import re
                 matches = re.findall(r'<link[^>]+rel=[\'\"](?:icon|shortcut icon|apple-touch-icon)[\'\"][^>]*>', html, flags=re.I)
                 for tag in matches:
                     # find href
@@ -529,7 +543,11 @@ class ToolConfigDialog(QDialog):
 
     def _update_icon_preview(self):
         icon_name = self.selected_icon_name or self.default_icon_name
-        icon_path = os.path.join(self.icon_dir, icon_name)
+        # 处理绝对路径和相对路径
+        if os.path.isabs(icon_name):
+            icon_path = icon_name
+        else:
+            icon_path = os.path.join(self.icon_dir, icon_name)
         pixmap = QPixmap(icon_path)
         if not pixmap.isNull():
             self.icon_preview.setPixmap(pixmap.scaled(48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation))

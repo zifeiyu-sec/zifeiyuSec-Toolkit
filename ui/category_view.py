@@ -1,9 +1,10 @@
+import os
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QIcon
-import os
 
 class CategoryView(QWidget):
+    """分类视图，显示一级分类列表"""
     # 信号定义：当分类被选择时发出
     category_selected = pyqtSignal(int)  # 仅发出category_id
     # 右键菜单信号
@@ -244,8 +245,11 @@ class CategoryView(QWidget):
 
 if __name__ == "__main__":
     import sys
+    import os
+    # 添加项目根目录到Python路径
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from PyQt5.QtWidgets import QApplication
-    from ..core.data_manager import DataManager
+    from core.data_manager import DataManager
     
     # 获取当前脚本所在目录
     script_dir = os.path.dirname(os.path.abspath(__file__))

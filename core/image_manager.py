@@ -206,20 +206,3 @@ class ImageManager:
             print(f"调整图片大小失败: {e}")
             return False
 
-# 示例用法
-if __name__ == "__main__":
-    # 获取当前脚本所在目录
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    # 构建相对于脚本的images目录路径
-    images_dir = os.path.join(os.path.dirname(script_dir), "images")
-    
-    # 创建图片管理器
-    image_manager = ImageManager(images_dir)
-    
-    # 创建默认背景图片
-    created = image_manager.create_default_backgrounds()
-    print(f"已创建 {len(created)} 个默认背景图片")
-    
-    # 列出所有图片
-    all_images = image_manager.list_images()
-    print(f"所有可用图片: {all_images}")

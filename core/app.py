@@ -1,14 +1,14 @@
+import difflib
+import os
+import sys
+import webbrowser
+import subprocess
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter, 
                             QToolBar, QAction, QMessageBox, QInputDialog, QApplication, 
                             QLineEdit, QActionGroup, QMenu, QToolButton, QStatusBar, 
                             QProgressBar, QLabel)
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize, QSettings
-import difflib
-import os
-import sys
-import webbrowser
-import subprocess
 
 # 导入自定义模块
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -105,6 +105,10 @@ class PentestToolManager(QMainWindow):
         self.refresh_action.setShortcut("F5")
         self.refresh_action.triggered.connect(self.refresh_all)
 
+        # 收藏操作
+        self.favorites_action = QAction("收藏", self)
+        self.favorites_action.triggered.connect(self.on_show_favorites)
+
         # 帮助
         self.about_action = QAction("关于", self)
         self.about_action.triggered.connect(self.on_about)
@@ -171,6 +175,13 @@ class PentestToolManager(QMainWindow):
         # 刷新按钮
         main_toolbar.addAction(self.refresh_action)
         
+        # 收藏按钮
+        main_toolbar.addSeparator()
+        self.favorites_button = QToolButton()
+        self.favorites_button.setText("收藏")
+        self.favorites_button.clicked.connect(self.on_show_favorites)
+        main_toolbar.addWidget(self.favorites_button)
+        
         # 关于按钮
         main_toolbar.addSeparator()
         about_button = QToolButton()
@@ -204,7 +215,7 @@ class PentestToolManager(QMainWindow):
         main_layout = QHBoxLayout(central_widget)
         
         # 分割器
-        splitter = QSplitter(Qt.Horizontal)
+        self.splitter = QSplitter(Qt.Horizontal)
         
         # 左侧一级分类视图
         self.category_view = CategoryView(self.data_manager)
@@ -213,7 +224,7 @@ class PentestToolManager(QMainWindow):
         self.category_view.new_category_requested.connect(self.on_new_category)
         self.category_view.new_subcategory_requested.connect(self.on_new_subcategory)
         self.category_view.delete_category_requested.connect(self.on_delete_category)
-        splitter.addWidget(self.category_view)
+        self.splitter.addWidget(self.category_view)
         
         # 中间二级分类视图
         self.subcategory_view = SubcategoryView(self.data_manager)
@@ -221,7 +232,7 @@ class PentestToolManager(QMainWindow):
         # 连接右键菜单信号
         self.subcategory_view.new_subcategory_requested.connect(self.on_new_subcategory)
         self.subcategory_view.delete_subcategory_requested.connect(self.on_delete_subcategory)
-        splitter.addWidget(self.subcategory_view)
+        self.splitter.addWidget(self.subcategory_view)
         
         # 右侧工具卡片容器
         right_widget = QWidget()
@@ -267,18 +278,18 @@ class PentestToolManager(QMainWindow):
         # 保留小幅缓冲，设置最小宽度为 580
         right_widget.setMinimumWidth(580)
         
-        splitter.addWidget(right_widget)
+        self.splitter.addWidget(right_widget)
         
         # 设置初始大小
         # 调整三列初始宽度比例，使左侧两列足够宽以完整显示分类名称
         # 总宽度 1200，对应的三列：一级分类 260px，二级分类 300px，工具区 640px
-        splitter.setSizes([400, 300, 640])
+        self.splitter.setSizes([400, 300, 640])
 
         # 强制左右两列在布局中保留最小宽度，避免被过度收缩导致名称截断
         self.category_view.setMinimumWidth(260)
         self.subcategory_view.setMinimumWidth(300)
         
-        main_layout.addWidget(splitter, 1)
+        main_layout.addWidget(self.splitter, 1)
     
     def apply_styles(self):
         """应用样式 - 支持多种主题"""
@@ -644,6 +655,13 @@ class PentestToolManager(QMainWindow):
         """处理一级分类选择"""
         self.current_category = category_id
         
+        # 重新显示分类视图
+        self.category_view.show()
+        self.subcategory_view.show()
+        
+        # 恢复分割器大小
+        self.splitter.setSizes([400, 300, 640])
+        
         # 加载并显示该分类下的子分类
         self.subcategory_view.load_subcategories(category_id)
         
@@ -664,6 +682,13 @@ class PentestToolManager(QMainWindow):
     
     def on_subcategory_selected(self, category_id, subcategory_id):
         """处理二级分类选择"""
+        # 重新显示分类视图
+        self.category_view.show()
+        self.subcategory_view.show()
+        
+        # 恢复分割器大小
+        self.splitter.setSizes([400, 300, 640])
+        
         # 更新分类信息标签
         categories = self.data_manager.load_categories()
         category_name = "所有工具"
@@ -757,20 +782,49 @@ class PentestToolManager(QMainWindow):
         tool_id = tool_data.get('id')
 
         # Helper: try to open local path using platform-appropriate method
-        def _open_local(path: str) -> bool:
+        def _open_local(path: str, working_dir: str = None) -> bool:
             try:
                 if not path:
                     raise ValueError("工具路径为空")
 
+                # 确保路径是绝对路径
+                if not os.path.isabs(path):
+                    # 如果是相对路径，尝试转换为绝对路径
+                    path = os.path.abspath(path)
+                    
+                # 检查文件是否存在
+                if not os.path.exists(path):
+                    raise ValueError(f"文件不存在: {path}")
+
+                # 获取工具所在目录作为默认工作目录
+                default_working_dir = os.path.dirname(path)
+                
+                # 使用工具配置的工作目录，如果没有则使用默认工作目录
+                actual_working_dir = working_dir or default_working_dir
+
                 # Prefer the simplest cross-platform open semantics:
                 if sys.platform.startswith('win'):
-                    # Windows: os.startfile mimics double-click
-                    os.startfile(path)
+                    # Windows: 对于所有命令行工具，使用新的终端窗口运行
+                    if path.lower().endswith('.cmd') or path.lower().endswith('.bat') or path.lower().endswith('.py'):
+                        # 使用cmd.exe /c start命令来打开新的终端窗口
+                        subprocess.Popen(
+                            ['cmd.exe', '/c', 'start', path], 
+                            cwd=actual_working_dir,
+                            shell=True
+                        )
+                    else:
+                        # 对于其他可执行文件，使用默认方式运行
+                        subprocess.Popen(
+                            [path], 
+                            cwd=actual_working_dir,
+                            shell=True
+                        )
                 elif sys.platform == 'darwin':
-                    subprocess.Popen(['open', path])
+                    # macOS: 使用open -a Terminal命令来打开新的终端窗口
+                    subprocess.Popen(['open', '-a', 'Terminal', path], cwd=actual_working_dir)
                 else:
-                    # Linux: use xdg-open if available
-                    subprocess.Popen(['xdg-open', path])
+                    # Linux: 使用x-terminal-emulator命令来打开新的终端窗口
+                    subprocess.Popen(['x-terminal-emulator', '-e', path], cwd=actual_working_dir)
 
                 return True
             except Exception as e:
@@ -780,6 +834,7 @@ class PentestToolManager(QMainWindow):
         # Determine if it's a web tool
         is_web = tool_data.get('is_web_tool', False)
         path = (tool_data.get('path') or '').strip()
+        working_directory = tool_data.get('working_directory', '')
 
         started_ok = False
 
@@ -792,8 +847,8 @@ class PentestToolManager(QMainWindow):
                 QMessageBox.warning(self, "运行失败", f"打开网页工具失败: {e}")
                 started_ok = False
         else:
-            # Local tool - try to open using double-click semantics
-            started_ok = _open_local(path)
+            # Local tool - try to open using double-click semantics with working directory
+            started_ok = _open_local(path, working_directory)
 
         # If started successfully, update usage stats
         if started_ok and tool_id:
@@ -927,9 +982,9 @@ class PentestToolManager(QMainWindow):
             return
         
         # 弹出确认对话框
-            reply = self._themed_question("确认删除", 
-                                        f"确定要删除选中的子分类吗？\n删除前请确保该子分类下没有工具。",
-                                        default=QMessageBox.No)
+        reply = self._themed_question("确认删除", 
+                                    f"确定要删除选中的子分类吗？\n删除前请确保该子分类下没有工具。",
+                                    default=QMessageBox.No)
         
         if reply == QMessageBox.Yes:
             # 调用数据管理器删除子分类
@@ -1022,6 +1077,62 @@ class PentestToolManager(QMainWindow):
         # 更新工具数量为搜索结果数量
         self.tool_count_label.setText(f"工具数量: {len(filtered_tools)}")
     
+    def on_show_favorites(self):
+        """显示所有收藏的工具"""
+        # 加载所有工具
+        tools = self.data_manager.load_tools()
+        
+        # 过滤出收藏的工具
+        favorite_tools = [tool for tool in tools if tool.get('is_favorite', False)]
+        
+        # 更新分类信息标签
+        self.category_info_label.setText("收藏工具")
+        
+        # 显示收藏的工具
+        self.tool_container.display_tools(favorite_tools)
+        
+        # 刷新工具数量
+        self.refresh_tool_count()
+        
+        # 取消选择分类和子分类
+        self.current_category = None
+        
+        # 隐藏左侧一级分类和中间二级分类视图
+        self.category_view.hide()
+        self.subcategory_view.hide()
+        
+        # 调整分割器大小，使右侧工具卡片容器占据整个窗口宽度
+        self.splitter.setSizes([0, 0, 1200])
+        
+        # 将收藏按钮改为返回按钮
+        self.favorites_button.setText("返回")
+        self.favorites_button.disconnect()
+        self.favorites_button.clicked.connect(self.on_back_from_favorites)
+    
+    def on_back_from_favorites(self):
+        """从收藏页面返回正常视图"""
+        # 重新显示分类视图
+        self.category_view.show()
+        self.subcategory_view.show()
+        
+        # 恢复分割器大小
+        self.splitter.setSizes([400, 300, 640])
+        
+        # 加载所有工具
+        tools = self.data_manager.load_tools()
+        self.tool_container.display_tools(tools)
+        
+        # 更新分类信息标签
+        self.category_info_label.setText("所有工具")
+        
+        # 刷新工具数量
+        self.refresh_tool_count()
+        
+        # 将返回按钮改回收藏按钮
+        self.favorites_button.setText("收藏")
+        self.favorites_button.disconnect()
+        self.favorites_button.clicked.connect(self.on_show_favorites)
+        
     def on_about(self):
         """处理关于对话框"""
         # 使用自定义 QMessageBox，以便在深色主题下也能保持一致的外观
@@ -1196,25 +1307,3 @@ class PentestToolManager(QMainWindow):
         else:
             event.ignore()
 
-# 主函数
-if __name__ == "__main__":
-    # 确保中文显示正常
-    if hasattr(Qt, "AA_EnableHighDpiScaling"):
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    if hasattr(Qt, "AA_UseHighDpiPixmaps"):
-        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-    
-    app = QApplication(sys.argv)
-    app.setStyle("Fusion")
-    
-    # 获取当前脚本所在目录的父目录，即项目根目录
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
-    # 创建主窗口，明确传递项目根目录作为配置目录
-    window = PentestToolManager(config_dir=project_root)
-    window.show()
-    
-    # 加载初始工具列表
-    window.refresh_current_view()
-    
-    sys.exit(app.exec_())

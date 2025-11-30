@@ -1,9 +1,10 @@
+import os
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QIcon
-import os
 
 class SubcategoryView(QWidget):
+    """子分类视图，显示指定分类下的子分类列表"""
     # 信号定义：当子分类被选择时发出
     subcategory_selected = pyqtSignal(int, int)  # (category_id, subcategory_id)
     # 右键菜单信号
@@ -30,7 +31,6 @@ class SubcategoryView(QWidget):
         self.subcategory_list = QListWidget()
         # 给子分类列表设置最小宽度，保证长名称能完整显示
         self.subcategory_list.setMinimumWidth(200)
-        self.subcategory_list.setMinimumWidth(150)
         self.subcategory_list.itemClicked.connect(self.on_item_clicked)
         # 设置右键菜单
         self.subcategory_list.setContextMenuPolicy(Qt.CustomContextMenu)

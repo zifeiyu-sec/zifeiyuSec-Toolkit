@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 class DataManager:
+    """数据管理器，负责处理工具分类和工具数据的存储与读取"""
     def __init__(self, config_dir=None, data_dir=None):
         """初始化数据管理器"""
         # 初始化数据目录
@@ -403,19 +404,3 @@ class DataManager:
                 return self.save_tools(tools)
         return False
 
-# 示例用法
-if __name__ == "__main__":
-    # 获取当前脚本所在目录
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    # 构建相对于脚本的data目录路径
-    data_dir = os.path.join(os.path.dirname(script_dir), "data")
-    
-    data_manager = DataManager(data_dir)
-    
-    # 示例：加载所有分类
-    categories = data_manager.load_categories()
-    print(f"已加载 {len(categories)} 个一级分类")
-    
-    # 示例：加载所有工具
-    tools = data_manager.load_tools()
-    print(f"已加载 {len(tools)} 个工具")

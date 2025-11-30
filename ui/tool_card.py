@@ -2,9 +2,9 @@ import os
 import sys
 from PyQt5.QtWidgets import (QFrame, QVBoxLayout, QHBoxLayout, QLabel, 
                            QPushButton, QMessageBox, QMenu, QScrollArea, 
-                           QWidget, QGridLayout)
-from PyQt5.QtCore import Qt, pyqtSignal, QProcess, QTimer
-from PyQt5.QtGui import QIcon, QColor, QFont
+                           QWidget, QGridLayout, QGraphicsDropShadowEffect)
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QIcon, QColor
 
 # 获取资源目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,6 +17,7 @@ if not os.path.exists(DEFAULT_ICON_PATH):
     DEFAULT_ICON_PATH = os.path.join(RESOURCE_ICON_DIR, 'default_tool_icon.svg')
 
 class ToolCard(QFrame):
+    """工具卡片组件，用于显示单个工具的信息和操作按钮"""
     # 信号定义
     run_tool = pyqtSignal(dict)
     edit_requested = pyqtSignal(dict)
@@ -30,7 +31,6 @@ class ToolCard(QFrame):
         self.process = None  # 用于存储进程引用
         
         # 创建阴影效果
-        from PyQt5.QtWidgets import QGraphicsDropShadowEffect
         self.shadow = QGraphicsDropShadowEffect()
         self.shadow.setBlurRadius(8)
         self.shadow.setOffset(0, 3)
@@ -268,7 +268,7 @@ class ToolCard(QFrame):
     
     def apply_theme_styles(self):
         # 应用主题样式
-        if self.current_theme == "light" or self.current_theme == "blue_white":
+        if self.current_theme in ("light", "blue_white"):
             # 浅色主题样式
             self.setStyleSheet("""
                 QFrame {
@@ -328,6 +328,7 @@ class ToolCard(QFrame):
             """)
 
 class ToolCardContainer(QWidget):
+    """工具卡片容器组件，用于显示多个工具卡片，支持滚动和主题切换"""
     # 信号定义
     run_tool = pyqtSignal(dict)
     edit_requested = pyqtSignal(dict)
@@ -380,7 +381,7 @@ class ToolCardContainer(QWidget):
     
     def apply_theme_styles(self):
         # 应用主题样式
-        if self.current_theme == "light" or self.current_theme == "blue_white":
+        if self.current_theme in ("light", "blue_white"):
             # 浅色主题样式
             self.scroll_area.setStyleSheet("""
                 QScrollArea {

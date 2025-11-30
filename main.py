@@ -6,6 +6,7 @@
 
 import os
 import sys
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon, QFont
 from core.app import PentestToolManager
@@ -21,7 +22,6 @@ def setup_fonts():
 
 def main():
     # 设置高DPI支持
-    from PyQt5.QtCore import Qt
     if hasattr(Qt, "AA_EnableHighDpiScaling"):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     if hasattr(Qt, "AA_UseHighDpiPixmaps"):
