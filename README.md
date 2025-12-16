@@ -87,7 +87,7 @@ python scripts/create_desktop_shortcut.py
 - ✅ 墨绿主题
 - ✅ 主题切换功能
 
-## 📸 效果图
+## � 效果图
 
 ### 蓝白主题
 
@@ -155,6 +155,113 @@ zifeiyuSec-Toolkit/
 ├── image.ico             # 应用图标
 └── README.md            # 项目文档
 ```
+
+## ⚙️ 配置管理
+
+### 配置文件概述
+
+子非鱼工具箱使用JSON格式的配置文件来存储工具分类和工具信息，这些配置文件位于data目录下：
+
+- categories.json：存储工具的分类结构
+- tools.json：存储所有工具的详细信息
+
+### 配置文件结构
+
+#### categories.json
+
+```json
+{
+  "categories": [
+    {
+      "name": "信息收集 (Information Gathering)",
+      "icon": "info_gather.svg",
+      "id": 1,
+      "subcategories": [
+        {
+          "name": "设备与子域 (Devices & Subdomains)",
+          "id": 101,
+          "parent_id": 1
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### tools.json
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Nmap",
+    "path": "C:\\",
+    "description": " `https://github.com/nmap/nmap` ",
+    "category_id": 1,
+    "subcategory_id": 103,
+    "background_image": "",
+    "icon": "new_default_icon.ico",
+    "tags": ["端口扫描", "网络发现"],
+    "priority": 0,
+    "is_favorite": true,
+    "arguments": "",
+    "working_directory": "C:\\",
+    "run_in_terminal": true,
+    "is_web_tool": false,
+    "usage_count": 14,
+    "last_used": "2025-11-30T21:22:53.705972Z"
+  }
+]
+```
+
+### 配置文件字段说明
+
+#### categories.json字段
+
+| 字段名                     | 类型      | 描述                          |
+|-------------------------|---------|------------------------------|
+| name                    | string  | 分类名称                        |
+| icon                    | string  | 分类图标（位于resources/icons/目录下） |
+| id                      | integer | 分类唯一标识符                    |
+| subcategories           | array   | 子分类列表                       |
+| subcategories.name      | string  | 子分类名称                       |
+| subcategories.id        | integer | 子分类唯一标识符                    |
+| subcategories.parent_id | integer | 父分类ID                       |
+
+#### tools.json字段
+
+| 字段名               | 类型      | 描述           |
+|-------------------|---------|--------------|
+| id                | integer | 工具唯一标识符      |
+| name              | string  | 工具名称         |
+| path              | string  | 工具路径或URL     |
+| description       | string  | 工具描述         |
+| category_id       | integer | 所属一级分类ID     |
+| subcategory_id    | integer | 所属二级分类ID     |
+| background_image  | string  | 工具卡片背景图片     |
+| icon              | string  | 工具图标         |
+| tags              | array   | 工具标签         |
+| priority          | integer | 工具优先级        |
+| is_favorite       | boolean | 是否收藏         |
+| arguments         | string  | 命令行参数        |
+| working_directory | string  | 工作目录         |
+| run_in_terminal   | boolean | 是否在终端中运行     |
+| is_web_tool       | boolean | 是否为网页工具      |
+| usage_count       | integer | 使用次数         |
+| last_used         | string  | 最后使用时间（ISO格式）|
+
+## 📌 工具配置说明
+
+1. **本地工具路径**：当前README中所有本地工具路径均使用`C:\`作为占位符，您需要根据自己的实际安装路径进行配置
+
+2. **图标配置**：
+   - 工具图标可以自行下载
+   - 图标文件需放置在`resources/icons/`目录下
+   - 可在`categories.json`和`tools.json`中修改图标路径或者ui界面修改
+
+3. **工具优化**：
+   - 后续将持续优化工具配置和使用体验
+   - 支持更多工具类型和更灵活的配置选项
 
 ## ⚠️ 免责声明
 
