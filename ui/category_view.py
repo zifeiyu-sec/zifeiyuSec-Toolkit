@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, 
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QIcon
 
+# 图标缓存，减少重复的文件系统操作
+category_icon_cache = {}
+
 class CategoryView(QWidget):
     """分类视图，显示一级分类列表"""
     # 信号定义：当分类被选择时发出
@@ -72,38 +75,28 @@ class CategoryView(QWidget):
             # 创建分类项，显示名称和可选图标
             name = category.get('name', '未知分类')
             
-            # 处理图标显示
-            if 'icon' in category and isinstance(category['icon'], str) and category['icon'] != 'default_icon':
-                # 尝试加载图标
-                try:
-                    # 移除可能的'icons/'前缀
-                    icon_name = category['icon']
-                    if icon_name.startswith('icons/'):
-                        icon_name = icon_name[6:]
-                    
-                    # 尝试加载图标
-                    icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'resources', 'icons', icon_name)
-                    if os.path.exists(icon_path):
-                        item = QListWidgetItem(name)
-                        item.setIcon(QIcon(icon_path))
-                        item.setData(Qt.UserRole, {'id': category.get('id', 0)})
-                        self.category_list.addItem(item)
-                        continue
-                except Exception as e:
-                    print(f"加载图标失败: {e}")
-            
-            # 默认显示方式
+            # 优化：先创建列表项，延迟加载图标，避免启动时阻塞
             item = QListWidgetItem(name)
             item.setData(Qt.UserRole, {'id': category.get('id', 0)})
             self.category_list.addItem(item)
+            
+            # 移除图标加载逻辑
+            # if 'icon' in category and isinstance(category['icon'], str) and category['icon'] != 'default_icon':
+            #     def load_icon_delayed(item_ref, icon_name):
+            #         # ... (removed)
+            #     from PyQt5.QtCore import QTimer
+            #     QTimer.singleShot(200, lambda: load_icon_delayed(item, category['icon']))
         
-        # 如果有分类，默认选中第一个分类
+        # 优化：延迟加载工具，避免启动时阻塞
+        # 如果有分类，默认选中第一个分类，但延迟触发加载
         if self.category_list.count() > 0:
             self.category_list.setCurrentRow(0)
             first_item = self.category_list.item(0)
             data = first_item.data(Qt.UserRole)
             self.current_category = data['id']
-            self.category_selected.emit(data['id'])
+            # 使用 QTimer 延迟触发，让 UI 先显示（增加延迟时间到300ms）
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(300, lambda: self.category_selected.emit(data['id']))
     
     def on_item_clicked(self, item):
         """处理分类项点击事件"""
@@ -168,7 +161,7 @@ class CategoryView(QWidget):
                     margin-bottom: 6px;
                     color: #0369a1;
                     font-weight: 600;
-                    font-size: 13px;
+                    font-size: 16px;
                 }
                 
                 QListWidget::item:hover {
@@ -200,7 +193,7 @@ class CategoryView(QWidget):
                     margin-bottom: 4px;
                     color: #ffffff;
                     font-weight: 500;
-                    font-size: 13px;
+                    font-size: 16px;
                     /* removed: transition not supported in Qt QSS */
                 }
                 

@@ -5,6 +5,7 @@ __pycache__/
 
 # PyInstaller
 *.spec
+!ZifeiyuSec.spec  # 保留打包配置文件
 build/
 dist/
 *.exe

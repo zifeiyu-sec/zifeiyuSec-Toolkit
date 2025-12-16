@@ -14,59 +14,18 @@
 - **自定义配置**：支持工具参数配置和工作目录设置
 - **支持多种工具类型**：命令行工具和网页工具
 - **使用统计**：自动记录工具使用次数和最后使用时间
-- **隐藏终端运行**：支持通过VBS/BAT脚本隐藏终端窗口运行工具
+- **隐藏终端运行**：支持通过VBS/BAT脚本隐藏终端窗口运行
 
-## 🚀 主要功能
+## 🚀 快速开始
 
-### 1. 工具管理
+### 环境要求
 
-- ✅ 添加新工具（支持命令行工具和网页工具）
-- ✅ 编辑工具配置
-- ✅ 删除工具
-- ✅ 收藏常用工具
-- ✅ 工具使用统计
-- ✅ 工具搜索功能
+- Python 3.8+
+- PyQt5及相关依赖
 
-### 2. 分类管理
+### 使用方式
 
-- ✅ 添加一级分类
-- ✅ 添加二级子分类
-- ✅ 编辑分类信息
-- ✅ 删除分类
-- ✅ 分类图标自定义
-
-### 3. 主题支持
-
-- ✅ 蓝白主题
-- ✅ 墨绿主题
-- ✅ 主题切换功能
-
-### 4. 配置管理
-
-- ✅ JSON配置文件
-- ✅ 图形界面配置
-- ✅ 手动编辑配置文件
-- ✅ 配置文件备份与恢复
-
-### 5. 运行方式
-
-- ✅ 直接运行Python脚本
-- ✅ 打包为可执行文件
-- ✅ 隐藏终端窗口运行
-
-## 📸 效果图
-
-### 蓝白主题
-
-![蓝白主题](./images/README/image-20251128010917770.png)
-
-### 墨绿主题
-
-![墨绿主题](./images/README/image-20251128013809420.png)
-
-## 🛠️ 快速开始
-
-### 从源代码运行
+#### 方式1：直接运行（有Python环境）
 
 1. **克隆仓库**
 ```bash
@@ -82,182 +41,83 @@ pip install -r requirements.txt
 3. **运行应用**
 ```bash
 python main.py
-或者直接点击run_tool.bat或者run_tool.vbs
 ```
 
-## 📖 详细使用指南
+#### 方式2：创建桌面快捷方式（双击启动）
 
-### 1. 添加工具
+1. **克隆仓库**
+```bash
+git clone https://github.com/zifeiyu-sec/zifeiyuSec-Toolkit.git
+cd zifeiyuSec-Toolkit
+```
 
-#### 命令行工具添加示例
+2. **安装依赖**
+```bash
+pip install -r requirements.txt
+```
 
-以dirsearch工具为例：
+3. **创建快捷方式**
+```bash
+python scripts/create_desktop_shortcut.py
+```
+
+4. **使用快捷方式**
+   - 在桌面上找到名为"子非鱼工具箱.lnk"的快捷方式
+   - 双击即可启动应用
+   - 启动时无终端窗口显示
+   - 图标使用`image.ico`
+
+## 📋 主要功能
+
+### 工具管理
+- ✅ 添加新工具（命令行工具和网页工具）
+- ✅ 编辑工具配置
+- ✅ 删除工具
+- ✅ 收藏常用工具
+- ✅ 工具使用统计
+- ✅ 工具搜索功能
+
+### 分类管理
+- ✅ 多级分类支持
+- ✅ 分类图标自定义
+- ✅ 分类编辑和删除
+
+### 主题支持
+- ✅ 蓝白主题
+- ✅ 墨绿主题
+- ✅ 主题切换功能
+
+## 📸 效果图
+
+### 蓝白主题
+
+![蓝白主题](./images/README/image-20251128010917770.png)
+
+### 墨绿主题
+
+![墨绿主题](./images/README/image-20251128013809420.png)
+
+## 📖 使用指南
+
+### 添加工具
 
 1. 点击左上角"新增工具"按钮
-2. 填写工具基本信息：
-   - 工具名称：dirsearch
-   - 工具路径：选择dirsearch目录下的cmd.bat文件
-   - 描述：目录扫描工具
-   - 分类：选择合适的分类和子分类
-   - 标签：端口扫描,目录扫描
-3. 配置运行参数：
-   - 命令行参数：可根据需要添加
-   - 工作目录：设置为工具所在目录
-   - 勾选"在终端中运行"
-4. 点击"保存"完成添加
+2. 填写工具基本信息（名称、路径、描述等）
+3. 选择分类和子分类
+4. 配置运行参数（可选）
+5. 点击"保存"完成添加
 
-#### 网页工具添加示例
-
-1. 点击左上角"新增工具"按钮
-2. 填写工具基本信息：
-   - 工具名称：Google搜索
-   - 工具路径：https://www.google.com
-   - 描述：搜索引擎
-   - 分类：选择合适的分类
-   - 标签：搜索,网页
-3. 勾选"网页工具"
-4. 点击"保存"完成添加
-
-### 2. 编辑工具
+### 编辑工具
 
 1. 右键点击工具卡片
 2. 选择"编辑工具"
 3. 修改工具信息
 4. 点击"保存"完成修改
 
-### 3. 删除工具
-
-1. 右键点击工具卡片
-2. 选择"删除工具"
-3. 确认删除
-
-### 4. 搜索工具
+### 搜索工具
 
 1. 在搜索框中输入工具名称或标签
 2. 系统会实时过滤显示匹配的工具
-
-### 5. 管理分类
-
-#### 添加分类
-
-1. 右键点击左侧分类区域
-2. 选择"添加分类"
-3. 填写分类名称和选择图标
-4. 点击"保存"完成添加
-
-#### 添加子分类
-
-1. 右键点击要添加子分类的父分类
-2. 选择"添加子分类"
-3. 填写子分类名称
-4. 点击"保存"完成添加
-
-#### 编辑分类
-
-1. 右键点击要编辑的分类
-2. 选择"编辑分类"
-3. 修改分类信息
-4. 点击"保存"完成修改
-
-#### 删除分类
-
-1. 右键点击要删除的分类
-2. 选择"删除分类"
-3. 确认删除
-
-## ⚙️ 配置管理
-
-### 配置文件概述
-
-子非鱼工具箱使用JSON格式的配置文件来存储工具分类和工具信息，这些配置文件位于`data`目录下：
-
-- `categories.json`：存储工具的分类结构
-- `tools.json`：存储所有工具的详细信息
-
-### 配置文件结构
-
-#### categories.json
-
-```json
-{
-  "categories": [
-    {
-      "name": "信息收集 (Information Gathering)",
-      "icon": "info_gather.svg",
-      "id": 1,
-      "subcategories": [
-        {
-          "name": "设备与子域 (Devices & Subdomains)",
-          "id": 101,
-          "parent_id": 1
-        }
-      ]
-    }
-  ]
-}
-```
-
-#### tools.json
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Nmap",
-    "path": "C:\\",
-    "description": "https://github.com/nmap/nmap",
-    "category_id": 1,
-    "subcategory_id": 103,
-    "background_image": "",
-    "icon": "new_default_icon.svg",
-    "tags": ["端口扫描", "网络发现"],
-    "priority": 0,
-    "is_favorite": true,
-    "arguments": "",
-    "working_directory": "C:\\",
-    "run_in_terminal": true,
-    "is_web_tool": false,
-    "usage_count": 14,
-    "last_used": "2025-11-30T21:22:53.705972Z"
-  }
-]
-```
-
-### 配置文件字段说明
-
-#### categories.json字段
-
-| 字段名 | 类型 | 描述 |
-|--------|------|------|
-| name | string | 分类名称 |
-| icon | string | 分类图标（位于`resources/icons/`目录下） |
-| id | integer | 分类唯一标识符 |
-| subcategories | array | 子分类列表 |
-| subcategories.name | string | 子分类名称 |
-| subcategories.id | integer | 子分类唯一标识符 |
-| subcategories.parent_id | integer | 父分类ID |
-
-#### tools.json字段
-
-| 字段名 | 类型 | 描述 |
-|--------|------|------|
-| id | integer | 工具唯一标识符 |
-| name | string | 工具名称 |
-| path | string | 工具路径或URL |
-| description | string | 工具描述 |
-| category_id | integer | 所属一级分类ID |
-| subcategory_id | integer | 所属二级分类ID |
-| background_image | string | 工具卡片背景图片 |
-| icon | string | 工具图标 |
-| tags | array | 工具标签 |
-| priority | integer | 工具优先级 |
-| is_favorite | boolean | 是否收藏 |
-| arguments | string | 命令行参数 |
-| working_directory | string | 工作目录 |
-| run_in_terminal | boolean | 是否在终端中运行 |
-| is_web_tool | boolean | 是否为网页工具 |
-| usage_count | integer | 使用次数 |
-| last_used | string | 最后使用时间（ISO格式） |
 
 ### 切换主题
 
@@ -266,9 +126,7 @@ python main.py
 3. 在主题列表中选择喜欢的主题
 4. 主题将立即切换
 
-## 🛠️ 开发指南
-
-### 项目结构
+## 🛠️ 项目结构
 
 ```
 zifeiyuSec-Toolkit/
@@ -279,7 +137,6 @@ zifeiyuSec-Toolkit/
 ├── ui/                   # UI组件
 │   ├── category_view.py     # 分类视图
 │   ├── subcategory_view.py  # 子分类视图
-│   ├── tool_card.py         # 工具卡片
 │   ├── tool_config_dialog.py # 工具配置对话框
 │   └── image_selector.py    # 图片选择器
 ├── resources/            # 资源文件
@@ -289,42 +146,15 @@ zifeiyuSec-Toolkit/
 │   ├── categories.json  # 分类配置
 │   └── tools.json       # 工具配置
 ├── images/               # 图片资源
-│   └── README/          # README文档图片
+├── scripts/              # 辅助脚本
+│   └── create_desktop_shortcut.py  # 快捷方式创建脚本
 ├── main.py               # 应用入口
-├── build_exe.py          # 打包脚本
 ├── requirements.txt      # 依赖列表
 ├── run_tool.vbs          # VBS启动脚本（隐藏终端）
 ├── run_tool.bat          # BAT启动脚本
-├── .gitignore           # Git忽略文件
+├── image.ico             # 应用图标
 └── README.md            # 项目文档
 ```
-
-### 代码质量
-
-项目使用pylint进行代码质量检查：
-
-```bash
-pylint main.py core/ ui/
-```
-
-### 开发规范
-
-1. **导入顺序**：标准库 → 第三方库 → 本地模块
-2. **代码格式**：遵循PEP 8规范
-3. **文档字符串**：为所有类和方法添加文档字符串
-4. **命名规范**：
-   - 类名：大驼峰命名法（如ToolCard）
-   - 方法名：小驼峰命名法（如on_add_tool）
-   - 变量名：下划线分隔命名法（如tool_list）
-5. **注释**：关键代码添加注释说明
-
-## 🤝 贡献指南
-
-欢迎提交Issue和Pull Request！
-
-## 📄 许可证
-
-本项目采用MIT许可证 - 查看[LICENSE](LICENSE)文件了解详情
 
 ## ⚠️ 免责声明
 
@@ -332,6 +162,14 @@ pylint main.py core/ ui/
 2. 使用本工具进行任何未授权的测试均属非法行为
 3. 作者对使用本工具造成的任何后果不承担责任
 4. 请在使用前遵守当地法律法规
+
+## 📄 许可证
+
+本项目采用MIT许可证 - 查看[LICENSE](LICENSE)文件了解详情
+
+## 🤝 贡献指南
+
+欢迎提交Issue和Pull Request！
 
 ## 📞 交流
 
@@ -350,4 +188,4 @@ pylint main.py core/ ui/
 **项目地址：** [https://github.com/zifeiyu-sec/zifeiyuSec-Toolkit](https://github.com/zifeiyu-sec/zifeiyuSec-Toolkit)
 
 **版本：** v1.0.1
-**更新时间：** 2025-11-30
+**更新时间：** 2025-12-16

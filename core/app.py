@@ -6,17 +6,29 @@ import subprocess
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter, 
                             QToolBar, QAction, QMessageBox, QInputDialog, QApplication, 
                             QLineEdit, QActionGroup, QMenu, QToolButton, QStatusBar, 
-                            QProgressBar, QLabel)
-from PyQt5.QtGui import QIcon, QFont
+                            QLabel)
 from PyQt5.QtCore import Qt, QSize, QSettings
+
+# 使用更快的JSON解析库orjson
+try:
+    import orjson as json
+except ImportError:
+    # 回退到ujson
+    try:
+        import ujson as json
+    except ImportError:
+        # 最后回退到标准库json
+        import json
 
 # 导入自定义模块
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.data_manager import DataManager
 from core.image_manager import ImageManager
+from core.logger import logger
 from ui.category_view import CategoryView
 from ui.subcategory_view import SubcategoryView
-from ui.tool_card import ToolCardContainer
+
+from ui.tool_model_view import ToolCardContainer
 from ui.image_selector import ImageSelectorDialog
 from ui.tool_config_dialog import ToolConfigDialog
 
@@ -31,18 +43,21 @@ class PentestToolManager(QMainWindow):
         self.data_manager = DataManager(config_dir=config_dir)
         self.image_manager = ImageManager(config_dir=config_dir)
         
-        # 创建默认背景图片
-        self.image_manager.create_default_backgrounds()
+        # 注意：不要在应用启动时强制创建默认背景图片（会增加启动延迟）
+        # 默认背景将延迟在首次需要图片目录或列出图片时创建，以加快启动速度。
         
         # 当前选中的分类
         self.current_category = None
+        
+        # 是否在收藏页面
+        self.is_in_favorites = False
         
         # 配置目录（用于保存 settings.ini 等）
         self.config_dir = config_dir or os.path.abspath('.')
 
         # 使用 config_dir 下的 settings.ini 持久化用户设置（如主题）
         settings_file = os.path.join(self.config_dir, "settings.ini")
-        # QSettings will read/write an INI-format file at settings_file
+        # QSettings 将在 settings_file 路径读写 INI 格式的文件
         self.settings = QSettings(settings_file, QSettings.IniFormat)
 
         # 当前主题（默认使用黑绿色主题），尝试从设置中加载
@@ -55,9 +70,25 @@ class PentestToolManager(QMainWindow):
         """初始化用户界面"""
         # 设置窗口属性
         self.setWindowTitle(f"{self.app_name} - v{self.version}")
-        self.setGeometry(100, 100, 1500, 900)
-        # 固定窗口大小，不允许缩放
-        self.setFixedSize(1200, 800)
+        
+        # 获取屏幕尺寸并设置窗口为屏幕的80%大小并居中显示
+        screen_geometry = QApplication.desktop().screenGeometry()
+        screen_width = screen_geometry.width()
+        screen_height = screen_geometry.height()
+        
+        # 计算窗口大小为屏幕的80%
+        window_width = int(screen_width * 0.8)
+        window_height = int(screen_height * 0.8)
+        
+        # 计算窗口居中的位置
+        x = int((screen_width - window_width) / 2)
+        y = int((screen_height - window_height) / 2)
+        
+        # 设置窗口几何形状
+        self.setGeometry(x, y, window_width, window_height)
+        
+        # 设置最小窗口大小
+        self.setMinimumSize(900, 600)
         
         # 创建主组件
         self.create_actions()
@@ -68,13 +99,17 @@ class PentestToolManager(QMainWindow):
         
         # 应用样式并把主题传播给子组件（确保重启后 UI 组件使用持久化主题）
         self.apply_styles()
+        # 优化：延迟主题刷新，避免启动时阻塞
         # 在初始化完成后，确保所有子组件也使用当前主题
         # 例如 CategoryView、SubcategoryView、ToolCardContainer 等
-        try:
-            self.refresh_ui_with_theme()
-        except Exception:
-            # 忽略刷新失败，以避免启动时的非关键异常阻止应用
-            pass
+        from PyQt5.QtCore import QTimer
+        def delayed_theme_refresh():
+            try:
+                self.refresh_ui_with_theme()
+            except (ValueError, AttributeError) as e:
+                # 忽略刷新失败，以避免启动时的非关键异常阻止应用
+                logger.warning("主题刷新失败: %s", str(e))
+        QTimer.singleShot(100, delayed_theme_refresh)
     
     def create_actions(self):
         """创建动作"""
@@ -131,8 +166,10 @@ class PentestToolManager(QMainWindow):
         self.blue_white_theme_action.setChecked(self.current_theme == "blue_white")
     
     def create_menus(self):
-        """创建菜单 - 目前不创建任何菜单"""
-        # 移除顶部菜单栏
+        """管理应用程序的菜单
+        当前实现：隐藏顶部菜单栏，因为应用程序主要通过工具栏进行操作
+        """
+        # 隐藏顶部菜单栏
         self.menuBar().setVisible(False)
     
     def create_toolbars(self):
@@ -250,7 +287,7 @@ class PentestToolManager(QMainWindow):
             info_bar.setStyleSheet("background-color: #000000; border-bottom: 2px solid #00ff00;")
         info_layout = QHBoxLayout(info_bar)
         
-        self.category_info_label = QLabel("所有工具")
+        self.category_info_label = QLabel("常用工具")
         if self.current_theme == "blue_white":
             self.category_info_label.setStyleSheet("font-weight: bold; font-size: 14px; color: #4287f5;")
         else:
@@ -272,384 +309,60 @@ class PentestToolManager(QMainWindow):
         self.tool_container.toggle_favorite.connect(self.on_toggle_favorite)
         
         right_layout.addWidget(self.tool_container, 1)
-
-        # 调整为适配当前卡片尺寸 (260px 每张)，并考虑 spacing/margin
-        # 计算：2 * 260 + grid spacing 10 + left/right margins 12*2 = 554
-        # 保留小幅缓冲，设置最小宽度为 580
-        right_widget.setMinimumWidth(580)
         
+        # 初始化时先显示空的工具容器，然后在后台加载工具
+        try:
+            # 先显示空的工具列表
+            self.tool_container.display_tools([])
+            # 更新工具数量为0
+            self.refresh_tool_count()
+            
+            # 定义异步加载完成后的回调函数
+            def on_tools_loaded(tools, error=None):
+                if error:
+                    logger.warning("初始加载工具失败: %s", str(error))
+                    return
+                try:
+                    # 保存工具数据到缓存，以便其他方法可以直接使用
+                    # self._all_tools_cache = tools  # 移除：不再在app层缓存，完全依赖data_manager
+
+                    # 显示常用工具
+                    common_tools = self.data_manager.get_common_tools()
+                    self.tool_container.display_tools(common_tools)
+                    # 更新工具数量
+                    self.refresh_tool_count()
+                except Exception as e:
+                    logger.warning("显示工具失败: %s", str(e))
+            
+            # 使用异步加载工具，避免启动时阻塞
+            self.data_manager.load_tools(callback=on_tools_loaded)
+        except Exception as e:
+            logger.warning("初始加载工具失败: %s", str(e))
+
         self.splitter.addWidget(right_widget)
         
-        # 设置初始大小
-        # 调整三列初始宽度比例，使左侧两列足够宽以完整显示分类名称
-        # 总宽度 1200，对应的三列：一级分类 260px，二级分类 300px，工具区 640px
-        self.splitter.setSizes([400, 300, 640])
+        # 设置初始大小和比例
+        # 三列比例：一级分类占25%，二级分类占20%，工具区占55%
+        self.splitter.setSizes([300, 240, 660])
+        
+        # 设置拉伸因子，确保各部分按比例缩放
+        self.splitter.setStretchFactor(0, 1)  # 一级分类拉伸因子1
+        self.splitter.setStretchFactor(1, 1)  # 二级分类拉伸因子1
+        self.splitter.setStretchFactor(2, 3)  # 工具区拉伸因子3
 
-        # 强制左右两列在布局中保留最小宽度，避免被过度收缩导致名称截断
-        self.category_view.setMinimumWidth(260)
-        self.subcategory_view.setMinimumWidth(300)
+        # 设置最小宽度，避免被过度收缩导致名称截断
+        self.category_view.setMinimumWidth(200)
+        self.subcategory_view.setMinimumWidth(180)
+        right_widget.setMinimumWidth(400)
         
         main_layout.addWidget(self.splitter, 1)
     
     def apply_styles(self):
         """应用样式 - 支持多种主题"""
-        # 定义两种主题的样式
-        themes = {
-            "dark_green": """
-            /* 主窗口样式 */
-            QMainWindow {
-                background-color: #1a1a2e;
-                border: none;
-            }
-            
-            /* 菜单栏样式 */
-            QMenuBar {
-                background: rgba(255, 255, 255, 0.05);
-                color: #ffffff;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            
-            QMenuBar::item {
-                padding: 5px 10px;
-            }
-            
-            QMenuBar::item:selected {
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 4px;
-            }
-            
-            /* 弹出菜单样式 */
-            QMenu {
-                background: rgba(26, 26, 46, 0.95);
-                color: #ffffff;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                padding: 5px;
-            }
-            
-            QMenu::item {
-                padding: 8px 20px;
-                border-radius: 4px;
-            }
-            
-            QMenu::item:selected {
-                background: rgba(103, 232, 249, 0.2);
-            }
-            
-            /* 工具栏样式 */
-            QToolBar {
-                background-color: #161c2a;
-                border-bottom: 1px solid rgba(144, 238, 144, 0.3);
-                padding: 10px 12px;
-                spacing: 15px;
-                border-radius: 0;
-            }
-            
-            /* 工具栏按钮 */
-            QToolButton {
-                background: rgba(32, 33, 54, 0.8);
-                border: 1px solid rgba(144, 238, 144, 0.2);
-                padding: 9px 18px;
-                border-radius: 8px;
-                color: #ffffff;
-                font-weight: 500;
-                font-size: 13px;
-                transition: all 0.2s ease;
-            }
-            
-            QToolButton:hover {
-                background: rgba(40, 42, 66, 0.9);
-                border: 1px solid rgba(144, 238, 144, 0.5);
-                box-shadow: 0 2px 6px rgba(144, 238, 144, 0.1);
-            }
-            
-            QToolButton:pressed {
-                background: rgba(144, 238, 144, 0.2);
-                box-shadow: 0 1px 3px rgba(144, 238, 144, 0.2);
-            }
-            
-            /* 状态栏 */
-            QStatusBar {
-                background: rgba(255, 255, 255, 0.05);
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                color: #ffffff;
-                font-size: 12px;
-            }
-            
-            /* 分割器 */
-            QSplitter {
-                background-color: #1a1a2e;
-            }
-            
-            QSplitter::handle {
-                background: rgba(255, 255, 255, 0.1);
-                width: 6px;
-                border-radius: 3px;
-            }
-            
-            QSplitter::handle:hover {
-                background: rgba(103, 232, 249, 0.3);
-            }
-            
-            /* 输入框 */
-            QLineEdit {
-                background: rgba(32, 33, 54, 0.8);
-                border: 1px solid rgba(144, 238, 144, 0.2);
-                border-radius: 8px;
-                padding: 9px 14px;
-                color: #ffffff;
-                font-size: 13px;
-                transition: all 0.2s ease;
-            }
-            
-            QLineEdit:focus {
-                border: 1px solid rgba(144, 238, 144, 0.7);
-                background: rgba(40, 42, 66, 0.9);
-                box-shadow: 0 2px 6px rgba(144, 238, 144, 0.1);
-                outline: none;
-            }
-            
-            /* 按钮 */
-            QPushButton {
-                background: rgba(144, 238, 144, 0.1);
-                border: 1px solid rgba(144, 238, 144, 0.3);
-                border-radius: 8px;
-                padding: 9px 18px;
-                color: #ffffff;
-                font-weight: 500;
-                font-size: 13px;
-                transition: all 0.2s ease;
-            }
-            
-            QPushButton:hover {
-                background: rgba(144, 238, 144, 0.2);
-                border: 1px solid rgba(144, 238, 144, 0.5);
-                box-shadow: 0 2px 6px rgba(144, 238, 144, 0.1);
-            }
-            
-            QPushButton:pressed {
-                background: rgba(144, 238, 144, 0.3);
-                box-shadow: 0 1px 3px rgba(144, 238, 144, 0.2);
-            }
-            
-            QPushButton:default {
-                border: 1px solid rgba(144, 238, 144, 0.5);
-                background: rgba(144, 238, 144, 0.15);
-            }
-            
-            /* 分组框 */
-            QGroupBox {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                margin-top: 10px;
-                padding: 15px;
-            }
-            
-            QGroupBox::title {
-                background-color: transparent;
-                color: #ffffff;
-                font-weight: 600;
-                font-size: 14px;
-                padding: 0 10px;
-                margin-top: -10px;
-            }
-            
-            /* 标签 */
-            QLabel {
-                color: #ffffff;
-                font-size: 13px;
-            }
-            
-            /* 文本编辑框 */
-            QTextEdit {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                padding: 10px;
-                color: #ffffff;
-                font-size: 13px;
-            }
-            
-            QTextEdit:focus {
-                border: 1px solid rgba(103, 232, 249, 0.5);
-                background: rgba(255, 255, 255, 0.08);
-                outline: none;
-            }""",
-            "blue_white": """
-            /* 主窗口样式 */
-            QMainWindow {
-                background-color: #f5f7fa;
-                border: none;
-            }
-            
-            /* 菜单栏样式 */
-            QMenuBar {
-                background: #ffffff;
-                color: #333333;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            
-            QMenuBar::item {
-                padding: 5px 10px;
-            }
-            
-            QMenuBar::item:selected {
-                background: #e6f0ff;
-                border-radius: 4px;
-            }
-            
-            /* 弹出菜单样式 */
-            QMenu {
-                background: rgba(255, 255, 255, 0.95);
-                color: #333333;
-                border: 1px solid rgba(0, 0, 0, 0.1);
-                border-radius: 8px;
-                padding: 5px;
-            }
-            
-            QMenu::item {
-                padding: 8px 20px;
-                border-radius: 4px;
-            }
-            
-            QMenu::item:selected {
-                background: rgba(66, 135, 245, 0.1);
-            }
-            
-            /* 工具栏样式 */
-            QToolBar {
-                background-color: #ffffff;
-                border-bottom: 1px solid #4287f5;
-                padding: 8px;
-                spacing: 12px;
-            }
-            
-            /* 工具栏按钮 */
-            QToolButton {
-                background: rgba(66, 135, 245, 0.05);
-                border: 1px solid rgba(66, 135, 245, 0.2);
-                padding: 8px 16px;
-                border-radius: 8px;
-                color: #333333;
-                font-weight: 500;
-            }
-            
-            QToolButton:hover {
-                background: rgba(66, 135, 245, 0.1);
-                border: 1px solid rgba(66, 135, 245, 0.5);
-            }
-            
-            QToolButton:pressed {
-                background: rgba(66, 135, 245, 0.2);
-            }
-            
-            /* 状态栏 */
-            QStatusBar {
-                background: rgba(255, 255, 255, 0.9);
-                border-top: 1px solid rgba(0, 0, 0, 0.1);
-                color: #333333;
-                font-size: 12px;
-            }
-            
-            /* 分割器 */
-            QSplitter {
-                background-color: #f0f4f8;
-            }
-            
-            QSplitter::handle {
-                background: rgba(0, 0, 0, 0.1);
-                width: 6px;
-                border-radius: 3px;
-            }
-            
-            QSplitter::handle:hover {
-                background: rgba(66, 135, 245, 0.3);
-            }
-            
-            /* 输入框 */
-            QLineEdit {
-                background: rgba(255, 255, 255, 0.9);
-                border: 1px solid rgba(0, 0, 0, 0.1);
-                border-radius: 8px;
-                padding: 8px 12px;
-                color: #333333;
-                font-size: 13px;
-            }
-            
-            QLineEdit:focus {
-                border: 1px solid rgba(66, 135, 245, 0.5);
-                background: rgba(255, 255, 255, 1);
-                outline: none;
-            }
-            
-            /* 按钮 */
-            QPushButton {
-                background: rgba(66, 135, 245, 0.1);
-                border: 1px solid rgba(66, 135, 245, 0.3);
-                border-radius: 8px;
-                padding: 8px 16px;
-                color: #333333;
-                font-weight: 500;
-                font-size: 13px;
-            }
-            
-            QPushButton:hover {
-                background: rgba(66, 135, 245, 0.2);
-                border: 1px solid rgba(66, 135, 245, 0.5);
-            }
-            
-            QPushButton:pressed {
-                background: rgba(66, 135, 245, 0.3);
-            }
-            
-            QPushButton:default {
-                border: 1px solid rgba(66, 135, 245, 0.5);
-            }
-            
-            /* 分组框 */
-            QGroupBox {
-                background: rgba(255, 255, 255, 0.9);
-                border: 1px solid rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                margin-top: 10px;
-                padding: 15px;
-            }
-            
-            QGroupBox::title {
-                background-color: transparent;
-                color: #333333;
-                font-weight: 600;
-                font-size: 14px;
-                padding: 0 10px;
-                margin-top: -10px;
-            }
-            
-            /* 标签 */
-            QLabel {
-                color: #333333;
-                font-size: 13px;
-            }
-            
-            /* 文本编辑框 */
-            QTextEdit {
-                background: rgba(255, 255, 255, 0.9);
-                border: 1px solid rgba(0, 0, 0, 0.1);
-                border-radius: 8px;
-                padding: 10px;
-                color: #333333;
-                font-size: 13px;
-            }
-            
-            QTextEdit:focus {
-                border: 1px solid rgba(66, 135, 245, 0.5);
-                background: rgba(255, 255, 255, 1);
-                outline: none;
-            }"""
-        }
-        
-        # 应用选中的主题样式
-        self.setStyleSheet(themes[self.current_theme])
+        from core.style_manager import ThemeManager
+        theme_manager = ThemeManager()
+        style = theme_manager.get_theme_style(self.current_theme)
+        self.setStyleSheet(style)
     
     def on_category_selected(self, category_id):
         """处理一级分类选择"""
@@ -780,8 +493,9 @@ class PentestToolManager(QMainWindow):
         更新：只有在启动成功后才会更新使用统计和视图。
         """
         tool_id = tool_data.get('id')
+        tool_name = tool_data.get('name', '未知工具')
 
-        # Helper: try to open local path using platform-appropriate method
+        # 辅助函数：尝试使用平台适当的方法打开本地路径
         def _open_local(path: str, working_dir: str = None) -> bool:
             try:
                 if not path:
@@ -791,72 +505,116 @@ class PentestToolManager(QMainWindow):
                 if not os.path.isabs(path):
                     # 如果是相对路径，尝试转换为绝对路径
                     path = os.path.abspath(path)
+                    logger.info("将相对路径转换为绝对路径: %s", path)
                     
-                # 检查文件是否存在
+                # 检查路径是否存在
                 if not os.path.exists(path):
-                    raise ValueError(f"文件不存在: {path}")
+                    raise FileNotFoundError(f"路径不存在: {path}")
 
-                # 获取工具所在目录作为默认工作目录
-                default_working_dir = os.path.dirname(path)
+                logger.info("启动本地工具: %s, 路径: %s", tool_name, path)
                 
-                # 使用工具配置的工作目录，如果没有则使用默认工作目录
-                actual_working_dir = working_dir or default_working_dir
-
-                # Prefer the simplest cross-platform open semantics:
-                if sys.platform.startswith('win'):
-                    # Windows: 对于所有命令行工具，使用新的终端窗口运行
-                    if path.lower().endswith('.cmd') or path.lower().endswith('.bat') or path.lower().endswith('.py'):
-                        # 使用cmd.exe /c start命令来打开新的终端窗口
-                        subprocess.Popen(
-                            ['cmd.exe', '/c', 'start', path], 
-                            cwd=actual_working_dir,
-                            shell=True
-                        )
+                # 如果是目录，使用操作系统默认方式打开
+                if os.path.isdir(path):
+                    logger.info("工具路径是目录，使用系统默认方式打开")
+                    if sys.platform.startswith('win'):
+                        # Windows: 使用explorer打开目录
+                        os.startfile(path)
+                    elif sys.platform == 'darwin':
+                        # macOS: 使用open命令打开目录
+                        subprocess.Popen(['open', path])
                     else:
-                        # 对于其他可执行文件，使用默认方式运行
-                        subprocess.Popen(
-                            [path], 
-                            cwd=actual_working_dir,
-                            shell=True
-                        )
-                elif sys.platform == 'darwin':
-                    # macOS: 使用open -a Terminal命令来打开新的终端窗口
-                    subprocess.Popen(['open', '-a', 'Terminal', path], cwd=actual_working_dir)
+                        # Linux: 使用xdg-open命令打开目录
+                        subprocess.Popen(['xdg-open', path])
                 else:
-                    # Linux: 使用x-terminal-emulator命令来打开新的终端窗口
-                    subprocess.Popen(['x-terminal-emulator', '-e', path], cwd=actual_working_dir)
+                    # 是文件，使用工作目录运行
+                    # 获取工具所在目录作为默认工作目录
+                    default_working_dir = os.path.dirname(path)
+                    
+                    # 使用工具配置的工作目录，如果没有则使用默认工作目录
+                    actual_working_dir = working_dir or default_working_dir
+                    logger.info("工具工作目录: %s", actual_working_dir)
+
+                    # 根据平台和文件类型选择运行方式
+                    if sys.platform.startswith('win'):
+                        # Windows: 对于所有命令行工具，使用新的终端窗口运行
+                        if path.lower().endswith('.cmd') or path.lower().endswith('.bat') or path.lower().endswith('.py'):
+                            # 使用cmd.exe /c start命令来打开新的终端窗口
+                            logger.info("使用cmd.exe启动命令行工具")
+                            subprocess.Popen(
+                                ['cmd.exe', '/c', 'start', path], 
+                                cwd=actual_working_dir,
+                                shell=True
+                            )
+                        else:
+                            # 对于其他可执行文件，使用默认方式运行
+                            logger.info("使用默认方式启动可执行文件")
+                            subprocess.Popen(
+                                [path], 
+                                cwd=actual_working_dir,
+                                shell=True
+                            )
+                    elif sys.platform == 'darwin':
+                        # macOS: 使用open -a Terminal命令来打开新的终端窗口
+                        subprocess.Popen(['open', '-a', 'Terminal', path], cwd=actual_working_dir)
+                    else:
+                        # Linux: 使用x-terminal-emulator命令来打开新的终端窗口
+                        subprocess.Popen(['x-terminal-emulator', '-e', path], cwd=actual_working_dir)
 
                 return True
-            except Exception as e:
+            except KeyboardInterrupt as e:
+                # 特别处理KeyboardInterrupt异常，避免程序崩溃
+                logger.warning("工具运行被用户中断: %s", tool_name)
+                QMessageBox.warning(self, "运行中断", "工具运行已被用户中断")
+                return False
+            except FileNotFoundError as e:
+                logger.error("启动工具失败: %s, 错误: %s", tool_name, str(e))
+                # 显示工具不存在的详细信息，包括工具配置
+                config_info = f"工具名称: {tool_name}\n"\
+                              f"工具路径: {path}\n"\
+                              f"工作目录: {working_dir or '默认（工具所在目录）'}\n"\
+                              f"工具类型: {'本地工具' if not is_web else '网页工具'}\n"\
+                              f"优先级: {tool_data.get('priority', 0)}"
+                QMessageBox.warning(self, "工具不存在", f"无法找到工具路径:\n{path}\n\n工具配置信息:\n{config_info}")
+                return False
+            except (PermissionError, subprocess.SubprocessError, ValueError) as e:
+                logger.error("启动工具失败: %s, 错误: %s", tool_name, str(e))
                 QMessageBox.warning(self, "运行失败", f"启动工具失败: {e}")
                 return False
 
-        # Determine if it's a web tool
+        # 确定是否为Web工具
         is_web = tool_data.get('is_web_tool', False)
         path = (tool_data.get('path') or '').strip()
         working_directory = tool_data.get('working_directory', '')
 
         started_ok = False
 
-        if is_web or (path.startswith('http://') or path.startswith('https://')):
-            # Open in default browser
+        if path.startswith('http://') or path.startswith('https://'):
+            # 无论工具类型如何，只有当它是URL时才在浏览器中打开
             try:
+                logger.info("启动网页工具: %s, URL: %s", tool_name, path)
                 webbrowser.open(path)
                 started_ok = True
-            except Exception as e:
+            except KeyboardInterrupt as e:
+                # 特别处理KeyboardInterrupt异常，避免程序崩溃
+                logger.warning("网页工具打开被用户中断: %s", tool_name)
+                QMessageBox.warning(self, "运行中断", "网页工具打开已被用户中断")
+                started_ok = False
+            except webbrowser.Error as e:
+                logger.error("打开网页工具失败: %s, 错误: %s", tool_name, str(e))
                 QMessageBox.warning(self, "运行失败", f"打开网页工具失败: {e}")
                 started_ok = False
         else:
-            # Local tool - try to open using double-click semantics with working directory
+            # If it's a path (not a URL), open as local file/directory, regardless of tool type
             started_ok = _open_local(path, working_directory)
 
         # If started successfully, update usage stats
         if started_ok and tool_id:
             try:
+                logger.info("更新工具使用统计: %s (ID: %s)", tool_name, tool_id)
                 self.data_manager.update_tool_usage(tool_id)
-            except Exception:
-                # ignore data update errors
-                pass
+            except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
+                # ignore data update errors but log them
+                logger.warning("更新工具使用统计失败: %s", str(e))
 
         # Refresh UI in any case (counts may have changed)
         self.refresh_current_view()
@@ -898,7 +656,44 @@ class PentestToolManager(QMainWindow):
     
     def on_new_category(self):
         """处理新建分类"""
-        category_name, ok = QInputDialog.getText(self, "新建分类", "请输入分类名称:")
+        # 创建并配置输入对话框
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle("新建分类")
+        dialog.setLabelText("请输入分类名称:")
+        
+        # 应用主题样式
+        if self.current_theme == "dark_green":
+            dialog.setStyleSheet("""
+                QDialog {
+                    background-color: #16213e;
+                    color: #ffffff;
+                }
+                QLabel {
+                    color: #ffffff;
+                }
+                QLineEdit {
+                    background-color: rgba(15, 52, 96, 0.8);
+                    border: 1px solid rgba(46, 204, 113, 0.2);
+                    border-radius: 8px;
+                    padding: 8px;
+                    color: #ffffff;
+                }
+                QPushButton {
+                    background-color: rgba(46, 204, 113, 0.15);
+                    border: 1px solid rgba(46, 204, 113, 0.3);
+                    border-radius: 6px;
+                    padding: 6px 12px;
+                    color: #ffffff;
+                }
+                QPushButton:hover {
+                    background-color: rgba(46, 204, 113, 0.25);
+                }
+            """)
+        
+        # 显示对话框并获取结果
+        ok = dialog.exec_()
+        category_name = dialog.textValue()
+        
         if ok and category_name:
             # 创建分类
             category = {
@@ -923,8 +718,44 @@ class PentestToolManager(QMainWindow):
             QMessageBox.warning(self, "警告", "请先选择一个主分类！")
             return
         
-        # 获取子分类名称
-        subcategory_name, ok = QInputDialog.getText(self, "新建子分类", "请输入子分类名称:")
+        # 创建并配置输入对话框
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle("新建子分类")
+        dialog.setLabelText("请输入子分类名称:")
+        
+        # 应用主题样式
+        if self.current_theme == "dark_green":
+            dialog.setStyleSheet("""
+                QDialog {
+                    background-color: #16213e;
+                    color: #ffffff;
+                }
+                QLabel {
+                    color: #ffffff;
+                }
+                QLineEdit {
+                    background-color: rgba(15, 52, 96, 0.8);
+                    border: 1px solid rgba(46, 204, 113, 0.2);
+                    border-radius: 8px;
+                    padding: 8px;
+                    color: #ffffff;
+                }
+                QPushButton {
+                    background-color: rgba(46, 204, 113, 0.15);
+                    border: 1px solid rgba(46, 204, 113, 0.3);
+                    border-radius: 6px;
+                    padding: 6px 12px;
+                    color: #ffffff;
+                }
+                QPushButton:hover {
+                    background-color: rgba(46, 204, 113, 0.25);
+                }
+            """)
+        
+        # 显示对话框并获取结果
+        ok = dialog.exec_()
+        subcategory_name = dialog.textValue()
+        
         if ok and subcategory_name:
             # 创建子分类
             subcategory = {
@@ -1011,13 +842,7 @@ class PentestToolManager(QMainWindow):
 
         # q 为空时恢复默认视图（当前分类或全部工具），避免空查询匹配所有项
         if not q:
-            if self.current_category:
-                tools = self.data_manager.get_tools_by_category(self.current_category)
-            else:
-                tools = self.data_manager.load_tools()
-
-            self.tool_container.display_tools(tools)
-            self.refresh_tool_count()
+            self.refresh_current_view()
             return
 
         # 过滤工具：支持不区分大小写的模糊搜索（包含子串匹配 + 相似度匹配）
@@ -1026,7 +851,7 @@ class PentestToolManager(QMainWindow):
         def fuzzy_score(a: str, b: str) -> float:
             try:
                 return difflib.SequenceMatcher(None, a, b).ratio()
-            except Exception:
+            except (TypeError, ValueError):
                 return 0.0
 
         filtered_tools = []
@@ -1055,14 +880,21 @@ class PentestToolManager(QMainWindow):
             if max(score_name, score_desc, score_tags) >= FUZZY_THRESHOLD:
                 filtered_tools.append(tool)
         
-        # 如果找到了匹配项，自动在左侧定位到匹配工具所在的分类和子分类（以第一个匹配项为准）
-        if filtered_tools:
+        # 如果找到了匹配项，并且不在收藏模式下，才自动在左侧定位到匹配工具所在的分类和子分类
+        # 收藏模式下不应触发分类试图的显隐逻辑
+        if filtered_tools and not self.is_in_favorites:
             first = filtered_tools[0]
             cat_id = first.get('category_id')
             sub_id = first.get('subcategory_id')
 
             # 选择一级分类（如果存在）
             if cat_id is not None:
+                # 注意：select_category 会触发 signal，进而调用 on_category_selected
+                # 这会导致视图重置，所以我们需要小心
+                # 由于 on_search 主要是为了过滤工具列表，而 on_category_selected 会重置显示
+                # 这里我们 block 信号或者接受这种行为（即搜索会跳转分类）
+                # 现有逻辑中 on_category_selected 会显示分类视图，这对普通模式是好的
+                # 但对收藏模式（已过滤掉）不好
                 self.category_view.select_category(cat_id)
                 # 以防没有自动加载子分类，显式加载
                 self.subcategory_view.load_subcategories(cat_id)
@@ -1079,56 +911,60 @@ class PentestToolManager(QMainWindow):
     
     def on_show_favorites(self):
         """显示所有收藏的工具"""
-        # 加载所有工具
+        # 1. 每次都从 DataManager 加载最新数据，DataManager 内部有基于文件修改时间的缓存
         tools = self.data_manager.load_tools()
         
-        # 过滤出收藏的工具
+        # 2. 过滤出收藏的工具
         favorite_tools = [tool for tool in tools if tool.get('is_favorite', False)]
         
-        # 更新分类信息标签
-        self.category_info_label.setText("收藏工具")
-        
-        # 显示收藏的工具
-        self.tool_container.display_tools(favorite_tools)
-        
-        # 刷新工具数量
-        self.refresh_tool_count()
-        
-        # 取消选择分类和子分类
+        # 3. 更新状态标志
         self.current_category = None
+        self.is_in_favorites = True
         
-        # 隐藏左侧一级分类和中间二级分类视图
+        # 4. 更新UI（批量操作，减少重绘）
+        # 隐藏分类视图
         self.category_view.hide()
         self.subcategory_view.hide()
         
-        # 调整分割器大小，使右侧工具卡片容器占据整个窗口宽度
+        # 调整分割器大小
         self.splitter.setSizes([0, 0, 1200])
         
-        # 将收藏按钮改为返回按钮
-        self.favorites_button.setText("返回")
+        # 显示收藏工具
+        self.tool_container.display_tools(favorite_tools)
+        
+        # 更新标签和工具数量
+        self.category_info_label.setText("收藏工具")
+        self.refresh_tool_count()
+        
+        # 5. 更新按钮状态（最后操作，避免频繁连接断开）
         self.favorites_button.disconnect()
+        self.favorites_button.setText("返回")
         self.favorites_button.clicked.connect(self.on_back_from_favorites)
     
     def on_back_from_favorites(self):
         """从收藏页面返回正常视图"""
-        # 重新显示分类视图
+        # 1. 更新状态标志
+        self.is_in_favorites = False
+        
+        # 2. 重新显示分类视图和恢复分割器大小
         self.category_view.show()
         self.subcategory_view.show()
-        
-        # 恢复分割器大小
         self.splitter.setSizes([400, 300, 640])
         
-        # 加载所有工具
+        # 3. 重新加载数据
         tools = self.data_manager.load_tools()
+        
+        # 4. 显示所有工具
         self.tool_container.display_tools(tools)
         
-        # 更新分类信息标签
+        # 5. 批量更新UI（减少重绘次数）
         self.category_info_label.setText("所有工具")
         
-        # 刷新工具数量
-        self.refresh_tool_count()
+        # 6. 优化：复用已加载的工具数据，避免重复加载
+        tool_count = len(tools)
+        self.tool_count_label.setText(f"工具数量: {tool_count}")
         
-        # 将返回按钮改回收藏按钮
+        # 7. 优化：减少信号连接和断开的频率
         self.favorites_button.setText("收藏")
         self.favorites_button.disconnect()
         self.favorites_button.clicked.connect(self.on_show_favorites)
@@ -1156,34 +992,75 @@ class PentestToolManager(QMainWindow):
         box.exec_()
     
     def refresh_all(self):
-        """刷新所有视图"""
-        self.category_view.refresh()
-        self.refresh_current_view()
+        """刷新所有视图，显示加载进度"""
+        from PyQt5.QtWidgets import QProgressDialog
+        from PyQt5.QtCore import Qt
+        
+        # 创建进度对话框
+        progress = QProgressDialog("正在刷新所有内容...", None, 0, 100, self)
+        progress.setWindowTitle("刷新")
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimumDuration(0)  # 立即显示对话框
+        progress.setValue(0)
+        progress.show()
+        
+        try:
+            # 刷新分类视图
+            progress.setValue(30)
+            progress.setLabelText("正在加载分类...")
+            self.category_view.refresh()
+            
+            # 刷新工具视图
+            progress.setValue(70)
+            progress.setLabelText("正在加载工具...")
+            self.refresh_current_view()
+            
+            # 完成
+            progress.setValue(100)
+            
+            # 显示完成提示
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.information(self, "完成", "所有内容已成功刷新！")
+        except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
+            from core.logger import logger
+            logger.error("刷新内容失败: %s", str(e))
+            QMessageBox.warning(self, "错误", f"刷新失败: {e}")
+        finally:
+            progress.close()
     
     def refresh_current_view(self):
         """刷新当前视图"""
-        # 如果有选中的分类，重新加载该分类下的工具
-        if self.current_category:
-            # 传递正确的参数给on_category_selected
-            self.on_category_selected(self.current_category)
-        else:
-            # 否则加载所有工具（使用load_tools方法）
+        # 优先检查搜索框是否有内容
+        if hasattr(self, 'search_input'):
+            search_text = self.search_input.text().strip()
+            if search_text:
+                # 如果有搜索内容，重新执行搜索逻辑
+                self.on_search(search_text)
+                return
+
+        # 如果在收藏页面，显示收藏的工具
+        if self.is_in_favorites:
             tools = self.data_manager.load_tools()
+            favorite_tools = [tool for tool in tools if tool.get('is_favorite', False)]
+            self.tool_container.display_tools(favorite_tools)
+        # 如果有选中的分类，直接加载该分类下的工具，避免重复调用on_category_selected
+        elif self.current_category:
+            # 直接加载该分类下的工具，避免重复操作
+            tools = self.data_manager.get_tools_by_category(self.current_category)
             self.tool_container.display_tools(tools)
+        else:
+            # 默认视图：显示常用工具
+            tools = self.data_manager.get_common_tools()
+            self.tool_container.display_tools(tools)
+            # 更新标题
+            self.category_info_label.setText("常用工具")
         
         self.refresh_tool_count()
     
     def refresh_tool_count(self):
         """刷新工具数量显示"""
-        # 从数据管理器获取当前显示的工具数量
-        if self.current_category:
-            # 如果有选中的分类，获取该分类下的工具数量
-            tools = self.data_manager.get_tools_by_category(self.current_category, None)
-        else:
-            # 否则获取所有工具数量
-            tools = self.data_manager.load_tools()
-        
-        tool_count = len(tools)
+        # 优化：直接从工具容器获取当前显示的工具数量，避免重新加载
+        tool_count = self.tool_container.get_tool_count()
         self.tool_count_label.setText(f"工具数量: {tool_count}")
         
     def switch_theme(self, theme_name):
@@ -1194,7 +1071,7 @@ class PentestToolManager(QMainWindow):
             # 将主题保存到 settings.ini
             if hasattr(self, 'settings') and self.settings is not None:
                 self.settings.setValue('theme', self.current_theme)
-        except Exception:
+        except (PermissionError, IOError):
             # 忽略设置失败（例如权限问题），不过应用主题仍然生效
             pass
         
@@ -1280,7 +1157,7 @@ class PentestToolManager(QMainWindow):
         box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         box.setDefaultButton(default)
 
-        # apply theme-locally to this dialog (avoid changing global app style)
+        # 在对话框本地应用主题（避免更改全局应用样式）
         if self.current_theme == 'blue_white':
             box.setStyleSheet('''
                 QMessageBox { background: #f6fbff; color: #003347; }
@@ -1303,7 +1180,30 @@ class PentestToolManager(QMainWindow):
         reply = self._themed_question('确认', '确定要退出吗？', default=QMessageBox.No)
         
         if reply == QMessageBox.Yes:
+            # 清理资源
+            try:
+                # 导入AsyncIconLoader并调用shutdown方法
+                from ui.tool_model_view import icon_loader
+                icon_loader.shutdown()
+            except Exception as e:
+                logger.error("清理icon_loader资源失败: %s", str(e))
+            
+            try:
+                # 调用数据管理器的shutdown方法，清理所有线程资源
+                # 添加额外检查，确保data_manager仍然有效
+                if hasattr(self, 'data_manager') and self.data_manager is not None:
+                    self.data_manager.shutdown()
+            except RuntimeError as e:
+                # 捕获Qt对象已被删除的错误
+                if "wrapped C/C++ object of type" in str(e):
+                    logger.warning("部分资源已被系统自动清理，跳过手动清理")
+                else:
+                    logger.error("清理data_manager资源失败: %s", str(e))
+            except Exception as e:
+                logger.error("清理data_manager资源失败: %s", str(e))
+            
             event.accept()
         else:
             event.ignore()
+
 

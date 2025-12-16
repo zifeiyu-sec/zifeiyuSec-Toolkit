@@ -6,7 +6,8 @@
 
 import os
 import sys
-from PyQt5.QtCore import Qt
+import signal
+from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QIcon, QFont
 from core.app import PentestToolManager
@@ -52,9 +53,39 @@ def main():
     window = PentestToolManager(config_dir=config_dir)
     
     # 设置窗口图标
-    icon_path = os.path.join(config_dir, "resources", "icons", "new_default_icon.svg")
-    if os.path.exists(icon_path):
-        window.setWindowIcon(QIcon(icon_path))
+    # 优先尝试使用工作目录下的 image.png 作为图标（便于用户快速替换）
+    png_icon_path = os.path.join(config_dir, "image.png")
+    if os.path.exists(png_icon_path):
+        icon = QIcon(png_icon_path)
+        if not icon.isNull():
+            # 设置应用级别与窗口级别图标，保证任务栏和标题栏均显示
+            QApplication.setWindowIcon(icon)
+            window.setWindowIcon(icon)
+    else:
+        # 回退到 resources 下的 ico 图标（保持向后兼容）
+        icon_path = os.path.join(config_dir, "resources", "icons", "new_default_icon.ico")
+        if os.path.exists(icon_path):
+            icon = QIcon(icon_path)
+            if not icon.isNull():
+                QApplication.setWindowIcon(icon)
+                window.setWindowIcon(icon)
+    
+    # 设置信号处理程序，用于捕获Ctrl+C信号
+    def signal_handler(signal, frame):
+        """处理信号，确保资源被正确清理"""
+        print("\n捕获到退出信号，正在清理资源...")
+        try:
+            # 调用窗口的closeEvent方法，确保资源被正确清理
+            window.close()
+        except Exception as e:
+            print(f"清理资源时出错: {e}")
+        finally:
+            # 强制退出应用
+            sys.exit(0)
+    
+    # 注册信号处理程序
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     # 显示窗口
     window.show()

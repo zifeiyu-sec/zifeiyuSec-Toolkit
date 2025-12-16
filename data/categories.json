@@ -4,616 +4,110 @@
       "name": "信息收集 (Information Gathering)",
       "icon": "info_gather.svg",
       "id": 1,
+      "priority": 1,
       "subcategories": [
-        {
-          "name": "设备与子域 (Devices & Subdomains)",
-          "id": 101,
-          "parent_id": 1
-        },
-        {
-          "name": "IP与网段 (IP & Network Segments)",
-          "id": 102,
-          "parent_id": 1
-        },
-        {
-          "name": "端口与服务 (Ports & Services)",
-          "id": 103,
-          "parent_id": 1
-        },
-        {
-          "name": "Web应用识别 (Web Application ID)",
-          "id": 104,
-          "parent_id": 1
-        },
-        {
-          "name": "目录文件 (Dirs & Files)",
-          "id": 105,
-          "parent_id": 1
-        },
-        {
-          "name": "JS与API (JS & APIs)",
-          "id": 106,
-          "parent_id": 1
-        },
-        {
-          "name": "敏感信息 (Sensitive Data)",
-          "id": 107,
-          "parent_id": 1
-        },
-        {
-          "name": "邮箱人员 (Emails & Personnel)",
-          "id": 108,
-          "parent_id": 1
-        },
-        {
-          "name": "云资产 (Cloud Assets)",
-          "id": 109,
-          "parent_id": 1
-        },
-        {
-          "name": "中间件组件 (Middleware & Components)",
-          "id": 110,
-          "parent_id": 1
-        },
-        {
-          "name": "高价值资产 (High-Value Assets)",
-          "id": 111,
-          "parent_id": 1
-        },
-        {
-          "name": "GraphQL (GraphQL)",
-          "id": 112,
-          "parent_id": 1
-        },
-        {
-          "name": "内网设备 (Internal Devices)",
-          "id": 113,
-          "parent_id": 1
-        },
-        {
-          "name": "Serverless (Serverless Functions)",
-          "id": 114,
-          "parent_id": 1
-        },
-        {
-          "name": "容器与K8s (Containers & K8s)",
-          "id": 115,
-          "parent_id": 1
-        },
-        {
-          "name": "AI与大模型 (AI & LLMs)",
-          "id": 116,
-          "parent_id": 1
-        },
-        {
-          "name": "微信应用 (WeChat Apps)",
-          "id": 117,
-          "parent_id": 1
-        },
-        {
-          "name": "审批流接口 (Approval Flows)",
-          "id": 118,
-          "parent_id": 1
-        }
+        { "name": "网络空间测绘 (Search Engines)", "id": 101, "priority": 1 },
+        { "name": "子域名与资产发现 (Subdomains)", "id": 102, "priority": 2 },
+        { "name": "目录与敏感文件扫描 (Dir Scanning)", "id": 103, "priority": 3 },
+        { "name": "社工与 OSINT (Social Eng)", "id": 104, "priority": 4 },
+        { "name": "指纹识别 (Fingerprint)", "id": 105, "priority": 5 }
       ]
     },
     {
-      "name": "漏洞分析 (Vulnerability Analysis)",
-      "icon": "vuln_scan.svg",
+      "name": "综合漏洞扫描 (Vuln Scanning)",
+      "icon": "radar.svg",
       "id": 2,
+      "priority": 2,
+      "description": "存放 TscanPlus, Goby, Nuclei, Xray 等综合性工具",
       "subcategories": [
-        {
-          "name": "通用扫描 (General Scanning)",
-          "id": 201,
-          "parent_id": 2
-        },
-        {
-          "name": "专项漏洞扫描 (Vulnerability Scanning)",
-          "id": 202,
-          "parent_id": 2
-        },
-        {
-          "name": "框架/CMS专项 (Framework/CMS)",
-          "id": 203,
-          "parent_id": 2
-        },
-        {
-          "name": "API专项 (API/GraphQL)",
-          "id": 204,
-          "parent_id": 2
-        },
-        {
-          "name": "流量分析拦截 (Proxy & Traffic)",
-          "id": 205,
-          "parent_id": 2
-        },
-        {
-          "name": "漏洞验证 (Vulnerability Verify)",
-          "id": 206,
-          "parent_id": 2
-        },
-        {
-          "name": "模糊测试 (Fuzzing)",
-          "id": 207,
-          "parent_id": 2
-        },
-        {
-          "name": "代码审计 (Code Audit)",
-          "id": 208,
-          "parent_id": 2
-        },
-        {
-          "name": "动态调试 (Debug & Hook)",
-          "id": 209,
-          "parent_id": 2
-        },
-        {
-          "name": "POC/EXP (POC/EXP)",
-          "id": 210,
-          "parent_id": 2
-        },
-        {
-          "name": "反序列化 (Deserialization)",
-          "id": 211,
-          "parent_id": 2
-        },
-        {
-          "name": "逻辑漏洞 (Logic Vulnerabilities)",
-          "id": 212,
-          "parent_id": 2
-        }
+        { "name": "综合漏扫工具 (All-in-One Scanners)", "id": 201, "priority": 1 },
+        { "name": "漏洞验证框架 (PoC Frameworks)", "id": 202, "priority": 2 },
+        { "name": "端口与服务扫描 (Port & Service)", "id": 203, "priority": 3 },
+        { "name": "Web 专用扫描器 (Web Scanners)", "id": 204, "priority": 4 },
+        { "name": "CMS 专项检测 (CMS Scanners)", "id": 205, "priority": 5 }
       ]
     },
     {
-      "name": "后利用 (Post Exploitation)",
-      "icon": "post_exploit.svg",
+      "name": "Web 攻防 (Web Exploitation)",
+      "icon": "web_attack.svg",
       "id": 3,
+      "priority": 3,
       "subcategories": [
-        {
-          "name": "权限提升 (Privilege Escalation)",
-          "id": 301,
-          "parent_id": 3
-        },
-        {
-          "name": "横向移动 (Lateral Movement)",
-          "id": 302,
-          "parent_id": 3
-        },
-        {
-          "name": "数据渗出 (Data Exfiltration)",
-          "id": 303,
-          "parent_id": 3
-        },
-        {
-          "name": "持久化 (Persistence)",
-          "id": 304,
-          "parent_id": 3
-        }
+        { "name": "抓包与代理 (Burp/Mitmproxy)", "id": 301, "priority": 1 },
+        { "name": "WebShell 管理 (WebShell Managers)", "id": 302, "priority": 2 },
+        { "name": "SQL 注入工具", "id": 303, "priority": 3 },
+        { "name": "XSS 与前端攻击", "id": 304, "priority": 4 },
+        { "name": "API 接口测试", "id": 305, "priority": 5 },
+        { "name": "反序列化工具", "id": 306, "priority": 6 }
       ]
     },
     {
-      "name": "密码编码 (Password Encoding)",
-      "icon": "password.svg",
+      "name": "内网与域渗透 (Intranet & AD)",
+      "icon": "network_internal.svg",
       "id": 4,
+      "priority": 4,
       "subcategories": [
-        {
-          "name": "离线破解 (Offline Cracking)",
-          "id": 401,
-          "parent_id": 4
-        },
-        {
-          "name": "在线攻击 (Online Attacks)",
-          "id": 402,
-          "parent_id": 4
-        },
-        {
-          "name": "词表生成 (Wordlist Generation)",
-          "id": 403,
-          "parent_id": 4
-        },
-        {
-          "name": "哈希识别 (Hash Identification)",
-          "id": 404,
-          "parent_id": 4
-        }
+        { "name": "代理与隧道 (Proxy & Tunnels)", "id": 401, "priority": 1 },
+        { "name": "域渗透工具 (AD Exploitation)", "id": 402, "priority": 2 },
+        { "name": "内网信息收集 (Internal Recon)", "id": 403, "priority": 3 },
+        { "name": "横向移动 (Lateral Movement)", "id": 404, "priority": 4 },
+        { "name": "C2 与远控 (C2 Frameworks)", "id": 405, "priority": 5 },
+        { "name": "免杀与对抗 (Evasion)", "id": 406, "priority": 6 }
       ]
     },
     {
-      "name": "内网渗透 (Internal Network Penetration)",
-      "icon": "web_app.svg",
+      "name": "密码学与认证 (Crypto & Auth)",
+      "icon": "lock.svg",
       "id": 5,
+      "priority": 5,
       "subcategories": [
-        {
-          "name": "内网扫描 (Internal Network Scanning)",
-          "id": 501,
-          "parent_id": 5
-        },
-        {
-          "name": "域环境攻击 (Domain Environment Attacks)",
-          "id": 502,
-          "parent_id": 5
-        },
-        {
-          "name": "内网横向 (Internal Network Lateral Movement)",
-          "id": 503,
-          "parent_id": 5
-        },
-        {
-          "name": "内网隧道 (Internal Network Tunneling)",
-          "id": 504,
-          "parent_id": 5
-        },
-        {
-          "name": "域权限维持 (Domain Persistence)",
-          "id": 505,
-          "parent_id": 5
-        },
-        {
-          "name": "内网流量分析 (Internal Traffic Analysis)",
-          "id": 506,
-          "parent_id": 5
-        },
-        {
-          "name": "内网漏洞利用 (Internal Vulnerability Exploitation)",
-          "id": 507,
-          "parent_id": 5
-        }
+        { "name": "在线/离线破解 (Cracking)", "id": 501, "priority": 1 },
+        { "name": "哈希识别与转换 (Hash Tools)", "id": 502, "priority": 2 },
+        { "name": "字典生成与处理 (Wordlists)", "id": 503, "priority": 3 },
+        { "name": "编码解码工具 (Encode/Decode)", "id": 504, "priority": 4 },
+        { "name": "加密解密工具 (Encryption)", "id": 505, "priority": 5 },
+        { "name": "凭据提取 (Credential Dump)", "id": 506, "priority": 6 }
       ]
     },
     {
-      "name": "杂项工具 (Miscellaneous Tools)",
-      "icon": "misc.svg",
+      "name": "蓝队与应急响应 (Blue Team & IR)",
+      "icon": "shield.svg",
       "id": 6,
+      "priority": 6,
       "subcategories": [
-        {
-          "name": "自动化脚本 (Automation Scripts)",
-          "id": 601,
-          "parent_id": 6
-        },
-        {
-          "name": "虚拟化工具 (Virtualization Tools)",
-          "id": 602,
-          "parent_id": 6
-        },
-        {
-          "name": "更新管理 (Update Management)",
-          "id": 603,
-          "parent_id": 6
-        },
-        {
-          "name": "开发工具 (Development Tools)",
-          "id": 604,
-          "parent_id": 6
-        },
-        {
-          "name": "远程连接工具 (Remote Connection Tools)",
-          "id": 605,
-          "parent_id": 6
-        }
+        { "name": "系统应急响应 (System IR)", "id": 601, "priority": 1 },
+        { "name": "Web 日志分析 (Log Analysis)", "id": 602, "priority": 2 },
+        { "name": "流量分析与取证 (Traffic Analysis)", "id": 603, "priority": 3 },
+        { "name": "恶意代码分析 (Malware Analysis)", "id": 604, "priority": 4 },
+        { "name": "内存与硬盘取证 (Forensics)", "id": 605, "priority": 5 },
+        { "name": "蜜罐与欺骗防御 (Honeypot)", "id": 606, "priority": 6 }
       ]
     },
     {
-      "name": "安全监控 (Security Monitoring)",
-      "icon": "vuln_scan.svg",
+      "name": "开发与调试 (Dev & Debug)",
+      "icon": "code_dev.svg",
       "id": 7,
+      "priority": 7,
       "subcategories": [
-        {
-          "name": "SIEM 工具 (SIEM Tools)",
-          "id": 701,
-          "parent_id": 7
-        },
-        {
-          "name": "日志分析 (Log Analysis)",
-          "id": 702,
-          "parent_id": 7
-        },
-        {
-          "name": "网络流量监控 (Network Traffic Monitoring)",
-          "id": 703,
-          "parent_id": 7
-        },
-        {
-          "name": "终端监控 (Endpoint Monitoring)",
-          "id": 704,
-          "parent_id": 7
-        },
-        {
-          "name": "资产监控 (Asset Monitoring)",
-          "id": 705,
-          "parent_id": 7
-        }
+        { "name": "数据格式化 (JSON/XML/SQL)", "id": 701, "priority": 1 },
+        { "name": "网络调试 (Curl/Netcat/TCP)", "id": 702, "priority": 2 },
+        { "name": "正则与文本处理 (Regex/Text)", "id": 703, "priority": 3 },
+        { "name": "脚本开发环境 (Python/Java)", "id": 704, "priority": 4 },
+        { "name": "API 调试工具 (Postman/Insomnia)", "id": 705, "priority": 5 },
+        { "name": "十六进制编辑 (Hex Editors)", "id": 706, "priority": 6 }
       ]
     },
     {
-      "name": "压力测试 (Stress Testing)",
-      "icon": "stress.svg",
+      "name": "云与移动安全 (Cloud & Mobile)",
+      "icon": "cloud_mobile.svg",
       "id": 8,
+      "priority": 8,
       "subcategories": [
-        {
-          "name": "DoS 攻击 (DoS Attacks)",
-          "id": 801,
-          "parent_id": 8
-        },
-        {
-          "name": "负载负载模拟 (Load Simulation)",
-          "id": 802,
-          "parent_id": 8
-        },
-        {
-          "name": "协议滥用 (Protocol Abuse)",
-          "id": 803,
-          "parent_id": 8
-        }
-      ]
-    },
-    {
-      "name": "逆向工程 (Reverse Engineering)",
-      "icon": "reverse.svg",
-      "id": 9,
-      "subcategories": [
-        {
-          "name": "反汇编 (Disassembly)",
-          "id": 901,
-          "parent_id": 9
-        },
-        {
-          "name": "调试 (Debugging)",
-          "id": 902,
-          "parent_id": 9
-        },
-        {
-          "name": "补丁分析 (Patch Analysis)",
-          "id": 903,
-          "parent_id": 9
-        },
-        {
-          "name": "恶意软件分析 (Malware Analysis)",
-          "id": 904,
-          "parent_id": 9
-        }
-      ]
-    },
-    {
-      "name": "漏洞利用 (Exploitation Tools)",
-      "icon": "exploit.svg",
-      "id": 10,
-      "subcategories": [
-        {
-          "name": "框架 (Frameworks)",
-          "id": 1001,
-          "parent_id": 10
-        },
-        {
-          "name": "壳代码生成 (Shellcode Generation)",
-          "id": 1002,
-          "parent_id": 10
-        },
-        {
-          "name": "远程利用 (Remote Exploits)",
-          "id": 1003,
-          "parent_id": 10
-        },
-        {
-          "name": "本地利用 (Local Exploits)",
-          "id": 1004,
-          "parent_id": 10
-        }
-      ]
-    },
-    {
-      "name": "入侵检测与防御 (Intrusion Detection & Prevention)",
-      "icon": "web_app.svg",
-      "id": 11,
-      "subcategories": [
-        {
-          "name": "IDS 系统 (IDS Systems)",
-          "id": 1101,
-          "parent_id": 11
-        },
-        {
-          "name": "IPS 系统 (IPS Systems)",
-          "id": 1102,
-          "parent_id": 11
-        },
-        {
-          "name": "WAF 工具 (WAF Tools)",
-          "id": 1103,
-          "parent_id": 11
-        },
-        {
-          "name": "蜜罐与诱饵 (Honeypots & Decoys)",
-          "id": 1104,
-          "parent_id": 11
-        },
-        {
-          "name": "异常检测 (Anomaly Detection)",
-          "id": 1105,
-          "parent_id": 11
-        }
-      ]
-    },
-    {
-      "name": "安全配置与合规 (Security Configuration & Compliance)",
-      "icon": "database.svg",
-      "id": 12,
-      "subcategories": [
-        {
-          "name": "安全基线检查 (Security Baseline Checking)",
-          "id": 1201,
-          "parent_id": 12
-        },
-        {
-          "name": "合规审计 (Compliance Auditing)",
-          "id": 1202,
-          "parent_id": 12
-        },
-        {
-          "name": "漏洞扫描 (Vulnerability Scanning)",
-          "id": 1203,
-          "parent_id": 12
-        },
-        {
-          "name": "配置管理 (Configuration Management)",
-          "id": 1204,
-          "parent_id": 12
-        },
-        {
-          "name": "补丁管理 (Patch Management)",
-          "id": 1205,
-          "parent_id": 12
-        }
-      ]
-    },
-    {
-      "name": "安全事件响应 (Security Incident Response)",
-      "icon": "forensics.svg",
-      "id": 13,
-      "subcategories": [
-        {
-          "name": "事件分类 (Incident Classification)",
-          "id": 1301,
-          "parent_id": 13
-        },
-        {
-          "name": "取证调查 (Forensic Investigation)",
-          "id": 1302,
-          "parent_id": 13
-        },
-        {
-          "name": "应急响应 (Emergency Response)",
-          "id": 1303,
-          "parent_id": 13
-        },
-        {
-          "name": "威胁狩猎 (Threat Hunting)",
-          "id": 1304,
-          "parent_id": 13
-        },
-        {
-          "name": "响应自动化 (Response Automation)",
-          "id": 1305,
-          "parent_id": 13
-        }
-      ]
-    },
-    {
-      "name": "数字取证 (Digital Forensics)",
-      "icon": "forensics.svg",
-      "id": 14,
-      "subcategories": [
-        {
-          "name": "内存分析 (Memory Analysis)",
-          "id": 1401,
-          "parent_id": 14
-        },
-        {
-          "name": "文件恢复 (File Recovery)",
-          "id": 1402,
-          "parent_id": 14
-        },
-        {
-          "name": "时间线构建 (Timeline Building)",
-          "id": 1403,
-          "parent_id": 14
-        },
-        {
-          "name": "图像取证 (Image Forensics)",
-          "id": 1404,
-          "parent_id": 14
-        }
-      ]
-    },
-    {
-      "name": "报告工具 (Reporting Tools)",
-      "icon": "report.svg",
-      "id": 15,
-      "subcategories": [
-        {
-          "name": "报告生成 (Report Generation)",
-          "id": 1501,
-          "parent_id": 15
-        },
-        {
-          "name": "数据可视化 (Data Visualization)",
-          "id": 1502,
-          "parent_id": 15
-        },
-        {
-          "name": "笔记管理 (Note Management)",
-          "id": 1503,
-          "parent_id": 15
-        }
-      ]
-    },
-    {
-      "name": "社会工程 (Social Engineering)",
-      "icon": "social.svg",
-      "id": 16,
-      "subcategories": [
-        {
-          "name": "钓鱼模拟 (Phishing Simulation)",
-          "id": 1601,
-          "parent_id": 16
-        },
-        {
-          "name": "诱饵工具 (Baiting Tools)",
-          "id": 1602,
-          "parent_id": 16
-        },
-        {
-          "name": "尾随模拟 (Tailgating Simulation)",
-          "id": 1603,
-          "parent_id": 16
-        }
-      ]
-    },
-    {
-      "name": "硬件黑客 (Hardware Hacking)",
-      "icon": "hardware.svg",
-      "id": 17,
-      "subcategories": [
-        {
-          "name": "Android 工具 (Android Tools)",
-          "id": 1701,
-          "parent_id": 17
-        },
-        {
-          "name": "Arduino 集成 (Arduino Integration)",
-          "id": 1702,
-          "parent_id": 17
-        },
-        {
-          "name": "固件分析 (Firmware Analysis)",
-          "id": 1703,
-          "parent_id": 17
-        }
-      ]
-    },
-    {
-      "name": "维护访问与匿名 (Maintaining Access & Anonymity)",
-      "icon": "anonymity.svg",
-      "id": 18,
-      "subcategories": [
-        {
-          "name": "后门 (Backdoors)",
-          "id": 1801,
-          "parent_id": 18
-        },
-        {
-          "name": "隧道 (Tunneling)",
-          "id": 1802,
-          "parent_id": 18
-        },
-        {
-          "name": "MAC 更改 (MAC Changing)",
-          "id": 1803,
-          "parent_id": 18
-        },
-        {
-          "name": "代理链 (Proxy Chains)",
-          "id": 1804,
-          "parent_id": 18
-        }
+        { "name": "云平台安全 (Cloud Security)", "id": 801, "priority": 1 },
+        { "name": "容器与 K8s (Container)", "id": 802, "priority": 2 },
+        { "name": "安卓逆向 (Android Reversing)", "id": 803, "priority": 3 },
+        { "name": "iOS 安全 (iOS Security)", "id": 804, "priority": 4 },
+        { "name": "小程序/App 抓包", "id": 805, "priority": 5 }
       ]
     }
   ]

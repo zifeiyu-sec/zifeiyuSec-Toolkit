@@ -69,6 +69,7 @@ class SubcategoryView(QWidget):
                     margin-bottom: 5px;
                     color: #000000;
                     font-weight: 500;
+                    font-size: 16px;
                 }
                 
                 QListWidget::item:hover {
@@ -83,35 +84,36 @@ class SubcategoryView(QWidget):
                 }
             """)
         else:  # dark_green 主题
-            # 深色主题样式
-            self.title_label.setStyleSheet("padding: 10px; background-color: #2d2d2d; font-weight: 600; border-bottom: 1px solid #2d5016; color: #90ee90; font-size: 14px;")
+            # 深色主题样式 - 与分类视图保持一致
+            self.title_label.setStyleSheet("padding: 10px; background-color: rgba(26, 28, 43, 1); font-weight: 600; border-bottom: 1px solid rgba(144, 238, 144, 0.3); color: #90ee90; font-size: 14px;")
             
             self.subcategory_list.setStyleSheet("""
                 QListWidget {
                     background-color: transparent;
                     border: none;
-                    padding: 5px;
+                    padding: 8px;
                 }
                 
                 QListWidget::item {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 10px;
-                    padding: 12px;
-                    margin-bottom: 5px;
+                    background: rgba(32, 33, 54, 0.8);
+                    border: 1px solid rgba(144, 238, 144, 0.2);
+                    border-radius: 8px;
+                    padding: 12px 14px;
+                    margin-bottom: 4px;
                     color: #ffffff;
                     font-weight: 500;
+                    font-size: 16px;
                 }
                 
                 QListWidget::item:hover {
-                    background: rgba(255, 255, 255, 0.1);
-                    border-color: rgba(103, 232, 249, 0.5);
+                    background: rgba(40, 42, 66, 0.9);
+                    border-color: rgba(144, 238, 144, 0.5);
                 }
                 
                 QListWidget::item:selected {
-                    background: rgba(103, 232, 249, 0.15);
+                    background: rgba(144, 238, 144, 0.2);
                     color: #ffffff;
-                    border-color: rgba(103, 232, 249, 0.5);
+                    border-color: rgba(144, 238, 144, 0.7);
                 }
             """)
     
@@ -138,25 +140,29 @@ class SubcategoryView(QWidget):
     
     def show_context_menu(self, position):
         """显示右键菜单"""
-        menu = QMenu(self)
-        
-        # 无论是否有选中项，都可以添加新子分类
-        # 添加新建子分类菜单项
-        new_subcategory_action = QAction("新建子分类", self)
-        new_subcategory_action.triggered.connect(lambda: self.new_subcategory_requested.emit(self.current_category))
-        menu.addAction(new_subcategory_action)
-        
-        # 获取当前选中的子分类
-        selected_items = self.subcategory_list.selectedItems()
-        if selected_items:
+        try:
+            menu = QMenu(self)
             
-            # 添加删除子分类菜单项
-            delete_subcategory_action = QAction("删除子分类", self)
-            delete_subcategory_action.triggered.connect(lambda: self.delete_subcategory_requested.emit(self.current_subcategory))
-            menu.addAction(delete_subcategory_action)
-        
-        # 显示菜单
-        menu.exec_(self.subcategory_list.mapToGlobal(position))
+            # 无论是否有选中项，都可以添加新子分类
+            # 添加新建子分类菜单项
+            new_subcategory_action = QAction("新建子分类", self)
+            new_subcategory_action.triggered.connect(lambda: self.new_subcategory_requested.emit(self.current_category))
+            menu.addAction(new_subcategory_action)
+            
+            # 获取当前选中的子分类
+            selected_items = self.subcategory_list.selectedItems()
+            if selected_items:
+                
+                # 添加删除子分类菜单项
+                delete_subcategory_action = QAction("删除子分类", self)
+                delete_subcategory_action.triggered.connect(lambda: self.delete_subcategory_requested.emit(self.current_subcategory))
+                menu.addAction(delete_subcategory_action)
+            
+            # 显示菜单
+            menu.exec_(self.subcategory_list.mapToGlobal(position))
+        except KeyboardInterrupt:
+            # 优雅地处理用户中断操作
+            pass
     
     def select_subcategory(self, subcategory_id):
         """手动选择指定ID的子分类"""
