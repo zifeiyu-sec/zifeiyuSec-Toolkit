@@ -5,6 +5,7 @@ import os
 import re
 import socket
 import shutil
+import hashlib
 from urllib.parse import urlparse
 import urllib.request
 
@@ -15,6 +16,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox, QApplication
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal, QFileInfo
 from PyQt5.QtWidgets import QFileIconProvider
+from core.style_manager import ThemeManager
 
 class ToolConfigDialog(QDialog):
     """工具配置对话框，用于添加或编辑工具信息"""
@@ -25,7 +27,7 @@ class ToolConfigDialog(QDialog):
         self.tool_data = tool_data or self._create_empty_tool()
         self.categories = categories or []
         self.icon_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources", "icons")
-        self.default_icon_name = "default_tool.svg"
+        self.default_icon_name = "favicon.ico"
         self.selected_icon_name = self._normalize_icon_name(self.tool_data.get("icon"))
         self.downloader = None  # 初始化下载器属性
         self.init_ui()
@@ -267,6 +269,11 @@ class ToolConfigDialog(QDialog):
         self.args_edit.setPlaceholderText("例如: -h, --verbose 等")
         run_layout.addWidget(self.args_edit, 0, 1)
         
+        # 在终端中运行选项
+        self.run_in_terminal_check = QCheckBox("在终端中运行")
+        self.run_in_terminal_check.setChecked(self.tool_data.get("run_in_terminal", False))
+        run_layout.addWidget(self.run_in_terminal_check, 1, 1, alignment=Qt.AlignLeft)
+        
         run_group.setLayout(run_layout)
         main_layout.addWidget(run_group)
         
@@ -328,31 +335,14 @@ class ToolConfigDialog(QDialog):
 
     def apply_theme_styles(self):
         """根据当前主题应用 QSS 样式（仅影响本对话框内控件）"""
-        # 基于两个主题单独调整控件样式，避免全局冲突
+        theme_manager = ThemeManager()
+        style = theme_manager.get_dialog_style(self.current_theme)
+        self.setStyleSheet(style)
+
+        # 单独处理 Icon preview
         if self.current_theme == 'blue_white':
-            # 淡雅浅蓝 & 白底
-            self.setStyleSheet('''
-                QDialog { background-color: #f6fbff; }
-                QGroupBox { background-color: transparent; border: 1px solid rgba(66,135,245,0.12); border-radius: 8px; margin-top: 4px; }
-                QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; color: #003366; font-weight:600; }
-                QLabel { color: #003347; }
-                QLineEdit, QTextEdit, QComboBox, QSpinBox { background: white; color: #0b2540; border: 1px solid rgba(3,105,161,0.12); border-radius: 6px; padding: 6px; }
-                QPushButton { background-color: rgba(66,135,245,0.06); color: #003347; border: 1px solid rgba(66,135,245,0.12); border-radius: 6px; padding: 6px 10px; }
-                QPushButton:hover { background-color: rgba(66,135,245,0.12); }
-            ''')
-            # icon preview border subtle
             self.icon_preview.setStyleSheet('border: 1px solid rgba(3,105,161,0.12); border-radius: 12px;')
         else:
-            # 深色主题
-            self.setStyleSheet('''
-                QDialog { background-color: #111217; }
-                QGroupBox { background-color: rgba(22,24,36,0.6); border: 1px solid rgba(144,238,144,0.12); border-radius: 8px; margin-top: 4px; }
-                QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; color: #90ee90; font-weight:600; }
-                QLabel { color: #dfeee0; }
-                QLineEdit, QTextEdit, QComboBox, QSpinBox { background: rgba(32,33,54,0.9); color: #ffffff; border: 1px solid rgba(144,238,144,0.08); border-radius: 6px; padding: 6px; }
-                QPushButton { background-color: rgba(144,238,144,0.06); color: #e8ffea; border: 1px solid rgba(144,238,144,0.16); border-radius: 6px; padding: 6px 10px; }
-                QPushButton:hover { background-color: rgba(144,238,144,0.14); }
-            ''')
             self.icon_preview.setStyleSheet('border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;')
     
     def on_url_text_changed(self, text):
@@ -676,18 +666,25 @@ class ToolConfigDialog(QDialog):
                         final_icon_name = self.default_icon_name
                     else:
                         try:
-                            icon_name = os.path.basename(self.selected_icon_name)
-                            # 确保文件名唯一
-                            base_name, ext = os.path.splitext(icon_name)
-                            counter = 1
-                            target_path = os.path.join(self.icon_dir, icon_name)
-                            while os.path.exists(target_path):
-                                icon_name = f"{base_name}_{counter}{ext}"
+                            # 首先检查是否已存在相同内容的图标
+                            existing_icon = self._find_existing_icon_by_hash(self.selected_icon_name)
+                            if existing_icon:
+                                # 找到相同图标，直接使用现有的
+                                final_icon_name = existing_icon
+                            else:
+                                # 没有找到相同图标，需要复制新文件
+                                icon_name = os.path.basename(self.selected_icon_name)
+                                # 确保文件名唯一（仅当文件名冲突时）
+                                base_name, ext = os.path.splitext(icon_name)
+                                counter = 1
                                 target_path = os.path.join(self.icon_dir, icon_name)
-                                counter += 1
-                            # 复制文件
-                            shutil.copy2(self.selected_icon_name, target_path)
-                            final_icon_name = icon_name
+                                while os.path.exists(target_path):
+                                    icon_name = f"{base_name}_{counter}{ext}"
+                                    target_path = os.path.join(self.icon_dir, icon_name)
+                                    counter += 1
+                                # 复制文件
+                                shutil.copy2(self.selected_icon_name, target_path)
+                                final_icon_name = icon_name
                         except (FileNotFoundError, PermissionError, IOError, shutil.Error, OSError) as e:
                             # 复制失败，使用默认图标
                             final_icon_name = self.default_icon_name
@@ -718,7 +715,7 @@ class ToolConfigDialog(QDialog):
             "icon": final_icon_name,
             "arguments": self.args_edit.text(),
             "working_directory": working_directory,  # 自动设置工作目录
-            "run_in_terminal": False,  # 移除在终端中运行选项
+            "run_in_terminal": self.run_in_terminal_check.isChecked(),  # 保存是否在终端中运行的设置
             "is_web_tool": is_web_tool  # 设置工具类型
         })
         
@@ -745,6 +742,38 @@ class ToolConfigDialog(QDialog):
         if os.path.exists(value):
             return value
         return ""
+
+    def _calculate_file_hash(self, file_path):
+        """计算文件的SHA256哈希值"""
+        try:
+            hash_sha256 = hashlib.sha256()
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_sha256.update(chunk)
+            return hash_sha256.hexdigest()
+        except Exception as e:
+            print(f"计算文件哈希失败: {e}")
+            return None
+
+    def _find_existing_icon_by_hash(self, source_path):
+        """根据文件哈希值查找已存在的相同图标"""
+        try:
+            source_hash = self._calculate_file_hash(source_path)
+            if not source_hash:
+                return None
+
+            # 遍历图标目录，查找相同哈希值的文件
+            if os.path.exists(self.icon_dir):
+                for filename in os.listdir(self.icon_dir):
+                    file_path = os.path.join(self.icon_dir, filename)
+                    if os.path.isfile(file_path):
+                        file_hash = self._calculate_file_hash(file_path)
+                        if file_hash == source_hash:
+                            return filename
+            return None
+        except Exception as e:
+            print(f"查找重复图标失败: {e}")
+            return None
 
     def _download_favicon(self, url: str, timeout: float = 8.0) -> str:
         """尝试从目标站点抓取 favicon 并保存到 resources/icons 目录。

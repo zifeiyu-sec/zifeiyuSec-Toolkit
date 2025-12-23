@@ -63,7 +63,7 @@ def main():
             window.setWindowIcon(icon)
     else:
         # 回退到 resources 下的 ico 图标（保持向后兼容）
-        icon_path = os.path.join(config_dir, "resources", "icons", "new_default_icon.ico")
+        icon_path = os.path.join(config_dir, "resources", "icons", "favicon.ico")
         if os.path.exists(icon_path):
             icon = QIcon(icon_path)
             if not icon.isNull():

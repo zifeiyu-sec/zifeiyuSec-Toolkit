@@ -6,19 +6,18 @@
 """
 import os
 import sys
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListView, QStyledItemDelegate, 
+import subprocess
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListView, QStyledItemDelegate,
                             QAbstractItemView, QMenu, QMessageBox, QStyle)
-from PyQt5.QtCore import (Qt, QAbstractListModel, QModelIndex, QSize, pyqtSignal, 
+from PyQt5.QtCore import (Qt, QAbstractListModel, QModelIndex, QSize, pyqtSignal,
                          QRect, QRectF, QPoint, QThread, QRunnable, QThreadPool, QObject)
-from PyQt5.QtGui import (QPainter, QColor, QFont, QIcon, QPen, QBrush, 
+from PyQt5.QtGui import (QPainter, QColor, QFont, QIcon, QPen, QBrush,
                         QFontMetrics, QPixmap, QPainterPath, QImage)
 
 # 获取资源目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESOURCE_ICON_DIR = os.path.join(BASE_DIR, 'resources', 'icons')
-DEFAULT_ICON_PATH = os.path.join(RESOURCE_ICON_DIR, 'new_default_icon.ico')
-if not os.path.exists(DEFAULT_ICON_PATH):
-    DEFAULT_ICON_PATH = os.path.join(RESOURCE_ICON_DIR, 'default_tool_icon.svg')
+DEFAULT_ICON_PATH = os.path.join(RESOURCE_ICON_DIR, 'favicon.ico')
 
 # 图标缓存
 # 异步图标加载器
@@ -140,8 +139,74 @@ class ToolModel(QAbstractListModel):
             return tool  # 返回完整的工具数据
         elif role == Qt.ToolTipRole:
             return tool.get('description', '')
+        
             
         return None
+    
+    def flags(self, index):
+        """设置项的标志，支持拖放"""
+        if not index.isValid():
+            return Qt.NoItemFlags
+        return super().flags(index) | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+    
+    def supportedDropActions(self):
+        """支持的拖放动作"""
+        return Qt.MoveAction
+    
+    def mimeTypes(self):
+        """支持的MIME类型"""
+        return ['application/vnd.tool.item']
+    
+    def mimeData(self, indexes):
+        """返回拖放的数据"""
+        mime_data = super().mimeData(indexes)
+        if not indexes or not mime_data:
+            return mime_data
+        
+        # 获取第一个选中项的索引
+        index = indexes[0]
+        if index.isValid():
+            # 将行索引作为MIME数据
+            mime_data.setData('application/vnd.tool.item', str(index.row()).encode())
+        return mime_data
+    
+    def dropMimeData(self, mime_data, action, row, column, parent):
+        """处理拖放操作"""
+        if action != Qt.MoveAction:
+            return False
+        
+        if not mime_data.hasFormat('application/vnd.tool.item'):
+            return False
+        
+        # 获取源行索引
+        source_row = int(mime_data.data('application/vnd.tool.item').data().decode())
+        
+        # 确定目标行索引
+        if parent.isValid():
+            # 拖放到某个项上，目标行是该项的行索引
+            target_row = parent.row()
+        else:
+            # 拖放到视图空白处，目标行是row参数
+            if row < 0:
+                # 拖放到末尾
+                target_row = len(self._tools)
+            else:
+                target_row = row
+        
+        # 避免相同位置的拖放
+        if source_row == target_row:
+            return False
+        
+        # 开始移动操作
+        self.beginMoveRows(QModelIndex(), source_row, source_row, QModelIndex(), target_row)
+        
+        # 执行实际的移动操作
+        tool = self._tools.pop(source_row)
+        self._tools.insert(target_row, tool)
+        
+        # 结束移动操作
+        self.endMoveRows()
+        return True
 
     def update_data(self, tools):
         """全量更新数据"""
@@ -158,6 +223,10 @@ class ToolModel(QAbstractListModel):
         self.beginRemoveRows(QModelIndex(), row, row)
         del self._tools[row]
         self.endRemoveRows()
+        
+    def tools(self):
+        """返回工具列表"""
+        return self._tools
 
 class ToolDelegate(QStyledItemDelegate):
     """工具卡片绘制代理"""
@@ -349,6 +418,12 @@ class ToolCardContainer(QWidget):
         self.view.setWordWrap(True)
         self.view.setSelectionMode(QAbstractItemView.SingleSelection)
         
+        # 启用拖放功能
+        self.view.setDragEnabled(True)
+        self.view.setAcceptDrops(True)
+        self.view.setDropIndicatorShown(True)
+        self.view.setDragDropMode(QAbstractItemView.InternalMove)
+        
         # 样式设置：去除丑陋的默认选中框，完全靠Delegate绘制
         self.view.setFrameShape(QListView.NoFrame)
         # 设置鼠标追踪以便Delegate可以处理Hover
@@ -406,29 +481,60 @@ class ToolCardContainer(QWidget):
         index = self.view.indexAt(pos)
         if not index.isValid():
             return
-            
+
         tool = self.model.get_tool(index)
         if not tool:
             return
-            
+
         menu = QMenu(self)
-        
+
         run_action = menu.addAction("运行工具")
         run_action.triggered.connect(lambda: self.run_tool.emit(tool))
-        
+
         edit_action = menu.addAction("编辑工具")
         edit_action.triggered.connect(lambda: self.edit_requested.emit(tool))
-        
+
         is_fav = tool.get('is_favorite', False)
         fav_text = "取消收藏" if is_fav else "添加收藏"
         fav_action = menu.addAction(fav_text)
         fav_action.triggered.connect(lambda: self.toggle_favorite.emit(tool['id']))
-        
+
         menu.addSeparator()
-        
+
+        # 获取工具路径和工作目录
+        tool_path = tool.get('path', '')
+        working_dir = tool.get('working_directory', '')
+        is_web = tool.get('is_web_tool', False)
+
+        # 确定目标目录（用于显示菜单项，点击时再校验是否存在）
+        # 只要不是Web工具，且有路径配置，就尝试显示
+        potential_target_dir = None
+
+        if working_dir:
+            potential_target_dir = working_dir
+        elif tool_path and not is_web:
+            # 简单的路径处理，不依赖文件系统检查，确保菜单项能显示
+            if not (tool_path.startswith('http://') or tool_path.startswith('https://')):
+                # 尝试猜测它是文件还是目录
+                if os.path.splitext(tool_path)[1]: 
+                    potential_target_dir = os.path.dirname(tool_path)
+                else:
+                    potential_target_dir = tool_path
+
+        if potential_target_dir:
+            # 添加"在此处打开命令行"选项
+            cmd_action = menu.addAction("在此处打开命令行")
+            cmd_action.triggered.connect(lambda: self.open_command_line(potential_target_dir))
+
+            # 添加"在此处打开目录"选项
+            dir_action = menu.addAction("在此处打开目录")
+            dir_action.triggered.connect(lambda: self.open_directory(potential_target_dir))
+
+            menu.addSeparator()
+
         del_action = menu.addAction("删除工具")
         del_action.triggered.connect(lambda: self.confirm_delete(tool))
-        
+
         menu.exec_(self.view.mapToGlobal(pos))
         
     def confirm_delete(self, tool):
@@ -442,3 +548,50 @@ class ToolCardContainer(QWidget):
 
     def get_tool_count(self):
         return self.model.rowCount()
+
+    def open_command_line(self, directory):
+        """在此处打开命令行"""
+        # 处理相对路径
+        if not os.path.isabs(directory):
+            directory = os.path.abspath(directory)
+            
+        if not os.path.exists(directory):
+            QMessageBox.warning(self, "错误", f"目录不存在:\n{directory}")
+            return
+
+        try:
+            if sys.platform.startswith('win'):
+                # Windows: 打开cmd.exe
+                subprocess.Popen(['start', 'cmd', '/k', f'cd /d "{directory}"'],
+                               cwd=directory, shell=True)
+            elif sys.platform == 'darwin':
+                # macOS: 打开Terminal
+                subprocess.Popen(['open', '-a', 'Terminal', directory])
+            else:
+                # Linux: 打开终端
+                subprocess.Popen(['x-terminal-emulator'], cwd=directory)
+        except Exception as e:
+            QMessageBox.warning(self, "错误", f"打开命令行失败: {str(e)}")
+
+    def open_directory(self, directory):
+        """在此处打开目录"""
+        # 处理相对路径
+        if not os.path.isabs(directory):
+            directory = os.path.abspath(directory)
+            
+        if not os.path.exists(directory):
+            QMessageBox.warning(self, "错误", f"目录不存在:\n{directory}")
+            return
+
+        try:
+            if sys.platform.startswith('win'):
+                # Windows: 使用explorer.exe打开目录
+                os.startfile(directory)
+            elif sys.platform == 'darwin':
+                # macOS: 使用Finder打开目录
+                subprocess.Popen(['open', directory])
+            else:
+                # Linux: 使用文件管理器打开目录
+                subprocess.Popen(['xdg-open', directory])
+        except Exception as e:
+            QMessageBox.warning(self, "错误", f"打开目录失败: {str(e)}")

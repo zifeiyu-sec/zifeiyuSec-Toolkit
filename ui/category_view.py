@@ -2,6 +2,7 @@ import os
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QIcon
+from core.style_manager import ThemeManager
 
 # 图标缓存，减少重复的文件系统操作
 category_icon_cache = {}
@@ -87,16 +88,8 @@ class CategoryView(QWidget):
             #     from PyQt5.QtCore import QTimer
             #     QTimer.singleShot(200, lambda: load_icon_delayed(item, category['icon']))
         
-        # 优化：延迟加载工具，避免启动时阻塞
-        # 如果有分类，默认选中第一个分类，但延迟触发加载
-        if self.category_list.count() > 0:
-            self.category_list.setCurrentRow(0)
-            first_item = self.category_list.item(0)
-            data = first_item.data(Qt.UserRole)
-            self.current_category = data['id']
-            # 使用 QTimer 延迟触发，让 UI 先显示（增加延迟时间到300ms）
-            from PyQt5.QtCore import QTimer
-            QTimer.singleShot(300, lambda: self.category_selected.emit(data['id']))
+        # 不默认选中任何分类，让应用程序启动时默认显示收藏页面
+        # 只有当用户主动选择分类时，才会触发分类选择信号
     
     def on_item_clicked(self, item):
         """处理分类项点击事件"""
@@ -143,73 +136,16 @@ class CategoryView(QWidget):
         
     def apply_theme_styles(self):
         """根据当前主题应用样式"""
+        # 从 StyleManager 获取样式
+        theme_manager = ThemeManager()
+        list_style = theme_manager.get_category_view_style(self.current_theme)
+        self.category_list.setStyleSheet(list_style)
+        
+        # 标题样式暂时保持本地，或者也可以移入 StyleManager (简单起见这里保留逻辑)
         if self.current_theme == 'blue_white':
-            # 蓝白配色主题样式 — 白色背景，黑色标题文字，分类项为淡蓝卡片
             self.title_label.setStyleSheet("font-weight: 600; padding: 12px; border-bottom: 1px solid #e6f2ff; background-color: #ffffff; color: #000000; font-size: 14px;")
-            self.category_list.setStyleSheet("""
-                QListWidget {
-                    background-color: transparent;
-                    border: none;
-                    padding: 8px;
-                }
-                
-                QListWidget::item {
-                    background: #f0f9ff;
-                    border: 1px solid #bae6fd;
-                    border-radius: 10px;
-                    padding: 12px 14px;
-                    margin-bottom: 6px;
-                    color: #0369a1;
-                    font-weight: 600;
-                    font-size: 16px;
-                }
-                
-                QListWidget::item:hover {
-                    background: #e0f2fe;
-                    border-color: #7dd3fc;
-                }
-                
-                QListWidget::item:selected {
-                    background: #e0f2fe;
-                    color: #0369a1;
-                    border-color: #7dd3fc;
-                }
-            """)
         else:
-            # 默认深色主题样式
             self.title_label.setStyleSheet("font-weight: 600; padding: 12px; border-bottom: 1px solid rgba(144, 238, 144, 0.3); background-color: rgba(26, 28, 43, 1); color: #90ee90; font-size: 14px;")
-            self.category_list.setStyleSheet("""
-                QListWidget {
-                    background-color: transparent;
-                    border: none;
-                    padding: 8px;
-                }
-                
-                QListWidget::item {
-                    background: rgba(32, 33, 54, 0.8);
-                    border: 1px solid rgba(144, 238, 144, 0.2);
-                    border-radius: 8px;
-                    padding: 12px 14px;
-                    margin-bottom: 4px;
-                    color: #ffffff;
-                    font-weight: 500;
-                    font-size: 16px;
-                    /* removed: transition not supported in Qt QSS */
-                }
-                
-                QListWidget::item:hover {
-                    background: rgba(40, 42, 66, 0.9);
-                    border-color: rgba(144, 238, 144, 0.5);
-                    /* removed: box-shadow not supported in Qt QSS */
-                }
-                
-                QListWidget::item:selected {
-                    background: rgba(144, 238, 144, 0.2);
-                    color: #ffffff;
-                    border-color: rgba(144, 238, 144, 0.7);
-                    /* removed: box-shadow not supported in Qt QSS */
-                }
-            """)
     
     def select_category(self, category_id):
         """手动选择分类"""
