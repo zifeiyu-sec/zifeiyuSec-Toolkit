@@ -431,6 +431,14 @@ class DataManager:
         # 按使用次数降序排序
         sorted_tools = sorted(tools, key=lambda x: x.get('usage_count', 0), reverse=True)
         return sorted_tools[:limit]
+    
+    def get_favorite_tools(self):
+        """获取收藏的工具列表"""
+        tools = self.load_tools()
+        # 过滤出收藏的工具
+        favorite_tools = [tool for tool in tools if tool.get('is_favorite', False)]
+        # 按优先级排序
+        return sorted(favorite_tools, key=lambda x: x.get('priority', 0))
 
     def get_tools_by_category(self, category_id, subcategory_id=None):
         """根据分类ID获取工具列表"""

@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, Qt
+from core.style_manager import ThemeManager
 
 class SubcategoryView(QWidget):
     """子分类视图，显示指定分类下的子分类列表"""
@@ -50,72 +51,18 @@ class SubcategoryView(QWidget):
         
     def apply_theme_styles(self):
         """根据当前主题应用样式"""
+        # 从 StyleManager 获取样式
+        # 注意：子分类视图样式与主分类视图非常相似，这里复用 category_view 样式
+        # 如果需要区分，可以在 StyleManager 新增 get_subcategory_view_style
+        theme_manager = ThemeManager()
+        list_style = theme_manager.get_category_view_style(self.current_theme)
+        self.subcategory_list.setStyleSheet(list_style)
+        
+        # 标题样式暂时保持本地
         if self.current_theme == 'blue_white':
-            # 蓝白主题样式
             self.title_label.setStyleSheet("padding: 10px; background-color: #e6f2ff; font-weight: 600; border-bottom: 1px solid #99ccff; color: #003366; font-size: 14px;")
-            
-            self.subcategory_list.setStyleSheet("""
-                QListWidget {
-                    background-color: transparent;
-                    border: none;
-                    padding: 5px;
-                }
-                
-                QListWidget::item {
-                    background: rgba(240, 248, 255, 0.9);
-                    border: 1px solid rgba(135, 206, 250, 0.3);
-                    border-radius: 10px;
-                    padding: 12px;
-                    margin-bottom: 5px;
-                    color: #000000;
-                    font-weight: 500;
-                    font-size: 16px;
-                }
-                
-                QListWidget::item:hover {
-                    background: rgba(240, 248, 255, 1);
-                    border-color: rgba(65, 105, 225, 0.5);
-                }
-                
-                QListWidget::item:selected {
-                    background: rgba(135, 206, 250, 0.2);
-                    color: #000000;
-                    border-color: rgba(65, 105, 225, 0.5);
-                }
-            """)
-        else:  # dark_green 主题
-            # 深色主题样式 - 与分类视图保持一致
+        else:
             self.title_label.setStyleSheet("padding: 10px; background-color: rgba(26, 28, 43, 1); font-weight: 600; border-bottom: 1px solid rgba(144, 238, 144, 0.3); color: #90ee90; font-size: 14px;")
-            
-            self.subcategory_list.setStyleSheet("""
-                QListWidget {
-                    background-color: transparent;
-                    border: none;
-                    padding: 8px;
-                }
-                
-                QListWidget::item {
-                    background: rgba(32, 33, 54, 0.8);
-                    border: 1px solid rgba(144, 238, 144, 0.2);
-                    border-radius: 8px;
-                    padding: 12px 14px;
-                    margin-bottom: 4px;
-                    color: #ffffff;
-                    font-weight: 500;
-                    font-size: 16px;
-                }
-                
-                QListWidget::item:hover {
-                    background: rgba(40, 42, 66, 0.9);
-                    border-color: rgba(144, 238, 144, 0.5);
-                }
-                
-                QListWidget::item:selected {
-                    background: rgba(144, 238, 144, 0.2);
-                    color: #ffffff;
-                    border-color: rgba(144, 238, 144, 0.7);
-                }
-            """)
     
     def load_subcategories(self, category_id):
         """加载指定分类下的子分类"""

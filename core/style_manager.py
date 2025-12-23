@@ -14,13 +14,17 @@ class ThemeManager:
                 "name": "深绿主题",
                 "styles": self._get_dark_green_styles(),
                 "messagebox": self._get_dark_green_messagebox_style(),
-                "toolcard": self._get_dark_green_toolcard_style()
+                "toolcard": self._get_dark_green_toolcard_style(),
+                "category_view": self._get_dark_green_category_style(),
+                "dialog": self._get_dark_green_dialog_style()
             },
             "blue_white": {
                 "name": "蓝白主题",
                 "styles": self._get_blue_white_styles(),
                 "messagebox": self._get_blue_white_messagebox_style(),
-                "toolcard": self._get_blue_white_toolcard_style()
+                "toolcard": self._get_blue_white_toolcard_style(),
+                "category_view": self._get_blue_white_category_style(),
+                "dialog": self._get_blue_white_dialog_style()
             }
         }
     
@@ -38,6 +42,14 @@ class ThemeManager:
         theme = self.themes.get(theme_name, self.themes["dark_green"])
         parts = [theme.get('styles', ''), theme.get('messagebox', ''), theme.get('toolcard', '')]
         return "\n".join(parts)
+
+    def get_category_view_style(self, theme_name):
+        """获取分类视图样式"""
+        return self.themes.get(theme_name, self.themes["dark_green"]).get('category_view', '')
+
+    def get_dialog_style(self, theme_name):
+        """获取对话框样式"""
+        return self.themes.get(theme_name, self.themes["dark_green"]).get('dialog', '')
     
     def get_messagebox_style(self, theme_name):
         """获取消息框样式
@@ -519,3 +531,91 @@ class ThemeManager:
             QPushButton:pressed {
                 background-color: rgba(66, 135, 245, 0.3);
             }"""
+
+    def _get_dark_green_category_style(self):
+        """获取深绿主题分类视图样式"""
+        return """
+            QListWidget {
+                background-color: transparent;
+                border: none;
+                padding: 8px;
+            }
+            
+            QListWidget::item {
+                background: rgba(32, 33, 54, 0.8);
+                border: 1px solid rgba(144, 238, 144, 0.2);
+                border-radius: 8px;
+                padding: 12px 14px;
+                margin-bottom: 4px;
+                color: #ffffff;
+                font-weight: 500;
+                font-size: 16px;
+            }
+            
+            QListWidget::item:hover {
+                background: rgba(40, 42, 66, 0.9);
+                border-color: rgba(144, 238, 144, 0.5);
+            }
+            
+            QListWidget::item:selected {
+                background: rgba(144, 238, 144, 0.2);
+                color: #ffffff;
+                border-color: rgba(144, 238, 144, 0.7);
+            }
+        """
+
+    def _get_blue_white_category_style(self):
+        """获取蓝白主题分类视图样式"""
+        return """
+            QListWidget {
+                background-color: transparent;
+                border: none;
+                padding: 8px;
+            }
+            
+            QListWidget::item {
+                background: #f0f9ff;
+                border: 1px solid #bae6fd;
+                border-radius: 10px;
+                padding: 12px 14px;
+                margin-bottom: 6px;
+                color: #0369a1;
+                font-weight: 600;
+                font-size: 16px;
+            }
+            
+            QListWidget::item:hover {
+                background: #e0f2fe;
+                border-color: #7dd3fc;
+            }
+            
+            QListWidget::item:selected {
+                background: #e0f2fe;
+                color: #0369a1;
+                border-color: #7dd3fc;
+            }
+        """
+
+    def _get_dark_green_dialog_style(self):
+        """获取深绿主题对话框样式"""
+        return """
+            QDialog { background-color: #111217; }
+            QGroupBox { background-color: rgba(22,24,36,0.6); border: 1px solid rgba(144,238,144,0.12); border-radius: 8px; margin-top: 4px; }
+            QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; color: #90ee90; font-weight:600; }
+            QLabel { color: #dfeee0; }
+            QLineEdit, QTextEdit, QComboBox, QSpinBox { background: rgba(32,33,54,0.9); color: #ffffff; border: 1px solid rgba(144,238,144,0.08); border-radius: 6px; padding: 6px; }
+            QPushButton { background-color: rgba(144,238,144,0.06); color: #e8ffea; border: 1px solid rgba(144,238,144,0.16); border-radius: 6px; padding: 6px 10px; }
+            QPushButton:hover { background-color: rgba(144,238,144,0.14); }
+        """
+
+    def _get_blue_white_dialog_style(self):
+        """获取蓝白主题对话框样式"""
+        return """
+            QDialog { background-color: #f6fbff; }
+            QGroupBox { background-color: transparent; border: 1px solid rgba(66,135,245,0.12); border-radius: 8px; margin-top: 4px; }
+            QGroupBox::title { subcontrol-origin: margin; left: 8px; padding: 0 4px; color: #003366; font-weight:600; }
+            QLabel { color: #003347; }
+            QLineEdit, QTextEdit, QComboBox, QSpinBox { background: white; color: #0b2540; border: 1px solid rgba(3,105,161,0.12); border-radius: 6px; padding: 6px; }
+            QPushButton { background-color: rgba(66,135,245,0.06); color: #003347; border: 1px solid rgba(66,135,245,0.12); border-radius: 6px; padding: 6px 10px; }
+            QPushButton:hover { background-color: rgba(66,135,245,0.12); }
+        """
