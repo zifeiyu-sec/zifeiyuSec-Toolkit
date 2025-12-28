@@ -1,11 +1,36 @@
 import os
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import pyqtSignal, Qt, QEvent
+from PyQt5.QtGui import QIcon, QDropEvent
 from core.style_manager import ThemeManager
+from core.data_manager import DataManager
 
 # 图标缓存，减少重复的文件系统操作
 category_icon_cache = {}
+
+# 自定义分类列表控件，支持拖拽排序
+class DraggableCategoryListWidget(QListWidget):
+    # 拖拽完成信号
+    order_changed = pyqtSignal()
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setDragDropMode(QListWidget.InternalMove)
+        self.setDefaultDropAction(Qt.MoveAction)
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+        self.setSelectionMode(QListWidget.SingleSelection)
+        self.setMovement(QListWidget.Snap)
+        self.setUniformItemSizes(True)
+    
+    def dropEvent(self, event: QDropEvent):
+        """处理拖拽完成事件"""
+        super().dropEvent(event)
+        # 使用延迟发射信号，确保列表状态完全稳定
+        # 这有助于避免拖拽过程中临时创建的重复项被处理
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(100, self.order_changed.emit)
 
 class CategoryView(QWidget):
     """分类视图，显示一级分类列表"""
@@ -33,10 +58,9 @@ class CategoryView(QWidget):
         layout.addWidget(self.title_label)
         
         # 创建分类列表控件
-        self.category_list = QListWidget()
+        self.category_list = DraggableCategoryListWidget()
         # 确保列表有足够宽度显示完整的分类名称
         self.category_list.setMinimumWidth(260)
-        self.category_list.setSelectionMode(QListWidget.SingleSelection)
         
         # 应用当前主题样式
         self.apply_theme_styles()
@@ -46,6 +70,8 @@ class CategoryView(QWidget):
         # 设置右键菜单
         self.category_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.category_list.customContextMenuRequested.connect(self.show_context_menu)
+        # 连接拖拽排序完成信号
+        self.category_list.order_changed.connect(self.on_category_order_changed)
         
         layout.addWidget(self.category_list)
         
@@ -55,38 +81,45 @@ class CategoryView(QWidget):
         # 加载分类数据
         self.load_categories()
     
-    def load_categories(self):
-        """加载分类数据，只显示一级分类"""
-        self.category_list.clear()
-        
-        # 从数据管理器加载分类
+
+    
+    def on_category_order_changed(self):
+        """处理分类拖拽排序事件，更新分类顺序"""
+        # 获取当前分类数据
         categories = self.data_manager.load_categories()
         
-        # 过滤出一级分类
-        root_categories = []
+        # 获取当前分类顺序，去重处理
+        current_order = []
+        seen_ids = set()
         
+        # 从列表中获取当前顺序，去除重复项
+        for i in range(self.category_list.count()):
+            item = self.category_list.item(i)
+            data = item.data(Qt.UserRole)
+            category_id = data['id']
+            
+            # 只添加唯一ID，避免重复
+            if category_id not in seen_ids:
+                seen_ids.add(category_id)
+                current_order.append(category_id)
+        
+        # 创建ID到分类的映射，提高查找效率
+        category_map = {cat['id']: cat for cat in categories}
+        
+        # 重新排序分类列表
+        new_order = []
+        for category_id in current_order:
+            if category_id in category_map:
+                new_order.append(category_map[category_id])
+        
+        # 确保只包含原始分类，避免添加不存在的分类
+        # 添加剩余的原始分类（如果有不在current_order中的）
         for category in categories:
-            if isinstance(category, dict):
-                # 只处理一级分类，忽略有parent_id的项
-                if 'subcategories' in category or ('parent_id' not in category or category['parent_id'] is None):
-                    root_categories.append(category)
+            if category['id'] not in seen_ids:
+                new_order.append(category)
         
-        # 创建分类项
-        for category in root_categories:
-            # 创建分类项，显示名称和可选图标
-            name = category.get('name', '未知分类')
-            
-            # 优化：先创建列表项，延迟加载图标，避免启动时阻塞
-            item = QListWidgetItem(name)
-            item.setData(Qt.UserRole, {'id': category.get('id', 0)})
-            self.category_list.addItem(item)
-            
-            # 移除图标加载逻辑
-            # if 'icon' in category and isinstance(category['icon'], str) and category['icon'] != 'default_icon':
-            #     def load_icon_delayed(item_ref, icon_name):
-            #         # ... (removed)
-            #     from PyQt5.QtCore import QTimer
-            #     QTimer.singleShot(200, lambda: load_icon_delayed(item, category['icon']))
+        # 更新并保存分类顺序
+        self.data_manager.save_categories(new_order)
         
         # 不默认选中任何分类，让应用程序启动时默认显示收藏页面
         # 只有当用户主动选择分类时，才会触发分类选择信号
@@ -125,10 +158,6 @@ class CategoryView(QWidget):
         # 显示菜单
         menu.exec_(self.category_list.mapToGlobal(position))
     
-    def refresh(self):
-        """刷新分类列表"""
-        self.load_categories()
-        
     def set_theme(self, theme):
         """设置当前主题并应用样式"""
         self.current_theme = theme
@@ -171,6 +200,46 @@ class CategoryView(QWidget):
         
         data = current_item.data(Qt.UserRole)
         return data['id']
+    
+    def refresh(self):
+        """刷新分类列表"""
+        # 保存当前选中的分类ID
+        current_selection = None
+        if self.category_list.currentItem():
+            current_selection = self.category_list.currentItem().data(Qt.UserRole)['id']
+        
+        # 重新加载分类数据
+        self.load_categories()
+        
+        # 恢复之前的选中状态
+        if current_selection:
+            self.select_category(current_selection)
+    
+    def load_categories(self):
+        """加载分类数据，只显示一级分类"""
+        self.category_list.clear()
+        
+        # 从数据管理器加载分类
+        categories = self.data_manager.load_categories()
+        
+        # 过滤出一级分类
+        root_categories = []
+        
+        for category in categories:
+            if isinstance(category, dict):
+                # 只处理一级分类，忽略有parent_id的项
+                if 'subcategories' in category or ('parent_id' not in category or category['parent_id'] is None):
+                    root_categories.append(category)
+        
+        # 创建分类项
+        for category in root_categories:
+            # 创建分类项，显示名称和可选图标
+            name = category.get('name', '未知分类')
+            
+            # 优化：先创建列表项，延迟加载图标，避免启动时阻塞
+            item = QListWidgetItem(name)
+            item.setData(Qt.UserRole, {'id': category.get('id', 0)})
+            self.category_list.addItem(item)
 
 if __name__ == "__main__":
     import sys

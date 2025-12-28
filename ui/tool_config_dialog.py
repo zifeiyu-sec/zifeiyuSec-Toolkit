@@ -142,7 +142,6 @@ class ToolConfigDialog(QDialog):
             "background_image": "",
             "icon": "",  # 工具图标路径
             "tags": [],
-            "priority": 0,
             "is_favorite": False,
             "arguments": "",  # 命令行参数
             "working_directory": "",  # 工作目录
@@ -281,17 +280,10 @@ class ToolConfigDialog(QDialog):
         tags_group = QGroupBox("其他设置")
         tags_layout = QGridLayout()
         
-        # 优先级
-        tags_layout.addWidget(QLabel("优先级:"), 0, 0)
-        self.priority_spin = QSpinBox()
-        self.priority_spin.setRange(0, 5)
-        self.priority_spin.setValue(self.tool_data["priority"])
-        tags_layout.addWidget(self.priority_spin, 0, 1)
-        
         # 收藏
         self.favorite_check = QCheckBox("添加到收藏")
         self.favorite_check.setChecked(self.tool_data.get("is_favorite", False))
-        tags_layout.addWidget(self.favorite_check, 1, 1, alignment=Qt.AlignLeft)
+        tags_layout.addWidget(self.favorite_check, 0, 1, alignment=Qt.AlignLeft)
         
         tags_group.setLayout(tags_layout)
         main_layout.addWidget(tags_group)
@@ -709,7 +701,6 @@ class ToolConfigDialog(QDialog):
             "description": self.description_edit.toPlainText(),
             "category_id": self.category_combo.currentData() if self.categories else None,
             "subcategory_id": self.subcategory_combo.currentData() if self.categories else None,
-            "priority": self.priority_spin.value(),
             "is_favorite": self.favorite_check.isChecked(),
             "tags": [],  # 移除标签功能
             "icon": final_icon_name,

@@ -61,9 +61,7 @@ class ToolsLoadWorker(QObject):
                 else:
                     tools = data
 
-            # 按优先级排序工具 - 保持简单，只进行必要的排序
-            if tools:
-                tools = sorted(tools, key=lambda x: x.get('priority', 0))
+
             
             self.finished.emit(tools)
         except Exception as e:
@@ -158,14 +156,9 @@ class DataManager:
                     logger.error("分类数据格式错误，创建默认分类: %s", str(e))
                     categories = self._create_default_categories()
             
-            # 按优先级排序分类
-            if categories:
-                categories = sorted(categories, key=lambda x: x.get('priority', 0))
-                # 对每个分类的子分类按优先级排序
-                for cat in categories:
-                    subcategories = cat.get('subcategories', [])
-                    sorted_subcategories = sorted(subcategories, key=lambda x: x.get('priority', 0))
-                    cat['subcategories'] = sorted_subcategories
+            # 注意：不再按优先级排序分类和子分类，以保持用户拖拽设置的顺序
+            # 如果需要排序，应该在拖拽排序完成后更新优先级字段
+            pass
             
             # 更新缓存
             self._categories_cache = categories
@@ -299,9 +292,7 @@ class DataManager:
                     else:
                         tools = data
 
-                # 按优先级排序工具 - 保持简单，只进行必要的排序
-                if tools:
-                    tools = sorted(tools, key=lambda x: x.get('priority', 0))
+
 
                 # 更新缓存
                 self._tools_cache = tools
@@ -437,8 +428,7 @@ class DataManager:
         tools = self.load_tools()
         # 过滤出收藏的工具
         favorite_tools = [tool for tool in tools if tool.get('is_favorite', False)]
-        # 按优先级排序
-        return sorted(favorite_tools, key=lambda x: x.get('priority', 0))
+        return favorite_tools
 
     def get_tools_by_category(self, category_id, subcategory_id=None):
         """根据分类ID获取工具列表"""

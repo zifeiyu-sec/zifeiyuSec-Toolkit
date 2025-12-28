@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         # 设置应用程序信息
         self.app_name = "子非鱼工具箱"
-        self.version = "1.0.0"
+        self.version = "2.0.0"
         
         # 初始化管理器
         self.data_manager = DataManager(config_dir=config_dir)
@@ -601,22 +601,55 @@ class MainWindow(QMainWindow):
                             # 自动检测EXE是否为命令行界面
                             should_run_in_terminal = self._is_windows_cui_exe(path)
                     
+                    # 获取命令行参数
+                    arguments = tool_data.get('arguments', '') if tool_data else ''
+                    
                     if should_run_in_terminal:
-                        subprocess.Popen(
-                            ['cmd.exe', '/c', 'start', path], 
-                            cwd=actual_working_dir,
-                            shell=True
-                        )
+                        # 在终端中运行
+                        if arguments:
+                            # 如果有命令行参数，直接执行完整命令
+                            logger.info(f"在终端中执行命令: {arguments}")
+                            subprocess.Popen(
+                                ['cmd.exe', '/c', 'start', '', 'cmd.exe', '/k', arguments], 
+                                cwd=actual_working_dir,
+                                shell=True
+                            )
+                        else:
+                            # 没有命令行参数，执行工具路径
+                            logger.info(f"在终端中运行工具: {path}")
+                            subprocess.Popen(
+                                ['cmd.exe', '/c', 'start', '', path], 
+                                cwd=actual_working_dir,
+                                shell=True
+                            )
                     else:
-                        subprocess.Popen(
-                            [path], 
-                            cwd=actual_working_dir,
-                            shell=True
-                        )
+                        # 不在终端中运行，将命令行参数传递给程序
+                        if arguments:
+                            subprocess.Popen(
+                                f'{path} {arguments}', 
+                                cwd=actual_working_dir,
+                                shell=True
+                            )
+                        else:
+                            subprocess.Popen(
+                                [path], 
+                                cwd=actual_working_dir,
+                                shell=True
+                            )
                 elif sys.platform == 'darwin':
-                    subprocess.Popen(['open', '-a', 'Terminal', path], cwd=actual_working_dir)
+                    # macOS: 在终端中运行
+                    arguments = tool_data.get('arguments', '') if tool_data else ''
+                    if arguments:
+                        subprocess.Popen(['open', '-a', 'Terminal', '--args', path, arguments], cwd=actual_working_dir)
+                    else:
+                        subprocess.Popen(['open', '-a', 'Terminal', path], cwd=actual_working_dir)
                 else:
-                    subprocess.Popen(['x-terminal-emulator', '-e', path], cwd=actual_working_dir)
+                    # Linux: 在终端中运行
+                    arguments = tool_data.get('arguments', '') if tool_data else ''
+                    if arguments:
+                        subprocess.Popen(f'x-terminal-emulator -e "{path} {arguments}"', shell=True, cwd=actual_working_dir)
+                    else:
+                        subprocess.Popen(['x-terminal-emulator', '-e', path], cwd=actual_working_dir)
 
             return True
         except KeyboardInterrupt as e:
@@ -625,7 +658,7 @@ class MainWindow(QMainWindow):
             return False
         except FileNotFoundError as e:
             logger.error("启动工具失败: %s, 错误: %s", tool_name, str(e))
-            config_info = f"工具名称: {tool_name}\n工具路径: {path}\n工作目录: {working_dir or '默认（工具所在目录）'}\n工具类型: {'本地工具' if not is_web else '网页工具'}\n优先级: {tool_data.get('priority', 0) if tool_data else 0}"
+            config_info = f"工具名称: {tool_name}\n工具路径: {path}\n工作目录: {working_dir or '默认（工具所在目录）'}\n工具类型: {'本地工具' if not is_web else '网页工具'}"
             QMessageBox.warning(self, "工具不存在", f"无法找到工具路径:\n{path}\n\n工具配置信息:\n{config_info}")
             return False
         except (PermissionError, subprocess.SubprocessError, ValueError) as e:

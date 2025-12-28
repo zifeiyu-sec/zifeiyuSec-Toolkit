@@ -1,6 +1,31 @@
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
-from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtCore import pyqtSignal, Qt, QEvent
+from PyQt5.QtGui import QDropEvent
 from core.style_manager import ThemeManager
+
+# 自定义分类列表控件，支持拖拽排序
+class DraggableCategoryListWidget(QListWidget):
+    # 拖拽完成信号
+    order_changed = pyqtSignal()
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setDragDropMode(QListWidget.InternalMove)
+        self.setDefaultDropAction(Qt.MoveAction)
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+        self.setSelectionMode(QListWidget.SingleSelection)
+        self.setMovement(QListWidget.Snap)
+        self.setUniformItemSizes(True)
+    
+    def dropEvent(self, event: QDropEvent):
+        """处理拖拽完成事件"""
+        super().dropEvent(event)
+        # 使用延迟发射信号，确保列表状态完全稳定
+        # 这有助于避免拖拽过程中临时创建的重复项被处理
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(100, self.order_changed.emit)
 
 class SubcategoryView(QWidget):
     """子分类视图，显示指定分类下的子分类列表"""
@@ -27,13 +52,15 @@ class SubcategoryView(QWidget):
         self.title_label = QLabel("子分类")
         
         # 创建子分类列表
-        self.subcategory_list = QListWidget()
+        self.subcategory_list = DraggableCategoryListWidget()
         # 给子分类列表设置最小宽度，保证长名称能完整显示
         self.subcategory_list.setMinimumWidth(200)
         self.subcategory_list.itemClicked.connect(self.on_item_clicked)
         # 设置右键菜单
         self.subcategory_list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.subcategory_list.customContextMenuRequested.connect(self.show_context_menu)
+        # 连接拖拽排序信号
+        self.subcategory_list.order_changed.connect(self.on_subcategory_order_changed)
         
         layout.addWidget(self.title_label)
         layout.addWidget(self.subcategory_list)
@@ -134,3 +161,54 @@ class SubcategoryView(QWidget):
             if data['id'] == self.current_subcategory:
                 return data
         return None
+    
+    def on_subcategory_order_changed(self):
+        """处理子分类拖拽排序事件，更新子分类顺序"""
+        if self.current_category is None:
+            return
+        
+        # 获取当前分类数据
+        categories = self.data_manager.load_categories()
+        parent_category = None
+        
+        # 查找当前父分类
+        for category in categories:
+            if category['id'] == self.current_category:
+                parent_category = category
+                break
+        
+        if not parent_category:
+            return
+        
+        # 获取当前子分类顺序，去重处理
+        current_order = []
+        seen_ids = set()
+        
+        # 从列表中获取当前顺序，去除重复项
+        for i in range(self.subcategory_list.count()):
+            item = self.subcategory_list.item(i)
+            data = item.data(Qt.UserRole)
+            subcat_id = data['id']
+            
+            # 只添加唯一ID，避免重复
+            if subcat_id not in seen_ids:
+                seen_ids.add(subcat_id)
+                current_order.append(subcat_id)
+        
+        # 获取原始子分类列表
+        original_subcategories = parent_category.get('subcategories', [])
+        
+        # 创建ID到子分类的映射，提高查找效率
+        subcat_map = {subcat['id']: subcat for subcat in original_subcategories}
+        
+        # 重新排序子分类
+        new_subcategories = []
+        for subcat_id in current_order:
+            if subcat_id in subcat_map:
+                new_subcategories.append(subcat_map[subcat_id])
+        
+        # 更新父分类的子分类列表
+        parent_category['subcategories'] = new_subcategories
+        
+        # 保存更新后的分类数据
+        self.data_manager.save_categories(categories)
