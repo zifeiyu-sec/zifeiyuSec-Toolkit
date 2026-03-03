@@ -154,9 +154,34 @@ class CategoryView(QWidget):
             delete_category_action = QAction("删除分类", self)
             delete_category_action.triggered.connect(lambda: self.delete_category_requested.emit(self.current_category))
             menu.addAction(delete_category_action)
+            # 添加重命名操作
+            rename_action = QAction("重命名", self)
+            rename_action.triggered.connect(self._rename_selected_category)
+            menu.addAction(rename_action)
         
         # 显示菜单
         menu.exec_(self.category_list.mapToGlobal(position))
+
+    def _rename_selected_category(self):
+        """弹出输入框获取新名称，并调用 DataManager 进行重命名"""
+        current_item = self.category_list.currentItem()
+        if not current_item:
+            return
+
+        data = current_item.data(Qt.UserRole)
+        category_id = data['id']
+        from PyQt5.QtWidgets import QInputDialog
+        old_name = current_item.text()
+        new_name, ok = QInputDialog.getText(self, "重命名分类", "新的分类名称:", text=old_name)
+        if ok and new_name and new_name.strip() and new_name != old_name:
+            success = self.data_manager.rename_category(category_id, new_name.strip())
+            if success:
+                # 重新加载并尽量恢复选中
+                self.load_categories()
+                self.select_category(category_id)
+            else:
+                from PyQt5.QtWidgets import QMessageBox
+                QMessageBox.warning(self, "失败", "重命名分类失败！")
     
     def set_theme(self, theme):
         """设置当前主题并应用样式"""

@@ -577,6 +577,38 @@ class DataManager:
                 
                 category['subcategories'].append(subcategory_data)
                 return self.save_categories(categories)
+
+    def rename_category(self, category_id, new_name):
+        """重命名一级分类（通过 id 定位）"""
+        categories = self.load_categories()
+        changed = False
+        for category in categories:
+            if category.get('id') == category_id:
+                category['name'] = new_name
+                changed = True
+                break
+
+        if changed:
+            return self.save_categories(categories)
+        return False
+
+    def rename_subcategory(self, subcategory_id, new_name):
+        """重命名二级子分类（通过子分类 id 定位）"""
+        categories = self.load_categories()
+        changed = False
+        for category in categories:
+            subs = category.get('subcategories', [])
+            for sub in subs:
+                if sub.get('id') == subcategory_id:
+                    sub['name'] = new_name
+                    changed = True
+                    break
+            if changed:
+                break
+
+        if changed:
+            return self.save_categories(categories)
+        return False
     
     def delete_category(self, category_id):
         """删除分类"""

@@ -1,22 +1,24 @@
 # 子非鱼工具箱 (ZifeiyuSec Toolkit) v2.0.0
 
-一个现代化、功能齐全的渗透测试工具分类管理平台，专为安全测试人员设计，帮助快速组织和访问各种渗透测试工具。
+一个现代化、功能齐全的红蓝攻防工具分类管理平台，专为安全测试人员设计，帮助快速组织和访问各种渗透测试工具。
 
 ## 📋 项目简介
 
-子非鱼工具箱是一个基于PyQt5开发的Web网络安全工具管理系统，提供直观的图形界面，帮助安全测试人员更高效地管理和使用各类渗透测试工具。一些工具时本地测试的时候添加的本地路径，可以修改为自己的工具路径。以及一些工具是临时添加，没有配置图标，可以自行下载图标（resources/icons）和工具路径进行替换。
+子非鱼工具箱是一个基于PyQt5开发的Web网络安全工具管理系统，提供直观的图形界面，帮助安全测试人员更高效地管理和使用各类渗透测试工具。
 
 ### 核心优势
 
 - **直观的图形界面**：现代化的UI设计，支持主题切换
 - **灵活的工具管理**：支持添加、编辑、删除和搜索工具
-- **分类拖拽排序**：支持一级分类和二级分类的自由拖拽排序
+- **分类管理**：支持一级分类和二级分类的管理
 - **自定义配置**：支持工具参数配置和工作目录设置
-- **终端命令执行**：支持直接在终端中执行配置的完整命令
+- **智能工具运行**：自动检测工具类型，支持在终端中运行命令行工具
 - **支持多种工具类型**：命令行工具和网页工具
 - **使用统计**：自动记录工具使用次数和最后使用时间
+- **工具收藏**：快速访问常用工具
 - **隐藏终端运行**：支持通过VBS/BAT脚本隐藏终端窗口运行
 - **快速启动方式**：支持创建桌面快捷方式，双击启动无终端显示
+- **Markdown笔记**：为每个工具添加详细的使用笔记
 
 ## 🚀 快速开始
 
@@ -78,15 +80,14 @@ python scripts/create_desktop_shortcut.py
 - ✅ 收藏常用工具
 - ✅ 工具使用统计
 - ✅ 工具搜索功能
-- ✅ 终端命令执行：支持直接在终端中执行配置的完整命令
+- ✅ 智能终端执行：自动检测工具类型，决定是否在终端中运行
 - ✅ 自定义参数配置：支持为工具配置命令行参数
+- ✅ Markdown笔记：为每个工具添加详细的使用笔记
 
 ### 分类管理
 - ✅ 多级分类支持
-- ✅ 分类图标自定义
 - ✅ 分类编辑和删除
-- ✅ 分类拖拽排序：支持一级分类和二级分类的自由拖拽排序
-- ✅ 排序持久化：拖拽后的分类顺序会自动保存
+- ✅ 分类管理界面
 
 ### 主题支持
 - ✅ 蓝白主题
@@ -107,7 +108,7 @@ python scripts/create_desktop_shortcut.py
 
 ### 添加工具
 
-1. 点击左上角"新增工具"按钮
+1. 点击左上角"新建工具"按钮
 2. 填写工具基本信息（名称、路径、描述等）
 3. 选择分类和子分类
 4. 配置运行参数（可选）
@@ -124,61 +125,61 @@ python scripts/create_desktop_shortcut.py
 
 1. 在搜索框中输入工具名称或标签
 2. 系统会实时过滤显示匹配的工具
+3. 支持模糊搜索和相似度匹配
 
 ### 切换主题
 
-1. 点击右上角的设置按钮
-2. 选择"主题设置"
-3. 在主题列表中选择喜欢的主题
-4. 主题将立即切换
+1. 点击右上角的主题按钮
+2. 在主题列表中选择喜欢的主题
+3. 主题将立即切换
 
-### 分类拖拽排序
+### 工具运行
 
-1. 在左侧分类列表中找到要排序的分类
-2. 点击并拖动分类到目标位置
-3. 释放鼠标后，分类会自动调整到新位置
-4. 排序结果会自动保存，下次启动时保持不变
+1. 点击工具卡片即可运行工具
+2. 系统会根据工具类型自动决定运行方式
+3. 命令行工具会在终端中运行
+4. 网页工具会在浏览器中打开
 
-### 终端命令执行
+### Markdown笔记
 
-1. 进入工具配置界面（新建或编辑工具）
-2. 在"运行配置"部分勾选"在终端中运行"
-3. 在"命令行参数"中输入完整的命令，例如：`java -jar myapp.jar`
-4. 保存配置后，点击工具卡片运行
-5. 系统会直接在终端中执行配置的完整命令
-
-**注意事项：**
-- 请确保命令行参数中的路径格式正确
-- 对于需要完整路径的程序，请确保路径正确
-- 终端会保持打开状态，以便查看程序输出
+1. 右键点击工具卡片
+2. 选择"打开笔记"
+3. 在弹出的对话框中编辑Markdown笔记
+4. 笔记会自动保存到`resources/notes/`目录
 
 ## 🛠️ 项目结构
 
 ```
 zifeiyuSec-Toolkit/
 ├── core/                 # 核心功能模块
-│   ├── app.py           # 应用主逻辑
+│   ├── app.py           # 应用外观
 │   ├── data_manager.py  # 数据管理
-│   └── image_manager.py # 图片管理
+│   ├── image_manager.py # 图片管理
+│   ├── logger.py        # 日志管理
+│   ├── notes_manager.py # 笔记管理
+│   └── style_manager.py # 样式管理
 ├── ui/                   # UI组件
 │   ├── category_view.py     # 分类视图
 │   ├── subcategory_view.py  # 子分类视图
+│   ├── tool_model_view.py   # 工具卡片容器
 │   ├── tool_config_dialog.py # 工具配置对话框
-│   └── image_selector.py    # 图片选择器
+│   ├── image_selector.py    # 图片选择器
+│   └── markdown_note_dialog.py # Markdown笔记对话框
 ├── resources/            # 资源文件
 │   ├── icons/           # 图标资源
-│   └── styles/          # 样式文件
+│   └── notes/           # Markdown笔记
 ├── data/                 # 配置文件
 │   ├── categories.json  # 分类配置
 │   └── tools.json       # 工具配置
 ├── images/               # 图片资源
 ├── scripts/              # 辅助脚本
-│   └── create_desktop_shortcut.py  # 快捷方式创建脚本
+│   ├── create_desktop_shortcut.py  # 快捷方式创建脚本
+│   └── process_probe.py            # 进程探测脚本
 ├── main.py               # 应用入口
 ├── requirements.txt      # 依赖列表
 ├── run_tool.vbs          # VBS启动脚本（隐藏终端）
-├── run_tool.bat          # BAT启动脚本
 ├── image.ico             # 应用图标
+├── image.png             # 应用图标（PNG格式）
 └── README.md            # 项目文档
 ```
 
@@ -196,22 +197,20 @@ zifeiyuSec-Toolkit/
 #### categories.json
 
 ```json
-{
-  "categories": [
-    {
-      "name": "信息收集 (Information Gathering)",
-      "icon": "info_gather.svg",
-      "id": 1,
-      "subcategories": [
-        {
-          "name": "设备与子域 (Devices & Subdomains)",
-          "id": 101,
-          "parent_id": 1
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "name": "信息收集",
+    "icon": "🔍",
+    "subcategories": [
+      {
+        "id": 101,
+        "name": "子域名枚举",
+        "parent_id": 1
+      }
+    ]
+  }
+]
 ```
 
 #### tools.json
@@ -222,13 +221,12 @@ zifeiyuSec-Toolkit/
     "id": 1,
     "name": "Nmap",
     "path": "C:\\",
-    "description": " `https://github.com/nmap/nmap` ",
+    "description": "网络扫描工具",
     "category_id": 1,
-    "subcategory_id": 103,
+    "subcategory_id": 101,
     "background_image": "",
     "icon": "new_default_icon.ico",
     "tags": ["端口扫描", "网络发现"],
-    "priority": 0,
     "is_favorite": true,
     "arguments": "",
     "working_directory": "C:\\",
@@ -247,7 +245,7 @@ zifeiyuSec-Toolkit/
 | 字段名                     | 类型      | 描述                          |
 |-------------------------|---------|------------------------------|
 | name                    | string  | 分类名称                        |
-| icon                    | string  | 分类图标（位于resources/icons/目录下） |
+| icon                    | string  | 分类图标（位于resources/icons/目录下或emoji） |
 | id                      | integer | 分类唯一标识符                    |
 | subcategories           | array   | 子分类列表                       |
 | subcategories.name      | string  | 子分类名称                       |
@@ -267,7 +265,6 @@ zifeiyuSec-Toolkit/
 | background_image  | string  | 工具卡片背景图片     |
 | icon              | string  | 工具图标         |
 | tags              | array   | 工具标签         |
-| priority          | integer | 工具优先级        |
 | is_favorite       | boolean | 是否收藏         |
 | arguments         | string  | 命令行参数        |
 | working_directory | string  | 工作目录         |
@@ -283,11 +280,12 @@ zifeiyuSec-Toolkit/
 2. **图标配置**：
    - 工具图标可以自行下载
    - 图标文件需放置在`resources/icons/`目录下
-   - 可在`categories.json`和`tools.json`中修改图标路径或者ui界面修改
+   - 可在工具配置界面中修改图标
 
 3. **工具优化**：
-   - 后续将持续优化工具配置和使用体验
-   - 支持更多工具类型和更灵活的配置选项
+   - 支持自动检测Windows可执行文件是否为命令行界面(CUI)应用程序
+   - 对于命令行工具，会自动在终端中运行
+   - 对于GUI工具，会直接运行
 
 ## ⚠️ 免责声明
 
@@ -303,6 +301,24 @@ zifeiyuSec-Toolkit/
 ## 🤝 贡献指南
 
 欢迎提交Issue和Pull Request！
+
+## 📝 笔记功能（Markdown Notes）
+
+为了方便记录每个工具的常用用法、命令示例和问题解决方案，项目内嵌了一个轻量级的 Markdown 笔记功能：
+
+- 打开方式：在工具列表中对某个工具右键，选择 `打开笔记`。会弹出一个笔记对话框，左侧为 Markdown 编辑器，右侧为渲染预览。
+- 预览模式：对话框提供 `只看预览` 切换按钮，开启后只显示右侧渲染视图（适合阅读）；再次切回可继续编辑。
+- 保存位置：笔记以 Markdown 文件的形式保存在仓库根目录下的 `resources/notes/` 目录中，文件名由工具名生成并做安全化处理（非法字符替换为下划线）。
+  - 例如，工具 `Nmap` 的笔记文件为 `resources/notes/Nmap.md`。
+- 编码与容错：笔记以 `UTF-8` 编码保存；读取失败时会以容错模式回退读取。
+- 渲染依赖：可选安装 `markdown`（已在 `requirements.txt` 中声明），若未安装将以纯文本回退显示预览。
+
+实现细节：
+- 代码位置：
+  - 笔记管理：`core/notes_manager.py`（读取/保存、文件名安全化）
+  - 笔记对话框：`ui/markdown_note_dialog.py`（编辑 + 预览 + 只看预览切换）
+  - 右键菜单集成：`ui/tool_model_view.py`（添加了"打开笔记"动作）
+- 笔记会在首次保存时自动创建 `resources/notes/` 目录（若不存在）。
 
 ## 📞 交流
 
@@ -321,4 +337,4 @@ zifeiyuSec-Toolkit/
 **项目地址：** [https://github.com/zifeiyu-sec/zifeiyuSec-Toolkit](https://github.com/zifeiyu-sec/zifeiyuSec-Toolkit)
 
 **版本：** v2.0.0
-**更新时间：** 2025-12-16
+**更新时间：** 2026-03-03

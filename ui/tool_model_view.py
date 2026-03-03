@@ -13,6 +13,13 @@ from PyQt5.QtCore import (Qt, QAbstractListModel, QModelIndex, QSize, pyqtSignal
                          QRect, QRectF, QPoint, QThread, QRunnable, QThreadPool, QObject)
 from PyQt5.QtGui import (QPainter, QColor, QFont, QIcon, QPen, QBrush,
                         QFontMetrics, QPixmap, QPainterPath, QImage)
+# 本地笔记对话框（右键笔记功能）
+try:
+    from ui.markdown_note_dialog import MarkdownNoteDialog
+except Exception:
+    # 在运行时 app.py 会把项目根加入 sys.path，导入应当正常；
+    # 这里捕获异常以避免静态分析/编辑器报错
+    MarkdownNoteDialog = None
 
 # 获取资源目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -501,6 +508,12 @@ class ToolCardContainer(QWidget):
 
         menu.addSeparator()
 
+        # 打开笔记（基于工具名自动加载/保存 notes 文件）
+        if MarkdownNoteDialog is not None:
+            notes_action = menu.addAction("打开笔记")
+            notes_action.triggered.connect(lambda: self._open_notes_for_tool(tool))
+            menu.addSeparator()
+
         # 获取工具路径和工作目录
         tool_path = tool.get('path', '')
         working_dir = tool.get('working_directory', '')
@@ -536,6 +549,17 @@ class ToolCardContainer(QWidget):
         del_action.triggered.connect(lambda: self.confirm_delete(tool))
 
         menu.exec_(self.view.mapToGlobal(pos))
+    
+    def _open_notes_for_tool(self, tool):
+        """打开笔记对话框，基于工具名进行保存与加载"""
+        if MarkdownNoteDialog is None:
+            QMessageBox.warning(self, "未安装", "笔记功能未能加载。")
+            return
+
+        # 尝试推断项目根路径，Notes dialog 接受 repo_root
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        dialog = MarkdownNoteDialog(tool_name=tool.get('name', 'untitled'), repo_root=repo_root, parent=self)
+        dialog.exec_()
         
     def confirm_delete(self, tool):
         # 简单确认框，为了减少依赖不引用外部样式，使用原生

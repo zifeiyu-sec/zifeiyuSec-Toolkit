@@ -2,5 +2,8 @@
 PyQt5>=5.15.0
 ujson>=5.0.0
 
+# Markdown rendering for notes preview
+markdown>=3.3.7
+
 # 开发依赖（用于打包）
 PyInstaller>=6.0.0

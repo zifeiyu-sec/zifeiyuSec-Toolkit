@@ -1,0 +1,174 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/><meta http-equiv="X-UA-Compatible" content="ie=edge"/><link rel="shortcut icon" href="favicon.png"/><meta name="description" content="00SEC-ASM™ 零零信安暴露面管理平台，专注于企业外部暴露面管理（信息系统、小程序、公众号、APK、邮箱、代码/文档、域名等）及暗网情报监控。"/><meta name="keywords" content="网络空间测绘,暴露面管理,暗网情报监控,暗网情报监控,勒索事件监控"/><title>零零信安 | ASM | 暴露面 | 暗网监测、情报分析和处置专家 | 比攻击者更快一步了解您自己的风险</title><style>/* 全局样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #14161a;
+            color: #fff;
+        }
+        
+        /* 下拉菜单样式 */
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .custom-dropdown:hover .custom-dropdown-content {
+            display: block;
+            animation: ant-slide-up-in 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .custom-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #21242d;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            min-width: 120px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            border: 1px solid #34383f;
+            padding: 4px 0;
+            overflow: hidden;
+        }
+        
+        .custom-dropdown-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        .custom-dropdown-content li {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .custom-dropdown-content a {
+            display: block;
+            padding: 8px 16px;
+            color: rgba(151, 156, 171, 1);
+            font-size: 14px;
+            transition: color 0.2s, background-color 0.2s;
+            text-decoration: none;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .custom-dropdown-content a::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #d33d16;
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+        
+        .custom-dropdown-content a:hover {
+            color: #d33d16;
+            background-color: #2b2f3e;
+        }
+        
+   
+        
+        .custom-dropdown-content a.active {
+            color: #d33d16;
+            background-color: #2b2f3e;
+        }
+      
+        
+        @keyframes ant-slide-up-in {
+            0% {
+                opacity: 0;
+                transform: scaleY(0.8);
+                transform-origin: 0% 0%;
+            }
+            100% {
+                opacity: 1;
+                transform: scaleY(1);
+                transform-origin: 0% 0%;
+            }
+        }
+        
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        
+        /* 导航链接样式 */
+        .information_name {
+            cursor: pointer;
+            font-size: 14px;
+            font-family: PingFangSC-Regular, PingFang SC;
+            font-weight: 400;
+            color: #979CAB;
+            margin-right: 20px;
+            height: 78px;
+            line-height: 78px;
+            white-space: nowrap;
+            position: relative;
+            display: block;
+            transition: all 0.3s;
+        }
+        
+        .information_name::after {
+            content: '';
+            position: absolute;
+            bottom: 0px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #d33d16;
+            transition: width 0.3s ease;
+        }
+        
+        .information_name:hover {
+            color: #fff;
+        }
+        
+        .information_name:hover::after {
+            width: 100%;
+        }
+        
+        .information_name.mb {
+            margin-bottom: 0;
+        }
+        
+        .information_name.mb:hover {
+            color: #fff;
+        }
+        
+        .information_name.active {
+            color: #fff;
+            position: relative;
+        }
+        
+        .information_name.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #d33d16;
+        }
+        
+        .icon-arrow-down {
+            font-size: 12px;
+            margin-left: 2px;
+        }</style><link href="8506.21d01582.css" rel="stylesheet"><link href="main.d79d4fa6.css" rel="stylesheet"></head><body><div id="app"><link rel="stylesheet" href="https://static.0.zone/f04dba08cf8a6fe3c1b54a8957a60405.css"/><div class="Search"><div class="Header"><div class="ant-row" style="width: 100%; align-items: center; position: relative; row-gap: 0px;"><div class="ant-col ant-col-4"><div class="logo"><a href="https://0.zone"><img src="https://0.zone/9ebac2a71247e939ec038850dfd05c89.svg" alt=""></a></div></div><div class="ant-col ant-col-9"></div><div class="ant-col ant-col-12" style="position: absolute; right: 5px;"><div class="information"><div class="custom-dropdown"></div><a href="/introduce"><span class="information_name">会员</span> </a><a href="/dataService"><span class="information_name">商品</span> </a><a href="/subscription"><span class="information_name">订阅</span></a><div class="custom-dropdown"><a class="information_name mb" style="cursor: pointer;">文档和社区 <i class="font_family icon-arrow-down" style="font-size: 12px;"></i></a><div class="custom-dropdown-content"><ul><li><a href="/apply">API申请</a></li><li><a href="/daily">每日暗网情报</a></li><li><a href="/help">文章和资讯</a></li></ul></div></div><a href="/messageCenter" class="information_name"><i class="font_family icon-xiaoxi" style="color: rgb(151, 156, 171);"></i></a></div></div></div></div></div></div><script src="wx.js"></script><script>var _hmt = _hmt || [];
+        (function () {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?5a2caee4a7c8bad536e35b95d5066e15';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();</script><script src="manifest.7de85844.js"></script><script src="8506.9ebc246e.js"></script><script src="main.73b08542.js"></script></body></html>

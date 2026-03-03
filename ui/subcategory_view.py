@@ -126,7 +126,11 @@ class SubcategoryView(QWidget):
             # 获取当前选中的子分类
             selected_items = self.subcategory_list.selectedItems()
             if selected_items:
-                
+                # 添加重命名子分类菜单项
+                rename_action = QAction("重命名", self)
+                rename_action.triggered.connect(self._rename_selected_subcategory)
+                menu.addAction(rename_action)
+
                 # 添加删除子分类菜单项
                 delete_subcategory_action = QAction("删除子分类", self)
                 delete_subcategory_action.triggered.connect(lambda: self.delete_subcategory_requested.emit(self.current_subcategory))
@@ -179,8 +183,6 @@ class SubcategoryView(QWidget):
         
         if not parent_category:
             return
-        
-        # 获取当前子分类顺序，去重处理
         current_order = []
         seen_ids = set()
         
@@ -212,3 +214,28 @@ class SubcategoryView(QWidget):
         
         # 保存更新后的分类数据
         self.data_manager.save_categories(categories)
+
+    def _rename_selected_subcategory(self):
+        """弹出输入框获取新名称，并调用 DataManager 进行重命名"""
+        current_item = self.subcategory_list.currentItem()
+        if not current_item:
+            return
+
+        data = current_item.data(Qt.UserRole)
+        subcategory_id = data['id']
+        from PyQt5.QtWidgets import QInputDialog
+        old_name = current_item.text()
+        new_name, ok = QInputDialog.getText(self, "重命名子分类", "新的子分类名称:", text=old_name)
+        if ok and new_name and new_name.strip() and new_name != old_name:
+            try:
+                success = self.data_manager.rename_subcategory(subcategory_id, new_name.strip())
+            except Exception:
+                success = False
+
+            if success:
+                # 重新加载并尽量恢复选中
+                self.load_subcategories(self.current_category)
+                self.select_subcategory(subcategory_id)
+            else:
+                from PyQt5.QtWidgets import QMessageBox
+                QMessageBox.warning(self, "失败", "重命名子分类失败！")

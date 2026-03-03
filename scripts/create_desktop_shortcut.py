@@ -112,11 +112,13 @@ def main():
 
     run_args = ''
     workdir = str(repo_root)
-    # Choose icon: prefer image.png in repo root, else resources icon if exists
-    icon = repo_root / "image.png"
+    # Choose icon: prefer image.ico first, then image.png, else resources icon if exists
+    icon = repo_root / "image.ico"
     if not icon.exists():
-        svg_icon = repo_root / "resources" / "icons" / "new_default_icon.ico"
-        icon = svg_icon if svg_icon.exists() else None
+        icon = repo_root / "image.png"
+        if not icon.exists():
+            svg_icon = repo_root / "resources" / "icons" / "new_default_icon.ico"
+            icon = svg_icon if svg_icon.exists() else None
 
     # If target is pythonw with main.py passed as argument
     if isinstance(target, Path) and target.name.lower().startswith('python') and target.suffix.lower() in ('.exe',):

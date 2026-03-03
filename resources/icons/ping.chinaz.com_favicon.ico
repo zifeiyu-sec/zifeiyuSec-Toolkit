@@ -1,0 +1,2018 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>多个地点ping[favicon.ico]服务器-网站测速-站长工具</title>
+    <meta name="keywords" content="ping检测,ping测试,超级ping,检测ping值,网站测速"/>
+    <meta name="description" content="通过该工具可以多个地点Ping服务器以检测服务器响应速度。"/>
+    <meta content="always" name="referrer">
+    <link rel="shortcut icon" type="image/ico" href="//csstools.chinaz.com/favicon.ico">
+    <link rel="stylesheet" href="//csstools.chinaz.com/common/styles/commons.css?v=20241023" type="text/css">
+    <link rel="stylesheet" href="//csstools.chinaz.com/tools/styles/iconfont/iconfont.css?v=20230424" type="text/css">
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/mobilepage.js?v=20221013"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/common.js?v=20241107"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/tool.js?v=20231016"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/layer/layer.js?v=20220301"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/tools/js/member.js?v=20241219"></script>
+    <!--[if IE 6] -->
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/DD_belatedPNG.js"></script>
+    <script>    DD_belatedPNG.fix('*');</script>
+    <!-- [ENDIF]-->
+    <script type="text/javascript" src="//csstools.chinaz.com/tools/js/bdtongjisearch.js?v=20220301"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/bdtongji.js?v=20220301"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/generatetoken.js?v=20251016" ></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/permission.js?v=20250722"></script>
+    <script class="CLASS42bc4e2f_b826_11e9_9ed0_18dbf2568723" src="https://a2put.chinaz.com/propagate.js"></script>
+    <script>
+        document.domain = 'chinaz.com';
+        var jsurlbase = '//csstools.chinaz.com/tools/js';
+        var imgurlbase = '//csstools.chinaz.com/tools/images';
+        var styleurlbase = '//csstools.chinaz.com/tools/styles';
+        var helpLink = "\/\/toolchinaz.yuque.com\/gkzmig\/gz5dgn\/en87gx3luwkb43d4";
+        var auth = '{"vip_toolwebchecks_quickping_query_frequency":-2,"member_toolwebchecks_continuousping_query_frequency":-1,"vip_toolwebchecks_continuousping_query_frequency":-2,"guest_toolwebchecks_quickping_query_frequency":-2,"guest_toolwebchecks_continuousping_query_frequency":-1,"member_toolwebchecks_quickping_query_frequency":-2}';
+        var encryptString = '';
+        var isGuestIpLimit = '';
+        var pagingIdentify =  '';
+        var userType = '0';
+        var userTypeKey = 'guest';
+        var userTypeName = '游客';
+        var remainFrequency = '-1';
+        var otherModuleRemainLimit = {"guest_toolwebchecks_quickping_query_frequency":-2,"guest_toolwebchecks_continuousping_query_frequency":-1};
+        var remainQuantity = '';
+        var queryFrequencyKey = 'guest_toolwebchecks_continuousping_query_frequency';
+        var queryQuantityKey = 'guest_toolwebchecks_continuousping_query_quantity';
+        var authProperties = '';
+        var authVerifyResult = 'false';
+
+        //新版的权限变量
+        var permissionStatus = '';
+        var queryRemainFrequency = '';
+        var queryRemainQuantity = '';
+    </script>
+
+    
+    <script type="text/javascript" src="//csstools.chinaz.com/stat/pc.js?v=20231226"></script>
+
+    <script src="//csstools.chinaz.com/tools/js/biz/tailwindcss.min.js"></script>
+    <script src="//csstools.chinaz.com/tools/js/biz/tailwindcss.config.js"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/jquery-1.11.3.min.js"></script>
+    <script src="//csstools.chinaz.com/tools/js/UILibrary/index.js"></script>
+    <link rel="stylesheet" href="//csstools.chinaz.com/tools/styles/UILibrary/index.css" type="text/css">
+</head>
+
+<body class=" pularge">
+<link rel="stylesheet" href="//csstools.chinaz.com/tools/styles/toolstyle.css?v=20240513"
+      type="text/css">
+<!-- //重新旧样式 -->
+<link rel="stylesheet" href="//csstools.chinaz.com/tools/styles/reCommons.css?v=20240621"
+      type="text/css">
+<script type="text/javascript" src="//csstools.chinaz.com//tools/js/charts/echarts.min.js"></script>
+<script src="//csstools.chinaz.com/tools/js/biz/tailwindcss.min.js?v=1444"></script>
+
+
+<!--<link rel="stylesheet" href="//csstools.chinaz.com/tools/styles/UILibrary/index.css" type="text/css">-->
+<div>
+
+    <div>
+        <div class="ww100 ToolHeader">     <!--ToolTop-begin-->
+    <div><div class="ToolTop bor-b1s clearfix"> <div class="wrapper02"> <div class="w74-0 fl"> <ul class="TnavList pr zI52" id="menu"> <li class="tdrap"> <span>站长之家产品</span> <i class="corner iconfont iconzhankai"></i> <div class="tdrap-cur"> <span class="poptip-arrow"> <i>▲</i> </span> <div class="thisHover"></div> <a href="//chinaz.com" target="_blank">站长之家</a> <a href="//sc.chinaz.com" target="_blank">站长素材</a> <a href="http://down.chinaz.com" target="_blank">源码下载</a> <a href="//top.chinaz.com" target="_blank">网站排行</a> <a href="//data.chinaz.com" target="_blank">星网词库</a> <a href="//tuan.chinaz.com" target="_blank">站长团购</a><a href="//font.chinaz.com" target="_blank">字体下载</a><a href="https://app.aibase.cn/" target="_blank">AI工具推荐</a></div> </li> <li class="tdrap"> <a href="javascript:mobilepage();" class="Tnone"> <span>手机版</span> <i class="corner iconfont iconzhankai"></i> </a> <p class="tdrap-cur"> <span class="poptip-arrow"> <i>▲</i> </span> <img src="//csstools.chinaz.com/tools/images/mtool.chinaz.com.qrcode.png" id="code" /></p> </li> </ul> </div> <div class="fr msgBox"> <a href="//my.chinaz.com/toolvip/vip" class="toolvip" target="_blank"> <img src="//csstools.chinaz.com/tools/images/viptq.png" /></a> <div class="msgbtn"> <i class="iconfont icontongzhi"> <em class="fz12">消息通知</em> <div class="msgItem"> <span class="poptip-arrow"> <i>▲</i> </span> <div class="thisHover"></div> <div class="msgTab"> <ul> <li class="msgTabItem currentpage sysmsg">系统消息 <em class="msgTotal ml5">0</em> <div class="msgItemContent" style="display:block"> <div class="msgItemMain"></div> <span class="more"><a href='//my.chinaz.com/ToolMember/Member/News' target="_blank">查看更多</a></span> </div> </li> <li class="msgTabItem updatelog">更新日志 <div class="msgItemContent"> <div class="msgItemMain"></div> <span class="more"><a href="//tool.chinaz.com/notification" target="_blank">查看更多</a></span> </div> </li> </ul> </div> </div> </i></div> <div class="fr TrigW" id="chinaz_topbarBox"></div> </div> </div></div></div>
+    <!--ToolTop-end-->     <!--ToolHead-begin-->
+    <div class="ToolHead">
+        <div class="wrapperTopBtm clearfix">
+            <a href="//tool.chinaz.com" class="ToolLogo fl">
+                <img src="//csstools.chinaz.com/tools/images/public/logos/logo-index.png">
+            </a>
+            <span>
+
+    <!--   template_id 哪一套公用模板 -->
+    <!--   ads_id 模板id -->
+
+    <span>
+
+        <span>
+            <!--tool顶部广告-->
+            <div class="fr ml10" id="topTxt">
+    <script>propagate('s1696812498069624', getCurrentScript())</script>
+</div><div class="fr topTsCenter">
+    <script>propagate('s1696812292764109', getCurrentScript())</script>
+</div>
+        </span>
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+    </span>
+
+    
+
+    
+
+    
+
+</span>
+        </div>
+    </div>
+    <!--ToolHead-end-->     <div class="ToolNavbar" id="ToolNav">
+        <div class="Tool-mainnav">
+            <div class="Tool-nav clearfix">
+                <div class="Tool-link">
+                    <ul class="clearfix">
+                        <li name="home"><a href="//tool.chinaz.com" target="_blank">首页</a></li>
+                        <li class="currentpage">
+                            <a href="//seo.chinaz.com" target="_blank" class="moreserver">SEO优化</a><i  class="corner iconfont iconzhankai"></i>
+                            <div class="pulldown-Nav">
+                                <div class="shadowbg"></div>
+                                <div class="Nav-item-box navitem clearfix">
+                                    <div>
+                                        <div class="Nav-item">
+                                            <dl>
+                                                <div class="Nav-item-content mt20">
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//seo.chinaz.com/" target="_blank">SEO综合查询</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//seo.chinaz.com/" target="_blank">网站的SEO相关信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://monitor.chinaz.com/monitor/rank/search" target="_blank">站长权重</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://monitor.chinaz.com/monitor/rank/search" target="_blank">SEO竞争对手分析关键词和流量</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//stool.chinaz.com/robots" target="_blank">Robots.txt检测</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//stool.chinaz.com/robots" target="_blank">检测网站Robots状态和内容</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://link.chinaz.com/" target="_blank">友链检测</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://link.chinaz.com/" target="_blank">网站的友情链接信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://monitor.chinaz.com/monitor/keywords/ranking" target="_blank">关键词排名</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://monitor.chinaz.com/monitor/keywords/ranking" target="_blank">自定义关键词排名及流量跟踪</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://tool.chinaz.com/batchquery#6" target="_blank">关键词排名实时批量查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://tool.chinaz.com/batchquery#6" target="_blank">大批量查网站关键词实时排名</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tools/links" target="_blank">死链查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tools/links" target="_blank">网站的死链排查</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://outlink.chinaz.com/" target="_blank">网站反链</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://outlink.chinaz.com/" target="_blank">网站的反链和外链信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://monitor.chinaz.com/monitor/rank/cba-search" target="_blank">竞品分析 </a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://monitor.chinaz.com/monitor/rank/cba-search" target="_blank">对比您和竞争对手关键词工具</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/vie" target="_blank">竞争网站分析 </a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/vie" target="_blank">竞争对手网站的权重关键词信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/kwevaluate" target="_blank">关键词优化分析</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/kwevaluate" target="_blank">关键词优化难度及排名权重信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//stool.chinaz.com/baidu/words.aspx" target="_blank">关键词挖掘 </a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//stool.chinaz.com/baidu/words.aspx" target="_blank">挖掘更多流量关键词</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tools/density.aspx" target="_blank">关键词密度检测</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tools/density.aspx" target="_blank">网站的关键词密度检测</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/shoulu/" target="_blank">收录查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/shoulu/" target="_blank">网站的收录信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://tool.chinaz.com/batchquery#7" target="_blank">收录实时批量查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://tool.chinaz.com/batchquery#7" target="_blank">大批量查网址收录实时信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//stool.chinaz.com/same" target="_blank">同IP网站查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//stool.chinaz.com/same" target="_blank">同一IP下的网站SEO信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//rank.chinaz.com/history/baidupc/" target="_blank">SEO历史数据</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//rank.chinaz.com/history/baidupc/" target="_blank">网站的SEO历史信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://yx.chinaz.com/marketing/dropdown-word/index" target="_blank">全网下拉词 </a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://yx.chinaz.com/marketing/dropdown-word/index" target="_blank">覆盖多平台全方位掌握流量动态</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//ntool.chinaz.com/originality/" target="_blank">原创度检测</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//ntool.chinaz.com/originality/" target="_blank">文章原创度在线检测</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/keywords " target="_blank">关键词异地排名</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/keywords " target="_blank">网站的关键词排名信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                    <div class="HeaderAdvert mt20">
+                                        <script>propagate('s1764925528857203', getCurrentScript())</script>
+                                    </div>
+                                    
+                                    
+                                    
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="//rank.chinaz.com" target="_blank" class="moreserver">权重查询</a><i  class="corner iconfont iconzhankai"></i>
+                            <div class="pulldown-Nav">
+                                <div class="shadowbg"></div>
+                                <div class="Nav-item-box navitem clearfix">
+                                    <div>
+                                        <div class="Nav-item">
+                                            <dl>
+                                                <div class="Nav-item-content mt20">
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://monitor.chinaz.com/monitor/rank/search" target="_blank">站长权重</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://monitor.chinaz.com/monitor/rank/search" target="_blank">SEO竞争对手分析关键词和流量</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//rank.chinaz.com/" target="_blank">站长权重-百度PC</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//rank.chinaz.com/" target="_blank">网站的权重信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//rank.chinaz.com/baidumobile/" target="_blank">站长权重-百度移动</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//rank.chinaz.com/baidumobile/" target="_blank">网站的权重信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://rank.chinaz.com/sorank" target="_blank">360权重</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://rank.chinaz.com/sorank" target="_blank">网站在360PC的权重信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://rank.chinaz.com/bing" target="_blank">必应权重</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://rank.chinaz.com/bing" target="_blank">必应权重排名查询工具</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://tool.chinaz.com/batchquery#5" target="_blank">权重实时批量查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://tool.chinaz.com/batchquery#5" target="_blank">大批量查网站实时权重</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//rank.chinaz.com/sogoupc" target="_blank">搜狗权重</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//rank.chinaz.com/sogoupc" target="_blank">网站在搜狗PC的权重信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//rank.chinaz.com/smrank/" target="_blank">神马权重</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//rank.chinaz.com/smrank/" target="_blank">网站在神马的权重信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://trends.chinaz.com/ranklist" target="_blank">权重变化榜 </a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://trends.chinaz.com/ranklist" target="_blank">关键词权重周期变动信息
+</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//rank.chinaz.com/all" target="_blank">综合权重查询 </a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//rank.chinaz.com/all" target="_blank">网站在各搜索引擎的权重信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//index.chinaz.com/" target="_blank">指数查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//index.chinaz.com/" target="_blank">关键词的全网指数信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="HeaderAdvert mt20">
+                                        <script>propagate('s1764925558565590', getCurrentScript())</script>
+                                    </div>
+                                    
+                                    
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="//ntool.chinaz.com/tools/nav" target="_blank" class="moreserver">热门工具</a><i  class="corner iconfont iconzhankai"></i>
+                            <div class="pulldown-Nav">
+                                <div class="shadowbg"></div>
+                                <div class="Nav-item-box navitem clearfix">
+                                    <div>
+                                        <div class="Nav-item">
+                                            <dl>
+                                                <div class="Nav-item-content mt20">
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//icp.chinaz.com/" target="_blank">icp备案实时查询</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//icp.chinaz.com/" target="_blank">仅对备案信息实时结果如实展示</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//whois.chinaz.com/" target="_blank">Whois域名查询 </a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//whois.chinaz.com/" target="_blank">免费的域名whois检测工具</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//ip.tool.chinaz.com/" target="_blank">IP查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//ip.tool.chinaz.com/" target="_blank">覆盖全面的IP详细信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/pagestatus/" target="_blank">HTTP状态查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/pagestatus/" target="_blank">直观展示url的响应状态</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://tool.chinaz.com/batchquery#2" target="_blank">备案实时批量查询</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://tool.chinaz.com/batchquery#2" target="_blank">实时查询网站备案信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/batchquery#3" target="_blank">Whois实时批量查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/batchquery#3" target="_blank">省时省力获取Whois实时信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/batchquery#1" target="_blank">IP实时批量查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/batchquery#1" target="_blank">大批量查询IP实时信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/batchquery#4" target="_blank">HTTP状态实时批量查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/batchquery#4" target="_blank">大批量查网址HTTP状态实时信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//stool.chinaz.com/tools/pagecode.aspx" target="_blank">查看网页源代码</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//stool.chinaz.com/tools/pagecode.aspx" target="_blank">网页源代码查看和着色</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tools/Unicode.aspx" target="_blank">编码转换</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tools/Unicode.aspx" target="_blank">Unicode编码多种转换</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/robots" target="_blank">robots.txt生成</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/robots" target="_blank">指定或禁止蜘蛛抓取内容</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/dns/" target="_blank">DNS查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/dns/" target="_blank">查询网站DNS详细信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//ping.chinaz.com/" target="_blank">ping检测</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//ping.chinaz.com/" target="_blank">多线多地ping信息检测</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/js.aspx" target="_blank">压缩格式化</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/js.aspx" target="_blank">JS代码混淆压缩</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tools/unixtime.aspx" target="_blank">unix时间戳</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tools/unixtime.aspx" target="_blank">unix时间戳转换</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tools/textencrypt.aspx" target="_blank">对称加密解密</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tools/textencrypt.aspx" target="_blank">DES/AES等多种对称加密解密</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tracert/" target="_blank">路由追踪</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tracert/" target="_blank">追踪域名或网站的网络通行情况</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/sitespeed" target="_blank">网站速度测试</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/sitespeed" target="_blank">网站速度检测</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tools/dwz.aspx" target="_blank">短网址生成</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tools/dwz.aspx" target="_blank">生成url短链接</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//ntool.chinaz.com/forbid/word" target="_blank">违禁词查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//ntool.chinaz.com/forbid/word" target="_blank">智能识别违禁规避风险词汇</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/tools/randompwd/" target="_blank">随机密码生成器</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/tools/randompwd/" target="_blank">随机生成强密码更安全</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//cdn.chinaz.com/" target="_blank">CDN查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//cdn.chinaz.com/" target="_blank">最新CDN网站，CDN厂商，CDN大数据</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/ssl" target="_blank">SSL证书查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/ssl" target="_blank">最新SSL网站，SSL证书查询，SSL大数据</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//tool.chinaz.com/subdomain" target="_blank">子域名查询</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//tool.chinaz.com/subdomain" target="_blank">近5亿特殊子域名信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    <div class="HeaderAdvert mt20">
+                                        <script>propagate('s1764925585958548', getCurrentScript())</script>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="//www.aibase.com/zh" target="_blank" class="moreserver">AIBase基地</a><i  class="corner iconfont iconzhankai"></i>
+                            <div class="pulldown-Nav">
+                                <div class="shadowbg"></div>
+                                <div class="Nav-item-box navitem clearfix">
+                                    <div>
+                                        <div class="Nav-item">
+                                            <dl>
+                                                <div class="Nav-item-content mt20">
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//app.aibase.com/zh/best-ai-tools" target="_blank">全球AI排行榜</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//app.aibase.com/zh/best-ai-tools" target="_blank">跟踪全球AI网站排行榜</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//news.aibase.com/zh" target="_blank">AI行业资讯</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//news.aibase.com/zh" target="_blank">聚焦AI技术突破与产业变革</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//app.aibase.com/zh/tools" target="_blank">AI工具导航</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//app.aibase.com/zh/tools" target="_blank">千万用户信赖的AI工具导航平台</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//news.aibase.com/zh/daily" target="_blank">最新AI日报</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//news.aibase.com/zh/daily" target="_blank">全面了解AI动态</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//model.aibase.com/zh/llm" target="_blank">AI模型库</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//model.aibase.com/zh/llm" target="_blank">聚合全球优质AI模型</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//app.aibase.com/zh/discover" target="_blank">AI开源产品库</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//app.aibase.com/zh/discover" target="_blank">AI商用开源产品精选</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//model.aibase.com/zh/compare" target="_blank">AI大模型选型对比</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//model.aibase.com/zh/compare" target="_blank">大模型能力对比一键选型无忧</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//model.aibase.com/zh/providers" target="_blank">大模型供应商</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//model.aibase.com/zh/providers" target="_blank">汇聚全球大模型供应商</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//model.aibase.com/zh/arena" target="_blank">AI大模型竞技场</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//model.aibase.com/zh/arena" target="_blank">AI性能实测优中选优</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//model.aibase.com/zh/calculator" target="_blank">AI大模型费用计算器</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//model.aibase.com/zh/calculator" target="_blank">一键估算大模型费用成本</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//mcp.aibase.com/zh/server/doc" target="_blank">MCP案例教程</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//mcp.aibase.com/zh/server/doc" target="_blank">手把手教你MCP核心开发</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//mcp.aibase.com/zh/inspector" target="_blank">MCP服务调试器</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//mcp.aibase.com/zh/inspector" target="_blank">一键联调打通AI与工具</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//mcp.aibase.com/zh/ranking" target="_blank">MCP排行榜</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//mcp.aibase.com/zh/ranking" target="_blank">MCP服务端和客户端排行榜</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//mcp.aibase.com/zh/playground" target="_blank">MCP试验场</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//mcp.aibase.com/zh/playground" target="_blank">零门槛玩转MCP试验场</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//mcp.aibase.com/zh/explore" target="_blank">MCP服务端</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//mcp.aibase.com/zh/explore" target="_blank">发现全球优质MCP服务</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//mcp.aibase.com/zh/client" target="_blank">MCP客户端</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//mcp.aibase.com/zh/client" target="_blank">一站式整合MCP服务器和客户端</a></span>
+                                                        </div>
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    
+                                    <div class="HeaderAdvert">
+                                        <div id="advertImg"><a href="" class="experience" target="_blank"></a></div> <a href="https://www.chinaz.net/mall/a_zZxolAnDQ2.html" target="_blank"><img src="https://csstools.chinaz.com/tools/images/exercise.jpg?v=20250428" class="advert mt20"/></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="//data.chinaz.com/" target="_blank" class="moreserver">星网大数据</a><i  class="corner iconfont iconzhankai"></i>
+                            <div class="pulldown-Nav">
+                                <div class="shadowbg"></div>
+                                <div class="Nav-item-box navitem clearfix">
+                                    <div>
+                                        <div class="Nav-item">
+                                            <dl>
+                                                <div class="Nav-item-content mt20">
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/ip/" target="_blank">IP大数据</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/ip/" target="_blank">IPv4/v6大数据，排行榜</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/whoisdata" target="_blank">WHOIS大数据</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/whoisdata" target="_blank">whois数据分析，注册商分析</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/domain" target="_blank">域名大数据</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/domain" target="_blank">域名数据分析，排行榜</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/keyword" target="_blank">行业词库</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/keyword" target="_blank">提供行业专家级词库大数据</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/ci" target="_blank">长尾词挖掘</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/ci" target="_blank">挖掘网站的长尾词词库</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/bid" target="_blank">竞价词挖掘</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/bid" target="_blank">挖掘网站的竞价词词库</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/indexword" target="_blank">指数词挖掘</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/indexword" target="_blank">关键词的全网指数信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/related" target="_blank">相关词挖掘</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/related" target="_blank">挖掘网站的相关词词库</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/pullword" target="_blank">下拉词挖掘</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/pullword" target="_blank">挖掘网站的下拉词词库</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//data.chinaz.com/naotu" target="_blank">需求图谱</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//data.chinaz.com/naotu" target="_blank">数据需求图谱报告</a></span>
+                                                        </div>
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    
+                                    <div class="HeaderAdvert">
+                                        <div id="advertImg"><a href="" class="experience" target="_blank"></a></div> <a href="https://www.chinaz.net/mall/a_zZxolAnDQ2.html" target="_blank"><img src="https://csstools.chinaz.com/tools/images/exercise.jpg?v=20250428" class="advert mt20"/></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="//www.chinaz.net/mall" target="_blank" class="moreserver">API/数据集</a><i  class="corner iconfont iconzhankai"></i>
+                            <div class="pulldown-Nav">
+                                <div class="shadowbg"></div>
+                                <div class="Nav-item-box navitem clearfix">
+                                    <div>
+                                        <div class="Nav-item">
+                                            <dl>
+                                                <div class="Nav-item-content mt20">
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_9aUhQUNiv4.html" target="_blank">ICP域名备案实时查询</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_9aUhQUNiv4.html" target="_blank">零缓存实时数据查询</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_SpqZmv8RyC.html" target="_blank">端口检测</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_SpqZmv8RyC.html" target="_blank">可国内外实时检测目标的端口是否正常</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://www.chinaz.net/mall/a_gJE7TBH8Re.html" target="_blank">百度PC排名API</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://www.chinaz.net/mall/a_gJE7TBH8Re.html" target="_blank">PC端关键词排名</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://www.chinaz.net/mall/a_Ub6dqFMQ7H.html" target="_blank">IP反查域名</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://www.chinaz.net/mall/a_Ub6dqFMQ7H.html" target="_blank">原同IP网站查询</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_MwsWYgep2b.html" target="_blank">企业工商信息API</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_MwsWYgep2b.html" target="_blank">智能匹配40+工商信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_eN5lxTp4sp.html" target="_blank">最新注册域名</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_eN5lxTp4sp.html" target="_blank">联系客服领取折扣券</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_TsMSRI22oR.html" target="_blank">Whois实时查询</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_TsMSRI22oR.html" target="_blank">实时查询域名的相关信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_wakprOYdbT.html" target="_blank">运营商二要素验证</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_wakprOYdbT.html" target="_blank">通过姓名+手机号进行信息比对</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_daWyqf3oI1.html" target="_blank">IP被墙检测</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_daWyqf3oI1.html" target="_blank">支持输入域名检测解析的IP是否被墙</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_t302FUj62I.html" target="_blank">综合权重</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_t302FUj62I.html" target="_blank">所有搜索引擎对应的权重</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_WpaDuIOCuT.html" target="_blank">IP风险画像</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_WpaDuIOCuT.html" target="_blank">多维度IP风险精准判定</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_11pqPK4xe3.html" target="_blank">域名DNS解析检测</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_11pqPK4xe3.html" target="_blank">查询域名IP地址、解析线路、TTL值等</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_jB3dyMpMTb.html" target="_blank">企业三要素验证</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_jB3dyMpMTb.html" target="_blank">帮助核验企业信息的真实性</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_prblAiuQWT.html" target="_blank">谷歌域名报毒检测</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_prblAiuQWT.html" target="_blank">检测谷歌浏览器是否正常打开</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_zZxolAnDQ2.html" target="_blank">whois历史信息API</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_zZxolAnDQ2.html" target="_blank">包含了域名whois历史变更项</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_Qx7vJYRilq.html" target="_blank">司法综合数据查询</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_Qx7vJYRilq.html" target="_blank">属于法院综合性数据接口</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="https://www.chinaz.net/mall/a_kpSyGaOKn6.html" target="_blank">手机在网状态</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="https://www.chinaz.net/mall/a_kpSyGaOKn6.html" target="_blank">支持号码携转验证</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_nn4hlrDwyZ.html" target="_blank">个人身份实名验证</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_nn4hlrDwyZ.html" target="_blank">对身份证号和姓名进行认证</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_QvAEcT3C23.html" target="_blank">二维码生成</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_QvAEcT3C23.html" target="_blank">生成的二维码尺寸可自定义</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_JaSamWAmrm.html" target="_blank">企业信息数据集服务</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_JaSamWAmrm.html" target="_blank">各地区各行业企业相关信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_1oUXC7L4RV.html" target="_blank">视频内容检测</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_1oUXC7L4RV.html" target="_blank">精准识别视频内容，保障合规安全</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_8XGByt2Gj7.html" target="_blank">微信域名安全检测</a>
+                                                             
+                                                             <i class="color-FF9400 ml5 mt3">NEW</i>
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_8XGByt2Gj7.html" target="_blank">检测域名在微信上是否被拦截</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_9teha22fWY.html" target="_blank">whois信息离线库</a>
+                                                             
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_9teha22fWY.html" target="_blank">包含了注册域名的详细信息的数据库</a></span>
+                                                        </div>
+                                                    </dd>
+                                                    <dd>
+                                                        <span>
+                                                            <a href="//www.chinaz.net/mall/a_POGZL6l6KS.html" target="_blank">企业备案实时查询</a>
+                                                             <i class="col-red ml5 mt3">HOT</i>
+                                                             
+                                                        </span>
+                                                        <div class="second-level-link">
+                                                            <span><a href="//www.chinaz.net/mall/a_POGZL6l6KS.html" target="_blank">根据主办单位实时返回查询备案信息</a></span>
+                                                        </div>
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    
+                                    <div class="HeaderAdvert">
+                                        <div id="advertImg"><a href="" class="experience" target="_blank"></a></div> <a href="https://www.chinaz.net/mall/a_zZxolAnDQ2.html" target="_blank"><img src="https://csstools.chinaz.com/tools/images/exercise.jpg?v=20250428" class="advert mt20"/></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="last-nav-link">
+                            <a href="javascript:" rel="nofollow">更多</a><i class="corner iconfont iconzhankai"></i>
+                        </li>
+                        <div class="nothis"></div>
+                    </ul>
+                </div>
+                <div>
+                    <div>
+                    </div>
+                </div>
+                <div class="search-collect-btn">
+                    <ul>
+                        <li class="searchBox">
+                            <input type="text" placeholder="工具搜索" class="searchInpt" id="search_text" attr-count="0"><i class="iconfont iconchazhao"></i>
+                            <i class="iconfont iconxingzhuangjiehe3 closes"></i>
+                        </li>
+                    </ul>
+                </div>
+            </div>             <div class="bgDiv"></div>
+            <div class="searchMain">
+                <div class="rightNav">
+                    <!--Start 常用-->
+                    <div class="history">
+                        <div class="comtool">
+                            <h3>最近使用</h3>
+                            <div class="item recentVisit"></div>
+                        </div>
+                        <div class="hottool">
+                            <h3>热门推荐</h3>
+                            <div class="item hotRecommend"></div>
+                        </div>
+                    </div>
+                    <!--End 常用--><label class="result hid" id="search_show"></label>
+                    <label class="nullData hid">
+                        没有找到相关结果，换个词试试
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="showMark"></div>
+        <div id="showRightMark"></div>
+    </div>     <!--ToolNavbar-begin-->     <!--ToolNavbar-end-->     <span>
+
+    <!--   template_id 哪一套公用模板 -->
+    <!--   ads_id 模板id -->
+
+    <span>
+
+        
+
+        
+
+        <span>
+             <!--tool头部广告-->
+            <div class="wrapper02 ToolsWrapIM clearfix pb10" id="navAfter">
+    <div class="fl mr10 ToolsOne">
+        <script>propagate('s1696814222078616', getCurrentScript())</script>
+    </div>
+    <div class="fl mr10 ToolsTwo">
+        <script>propagate('s1696814254029491', getCurrentScript())</script>
+    </div>
+    <div class="fl ToolsThree">
+        <script>propagate('s1696814270384174', getCurrentScript())</script>
+    </div>
+</div>
+        </span>
+
+        
+
+        
+
+        
+
+        
+
+    </span>
+
+    
+
+    
+
+    
+
+</span>     <!--top-public-begin-->
+    <div class="ww100">
+        <!-- 当前位置开始(非首页的页面都有) -->
+        <div class="Map-navbar wrapper mb10 clearfix">
+            <div class="Mnav-left fl">
+                当前位置： <a href="//tool.chinaz.com/">站长工具</a> &gt;
+                <h1><a href="//ping.chinaz.com">ping检测</a></h1>
+            </div>
+            <span>
+
+    <!--   template_id 哪一套公用模板 -->
+    <!--   ads_id 模板id -->
+
+    <span>
+
+        
+
+        
+
+        
+
+        <span>
+            <!--tool当前位置广告-->
+            <div class="Mnav-right02 fr" id="loc">
+    <script>propagate('s1696822886879339', getCurrentScript())</script>
+</div>
+        </span>
+
+        
+
+        
+
+        
+
+    </span>
+
+    
+
+    
+
+    
+
+</span>
+        </div>
+        <!-- 当前位置结束 -->
+    </div>
+    <!--top-public-end-->
+</div>
+    </div>
+    
+
+</div>
+
+<div class="Tool-MainWrap wrapper">
+    <div class="toolSmallTab w800 pt32 pl30 clearfix">
+        <a href="//ping.chinaz.com/;jsessionid=82F973F15DB8487007EB5294501D9BDF" class="CHeadcur">Ping检测</a>
+        <a href="//tool.chinaz.com/speedtest/">国内测速</a>
+        <a href="//tool.chinaz.com/speedworld/">国际测速</a>
+        <a href="//tool.chinaz.com/speedcom/">网站速度对比</a>
+        <a href="//tool.chinaz.com/dns/">DNS查询</a>
+        <a href="//tool.chinaz.com/tracert/">路由追踪</a>
+        <a href="//tool.chinaz.com/dnsce/">DNS污染检测</a>
+    </div>
+    <div class="DelHeadWrap mb10 toolSearchBox [&_.publicSearch]:w-[1000px!important]  [&_.publicSearch]:ml-[200px!important] [&_.publicSearch.selectInpt]:pb-[55px!important] toolSearchBox">
+        <!--PingSearch-begin-->
+        <!--PingSearch-begin-->
+        <div class="publicSearch auto">
+
+                <div class="toolSearchInpt">
+                    <div
+                            class="search-write-wrap w800 clearfix pr zI1 [&_.search-write-left.pr.fl.flex]:overflow-visible [&_.search-write-left]:h-[42px!important] [&_._chinaz_search-input]:h-[40px!important]">
+                        <div class="search-write-left pr fl flex">
+                            <div
+                                    class="custom-select relative w-[120px] h-[40px] border-r border-r-[2px] border-r-[#1D8EFF]">
+                                <div
+                                        class="custom-select-display flex px-[12px] justify-between items-center text-center leading-[40px] cursor-pointer">
+                                    <span class="type-label"><span class="relative">快速Ping</span></span>
+                                    <i class="iconfont iconzhankai text-[12px] w-[12px]"></i>
+                                </div>
+                                <ul
+                                        class="custom-select-options absolute top-[35px] left-[-2px] w-[122px] bg-white shadow-md hidden z-10 border border-[2px] border-[#1D8EFF] pt-[5px] border-t-0 rounded-[0_0_6px_6px] leading-[30px] [&_li]:cursor-pointer">
+                                    <div class="mx-[16px] border-t relative top-[-1px]"></div>
+                                    <li class=" custom-select-option hover:bg-[rgba(29,142,255,0.1)] px-[12px]
+                                            py-1" data-value="快速Ping">
+                                        快速Ping
+                                    </li>
+                                    <li class="custom-select-option hover:bg-[rgba(29,142,255,0.1)] px-[12px] py-1"
+                                        data-value="持续Ping">
+                                            <span class="relative">
+                                                持续Ping
+                                                <span
+                                                        class="absolute right-[-10px] top-[-3px] rounded-[3px] w-[20px] h-[10px] bg-[url('//csstools.chinaz.com/tools/images/ip/vipTag.png')] bg-no-repeat bg-[length:20px_10px]"></span>
+                                            </span>
+                                    </li>
+                                </ul>
+                                <input type="hidden" name="queryPingType" value="快速Ping">
+                            </div>
+
+                            <input type="text"
+                                   class="_chinaz_search-input search-write-cont  WrapHid h-[40px!important] leading-[40px!important] w-[550px!important]"
+                                   id="host" url="true" siteTip="domainIpv6" value="" name="host" placeholder="请输入域名或IP，例如：chinaz.com、8.8.8.8"
+                                   routeurl="/" tip="请输入有效的域名或IP"/>
+                        </div>
+                        <div class="fl [&_.search-write-btn]:h-[42px!important]">
+                            <input class="search-write-btn _chinaz_search-btn mr10 fl w100" type="button"
+                                   BtnStatus="true" value="立即检测" data-pagetype="DNS查询" data-label="检测"/>
+                        </div>
+                    </div>
+                    <a href="javascript:;" class="advanced ml20" js-do="selectBox">
+                        高级选项<i class="iconfont iconzhankai fz13 color-00 ml5"></i>
+                    </a>
+                </div>
+                <div class="selectMain hid">
+                    <div class="relative mt20">
+                        <div id="dynamic-radio-options" class="relative"></div>
+                        <script>
+                            // 模拟传入的参数（例如从 URL 获取），实际应用中可替换为真实参数
+                            const selectedValues = '电信,多线,联通,移动,其他';; // 示例：默认选中电信、移动、联通
+                            const selectedList = selectedValues.split(",");
+                            // 动态生成选项的自执行函数
+                            (function () {
+                                const options = [
+                                    { id: 'option-2', name: '全选', value: '全选' },
+                                    { id: 'option-3', name: '电信', value: '电信' },
+                                    { id: 'option-4', name: '移动', value: '移动' },
+                                    { id: 'option-5', name: '联通', value: '联通' },
+                                    { id: 'option-6', name: '多线', value: '多线' },
+                                    { id: 'option-7', name: '其他', value: '其他' }
+                                ];
+
+                                const container = document.createElement('div');
+                                container.className = 'radioOption flex flex-wrap gap-4';
+
+                                options.forEach(option => {
+                                    const wrapper = document.createElement('div');
+                                    wrapper.className = 'flex items-center';
+
+                                    const checkbox = document.createElement('input');
+                                    checkbox.type = 'checkbox';
+                                    checkbox.id = option.id;
+                                    checkbox.name = 'lineType';
+                                    checkbox.value = option.value;
+                                    // 根据传入的参数设置选中状态，“全选”初始不选中
+                                    checkbox.checked = option.value === '全选' ? false : selectedList.includes(option.value);
+                                    checkbox.className = 'hidden peer';
+
+                                    const label = document.createElement('label');
+                                    label.htmlFor = option.id;
+                                    label.className = "relative pl-8 cursor-pointer before:content-[''] before:absolute before:top-0 before:left-0 before:w-[20px] before:h-[20px] before:border peer-checked:before:border-[#1D8EFF!important] before:rounded-full peer-checked:before:bg-[#1D8EFF] peer-checked:before:bg-[url('//csstools.chinaz.com/tools/images/dagou.png')] peer-checked:before:bg-no-repeat peer-checked:before:bg-[length:11px_11px] peer-checked:before:bg-center peer-checked:before:text-white";
+                                    label.textContent = option.name;
+
+                                    wrapper.appendChild(checkbox);
+                                    wrapper.appendChild(label);
+                                    container.appendChild(wrapper);
+                                });
+
+                                document.getElementById('dynamic-radio-options').appendChild(container);
+                            })();
+
+                            // 等待 DOM 加载完成后再绑定事件
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const selectAll = document.getElementById('option-2');
+                                const otherOptions = document.querySelectorAll('input[name="lineType"]:not(#option-2)');
+
+                                // 初始时检查全选状态
+                                const allChecked = Array.from(otherOptions).every(cb => cb.checked);
+                                selectAll.checked = allChecked;
+
+                                // 全选逻辑
+                                selectAll.addEventListener('change', function () {
+                                    otherOptions.forEach(cb => {
+                                        cb.checked = selectAll.checked;
+                                    });
+                                });
+
+                                // 单项变化时调整全选状态
+                                otherOptions.forEach(cb => {
+                                    cb.addEventListener('change', function () {
+                                        if (!this.checked) {
+                                            selectAll.checked = false; // 取消全选
+                                        } else {
+                                            // 检查是否所有其他选项都选中
+                                            const allChecked = Array.from(otherOptions).every(cb => cb.checked);
+                                            selectAll.checked = allChecked;
+                                        }
+                                    });
+                                });
+
+                                // 绑定立即检测按钮点击事件
+                                const detectBtn = document.querySelector('.search-write-btn');
+                                if (detectBtn) {
+                                    detectBtn.addEventListener('click', function () {
+                                        getQueryData();
+                                    });
+                                } else {
+                                    console.error('未找到 .search-write-btn 元素');
+                                }
+                            });
+                        </script>
+                    </div>
+                </div>
+        </div>
+        <!--PingSearch-end-->
+    </div>
+
+</div>
+<!-- 当前是游客  -->
+<div id="guestTimeTips" class=" w-[1200px] mx-auto bg-gradient-to-r from-[#e0f0ff] to-[#d1e8ff] text-[14px]  flex justify-center items-center leading-[56px] h-[56px] py-[10px]" style="display: none">
+    <div class="flex justify-center items-center gap-[24px]">
+        <div class="flex justify-center items-center text-[#00264C]">
+            <div class="flex justify-center items-center text-[#00264C]">
+                当前是游客，今日可查询
+                <span class="text-[#1A8CFF]" id="queryRemainLimit"></span>
+                <span class="text-[#1A8CFF]" id="queryFrequencyLimit"></span>
+                次，登录用户每日可查询 <span class="text-[#1A8CFF]" id="nextLevelFrequencyLimit"></span>
+            </div>
+        </div>
+        <div class="bg-[#1a8cff] min-w-[88px] h-[36px] rounded-[4px] flex items-center justify-center cursor-pointer text-white px-[16px]"
+             onclick="m.login()">
+            立即登录
+        </div>
+    </div>
+</div>
+<div id="memberTimeTips"
+     class="w-[1200px] mx-auto bg-gradient-to-r from-[#fff7e5] to-[#ffeec7] text-[14px]  flex justify-center items-center leading-[56px] h-[56px] py-[10px]"
+     style="display: none">
+    <div class=" flex justify-center items-center gap-[24px]">
+        <div class="flex justify-center items-center text-[#00264C]">
+            当前是游客，今日可查询
+            <span class="text-[#1A8CFF]" id="queryRemainLimit"></span>
+            <span class="text-[#1A8CFF]" id="queryFrequencyLimit"></span>
+            次，升级为VIP每日可查询 <span class="text-[#1A8CFF]" id="nextLevelFrequencyLimit"></span>
+        </div>
+        <div class="bg-gradient-to-l from-[#b67417] to-[#e9ba79] min-w-[88px] h-[36px] rounded-[4px] flex items-center justify-center cursor-pointer text-white px-[16px]"
+             onclick="m.upgradeVip()">
+            开通会员
+        </div>
+    </div>
+</div>
+
+<div id="vipTips"
+     class="w-[1200px] mx-auto bg-gradient-to-r from-[#fff7e5] to-[#ffeec7] text-[14px]  flex justify-center items-center leading-[56px] h-[56px] py-[10px]" style="display: none">
+    <div class=" flex justify-center items-center gap-[24px]">
+        <div class="flex justify-center items-center ">
+            以下为示例数据，开通VIP之后查看实时数据
+        </div>
+        <div class="bg-gradient-to-l from-[#b67417] to-[#e9ba79] min-w-[88px] h-[36px] rounded-[4px] flex items-center justify-center cursor-pointer text-white px-[16px]"
+             onclick="m.upgradeVip()">
+            开通会员
+        </div>
+    </div>
+</div>
+<!-- 当前是游客  -->
+<div id="loginTips" class=" w-[1200px] mx-auto bg-gradient-to-r from-[#e0f0ff] to-[#d1e8ff] text-[14px]  flex justify-center items-center leading-[56px] h-[56px] py-[10px]" style="display: none">
+    <div class="flex justify-center items-center gap-[24px]">
+        <div class="flex justify-center items-center text-[#00264C]">
+            以下数据为示例数据，登录后可查看实时数据
+        </div>
+        <div class="bg-[#1a8cff] min-w-[88px] h-[36px] rounded-[4px] flex items-center justify-center cursor-pointer text-white px-[16px]"
+             onclick="m.login()">
+            立即登录
+        </div>
+    </div>
+</div>
+<!--右侧广告-->
+<div class="pingimg mt10 auto" id="pingImg">
+    <script>propagate('s1826913284871392', getCurrentScript())</script>
+</div>
+<div class="relative">
+    <div id="watermask" class="watermask absolute right-0 left-0 top-0 bottom-0 w-full h-full bg-[url('//csstools.chinaz.com/tools/images/ip/watermark.png')] bg-[50%] bg-[1000px_auto]  z-[1]" style="display: none"></div>
+    <!--Start 查询结果-->
+    
+    
+    <!--<div class="wrapper mtb10 clearfix" th:if="${show}">-->
+    <!--    <div class="toolShare">-->
+    <!--        <img src="//csstools.chinaz.com/tools/images/dnsImg.png">-->
+    <!--        <p class="color-313131"><em class="marks">“</em>觉得好用的话，不妨分享给您的朋友，分享页面可保留90天<em class="marks">”</em></p>-->
+    <!--        <div class="toolShareInfo">-->
+    <!--            <p>分享链接：</p>-->
+    <!--            <div class="toolShareLink">-->
+    <!--                <div id="toolurlStr" class="toolurlStr">https://tool.chinaz.com/dns/cfa865117395e175765410f.html</div>-->
+    <!--                <a href="javascript:;" data-copy="url" onclick="toolsMain.CopyStr('#toolurlStr','text','url')">复制链接</a>-->
+    <!--            </div>-->
+    <!--        </div>-->
+    <!--    </div>-->
+    <!--</div>-->
+    <!--footer-public-begin-->
+    <span>
+
+    <!--   template_id 哪一套公用模板 -->
+    <!--   ads_id 模板id -->
+
+    <span>
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        <span>
+             <!--tool底部广告-->
+            <div class="wrapperTopBtm">
+    <div id="centerTxt">
+        <div class="ToolsTxtWrap clearfix">
+            <script>propagate('s1696818171411742', getCurrentScript())</script>
+        </div>
+    </div>
+    <div class="mt10 bg-gray02">
+        <div class="ToolsImgWrap clearfix">
+            <div class="fl mr10 ToolsFive">
+                <script>propagate('s1696818791251970', getCurrentScript())</script>
+            </div>
+            <div class="fl mr10 ToolsFour">
+                <script>propagate('s1696818813553907', getCurrentScript())</script>
+            </div>
+            <div class="fl ToolsFive">
+                <script>propagate('s1696818841543543', getCurrentScript())</script>
+            </div>
+        </div>
+    </div>
+</div>
+        </span>
+
+    </span>
+
+    
+
+    
+
+    
+
+</span>
+    
+</div>
+
+<!--End 查询结果-->
+<!--工具简介-->
+<div class="wrapper mb10">
+    <div>
+        <div class="_chinaz-seo-title _chinaz-Intr-tit">
+
+            <span>
+
+    <!--   template_id 哪一套公用模板 -->
+    <!--   ads_id 模板id -->
+
+    <span>
+
+        
+
+        <span>
+             <!--tool工具简介行广告-->
+            <div class="fr lh43 fz14" id="toolsIntro">
+    <script>propagate('s1696905183849914', getCurrentScript())</script>
+</div>
+        </span>
+
+        
+
+        
+
+        
+
+        
+
+        
+
+    </span>
+
+    
+
+    
+
+    
+
+</span>
+            <i class="iconfont iconshutiao-01 _chinaz-seo-titleicon toolIntricon"></i>
+            <b><strong>工具简介</strong></b>
+        </div>
+        <div class="_chinaz-seo-about ToolAbout ToolIntr">
+            <div class="col-gray01 ml10 ToolAbCont">
+                <p class="ToolAbContSec pb8">站长工具ping测速是一款全面的网站测速工具，它利用全球分布的多个节点，为全球用户提供准确、高效的网站测速服务。</p>
+                <p class="ToolAbContSec pb8">这款产品的主要功能包括Ping测速和HTTP测速，能够全面评估网站的响应速度和连接质量。</p>
+                <p class="pt5"><strong>主要功能有：</strong></p>
+                <p class="mt10 pt10">Ping测速：通过分布在全球的节点，Ping测速功能可以模拟用户从不同地理位置访问网站时的延迟情况。这有助于用户了解目标网站的稳定性和连接质量，从而优化网络性能，提高用户体验。</p>
+                <p class="mt10 pt10">HTTP测速：HTTP测速功能通过发送HTTP请求来测试网站的加载速度和响应时间。用户可以指定目标网站的URL。</p>
+                <p class="mt10 pt10">全球多节点：全球速测拥有多个分布式节点，覆盖全球主要国家和地区。这使得测速结果更具有代表性和准确性，能够全面评估不同地理位置的网络性能。</p>
+                <p class="mt10 pt10 mb20">实时监测：全球速测持续监测网络状况，确保测速结果的实时性和有效性。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--底部-->
+<div>
+
+    <div>
+            <div>
+    <!--siteBar-begin-->
+    <div class="wrapper mt10">
+        <div class="_chinaz-relevant plr20">
+            <div class="_chinaz-relevant-name">
+                <div class="fl fz14">相关功能</div>
+            </div>
+            <div class="clearfix">
+                <div class="_chinaz-relevant-type">
+                    <div class="_chinaz-relevant-tn">
+                        <i class="iconfont iconyuminglei-01"></i>
+                        <span>域名类</span>
+                    </div>
+                    <div class="_chinaz-relevant-tc">
+                        <a href="//whois.chinaz.com" target="_blank">WHOIS查询</a>
+                        <a href="//tool.chinaz.com/dns/" target="_blank">DNS查询</a>
+                        <a href="//del.chinaz.com" target="_blank">过期域名查询</a>
+                        <a href="//tool.chinaz.com/nslookup/" target="_blank">NsLookup查询</a>
+                        <a href="//tool.chinaz.com/DomainDel/" target="_blank">域名删除时间</a>
+                        <a href="//link.chinaz.com" target="_blank">友链查询</a>
+                        <a href="//seo.chinaz.com" target="_blank">SEO综合查询</a>
+                    </div>
+                </div>
+                <div class="_chinaz-relevant-type">
+                    <div class="_chinaz-relevant-tn">
+                        <i class="iconfont iconiplei-01"></i>
+                        <span>IP类</span>
+                    </div>
+                    <div class="_chinaz-relevant-tc">
+                        <a href="//ip.tool.chinaz.com" target="_blank">IP 查询</a>
+                        <a href="//ip.tool.chinaz.com/ipbatch" target="_blank">IP 批量</a>
+                        <a href="//tool.chinaz.com/same/" target="_blank">IP反查域名</a>
+                        <a href="//tool.chinaz.com/ipwhois/" target="_blank">IP WHOIS查询</a>
+                        <a href="//stool.chinaz.com/baiduspider" target="_blank">百度真假蜘蛛</a>
+                        <a href="//ip.tool.chinaz.com/siteip" target="_blank">IP所在地批量</a>
+                        <a href="//ip.tool.chinaz.com/linksip" target="_blank">友链同IP检测</a>
+                        <a href="//tool.chinaz.com/port/" target="_blank">端口扫描</a>
+                    </div>
+                </div>
+                <div class="_chinaz-relevant-type">
+                    <div class="_chinaz-relevant-tn">
+                        <i class="iconfont iconbaiduxiangguan-01"></i>
+                        <span>百度相关</span>
+                    </div>
+                    <div class="_chinaz-relevant-tc">
+                        <a href="//tool.chinaz.com/keywords" target="_blank">关键词排名</a>
+                        <a href="//tool.chinaz.com/baidu/words.aspx" target="_blank">关键词挖掘</a>
+                        <a href="//outlink.chinaz.com/" target="_blank">反链查询</a>
+                        <a href="//rank.chinaz.com" target="_blank">百度PC权重</a>
+                        <a href="//tool.chinaz.com/baidu/" target="_blank">收录查询</a>
+                        <a href="//tool.chinaz.com/kwevaluate" target="_blank">关键词优化分析</a>
+                        <a href="//tool.chinaz.com/baidu/metadig.aspx" target="_blank">Meta信息挖掘</a>
+                        <a href="//rank.chinaz.com/baidumobile" target="_blank">百度移动权重</a>
+                    </div>
+                </div>
+                <div class="_chinaz-relevant-type">
+                    <div class="_chinaz-relevant-tn">
+                        <i class="iconfont iconcesujiankong-01"></i>
+                        <span>测速监控</span>
+                    </div>
+                    <div class="_chinaz-relevant-tc">
+                        <a href="//ping.chinaz.com" target="_blank">PING检测</a>
+                        <a href="//stool.chinaz.com/tools/webcheck.aspx" target="_blank">网站被黑检测</a>
+                        <a href="//tool.chinaz.com/speedtest" target="_blank">国内网站测速</a>
+                        <a href="//tool.chinaz.com/speedworld" target="_blank">海外网站测速</a>
+                        <a href="//tool.chinaz.com/history/" target="_blank">网站历史记录</a>
+                        <a href="//tool.chinaz.com/history/" target="_blank">SEO历史记录</a>
+                        <a href="//tool.chinaz.com/speedcom" target="_blank">国内网速对比</a>
+                        <a href="//report.chinaz.com/" target="_blank">SEO报告</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--siteBar-end-->
+    <span>
+
+    <!--   template_id 哪一套公用模板 -->
+    <!--   ads_id 模板id -->
+
+    <span>
+
+        
+
+        
+
+        
+
+        
+
+        <span>
+             <!--tool最底部广告-->
+            <div class="wrapper mt10" id="bottomImg">
+    <div class="fotatxtd auto bg-white">
+        <script>propagate('s1696819965994788', getCurrentScript())</script>
+    </div>
+</div>
+        </span>
+
+        
+
+        
+
+    </span>
+
+    
+
+    
+
+    
+
+</span>
+
+    <!-- 最近查询 -->
+    
+
+    <!--ToolFooter-begin-->
+    <div class="puw100 h80 bor-t1s mt10 bg-white" style="margin-top:10px !important;">
+        <div class="ToolFooter">
+            <p class="linkbtn">
+                <a href="http://www.chinaz.com/aboutus/index.html" target="_blank">关于站长之家</a> | <a
+                    href="http://ww.chinaz.com/aboutus/contact.php" target="_blank">联系我们 </a> | <a
+                    href="http://www.chinaz.com/aboutus/ad.html" target="_blank">广告服务</a> | <a
+                    href="http://www.chinaz.com/aboutus/link.html" target="_blank">友情链接</a> | <a
+                    href="http://www.chinaz.com/aboutus/events.html" target="_blank">网站动态</a> | <a
+                    href="http://www.chinaz.com/aboutus/announce.html" target="_blank">版权声明</a> | <a
+                    href="http://www.chinaz.com/aboutus/join.html" target="_blank">人才招聘</a> | <a
+                    href="http://www.chinaz.com/aboutus/help.html" target="_blank">帮助</a></p>
+            <p class="info">
+                <span>© CopyRight 2002-2025, CHINAZ.COM, Inc.All Rights Reserved.</span><span>闽ICP备08105208号</span><span>增值电信业务经营许可证闽B2-20120007号</span><span
+                    class="col-gray02 ml10">亿速云提供<a href="http://www.yisu.com/" target="_blank" rel="nofollow"
+                                                    class="col-blue03">云服务器</a>支持</span></p>
+        </div>
+    </div>
+    <!--ToolFooter-end-->
+
+    <div class="_chinaz-main-new">
+        <div id="ToolBox">
+            <div id="xhead"></div>
+            <ul id="xlist"></ul>
+            <div id="xfoot"></div>
+        </div>
+    </div>
+    <div>
+        <script type="text/javascript">
+            var errorInfo = "请输入正确的网址或IP";
+            layer.msg(errorInfo, {offset: '50%'});
+        </script>
+    </div>
+
+    <script type="text/javascript" src="//my.chinaz.com/js/uc.js?v=20240307" charset="utf-8"></script>
+    <div class="backtoTop backtoTop-new backfix autohide"></div>
+    <!-- 左侧县浮广告-->
+    <span>
+
+    <!--   template_id 哪一套公用模板 -->
+    <!--   ads_id 模板id -->
+
+    <span>
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        <span>
+             <!--tool左侧广告-->
+            <div class="advertBox backfix" id="toolLeftImg">
+    <script>propagate('s1696821041922184', getCurrentScript())</script>
+</div>
+        </span>
+
+        
+
+    </span>
+
+    
+
+    
+
+    
+
+</span>
+</div>
+    </div>
+
+    
+
+</div>
+
+<input type="hidden" id="ftype" value="dns"/>
+<script type="text/javascript" src="//csstools.chinaz.com/tools/js/clipboard.min.js"></script>
+<script src="//csstools.chinaz.com/common/js/tbSort_source.js?v=20231013"></script>
+<script src="//csstools.chinaz.com/tools/js/charts/raphael-min.js"></script>
+<script src="//csstools.chinaz.com/tools/js/charts/mapData.js?v=20230324" type="text/javascript"></script>
+<script src="//csstools.chinaz.com/tools/js/map_secret.js?v=20250327" type="text/javascript"></script>
+<script src="//csstools.chinaz.com/tools/js/ping.v2.js?v=20250801" type="text/javascript"></script>
+<script type="text/javascript">
+    let token = "";
+    let keyword = "";
+    let type = "";
+    //var serverList = /**/ [];
+    // let task_id = "";
+    // let task_token = "";
+    //   new Pings("ping");
+</script>
+</body>
+
+</html>
