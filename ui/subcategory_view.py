@@ -87,9 +87,13 @@ class SubcategoryView(QWidget):
         
         # 标题样式暂时保持本地
         if self.current_theme == 'blue_white':
-            self.title_label.setStyleSheet("padding: 10px; background-color: #e6f2ff; font-weight: 600; border-bottom: 1px solid #99ccff; color: #003366; font-size: 14px;")
+            self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(255,255,255,0.72); font-weight: 700; border: 1px solid rgba(148,163,184,0.10); border-radius: 14px; color: #1e293b; font-size: 14px;")
+        elif self.current_theme == 'purple_neon':
+            self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(30,24,56,0.68); font-weight: 700; border: 1px solid rgba(157,123,255,0.10); border-radius: 14px; color: #efe9ff; font-size: 14px;")
+        elif self.current_theme == 'red_orange':
+            self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(42,30,24,0.68); font-weight: 700; border: 1px solid rgba(255,138,61,0.10); border-radius: 14px; color: #fff1e6; font-size: 14px;")
         else:
-            self.title_label.setStyleSheet("padding: 10px; background-color: rgba(26, 28, 43, 1); font-weight: 600; border-bottom: 1px solid rgba(144, 238, 144, 0.3); color: #90ee90; font-size: 14px;")
+            self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(24,58,39,0.68); font-weight: 700; border: 1px solid rgba(111,231,135,0.10); border-radius: 14px; color: #f3fff5; font-size: 14px;")
     
     def load_subcategories(self, category_id):
         """加载指定分类下的子分类"""

@@ -1,0 +1,9 @@
+{
+  "schema": "zifeiyu-toolkit-tools",
+  "version": 2,
+  "source": "zifeiyu",
+  "export_mode": "config_only",
+  "description": "Official sync catalog placeholder. Add/update tools here for remote sync.",
+  "tool_count": 0,
+  "tools": []
+}

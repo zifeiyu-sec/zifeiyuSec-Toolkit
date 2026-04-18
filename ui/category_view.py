@@ -1,14 +1,37 @@
 import os
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem, QVBoxLayout, QLabel, QMenu, QAction
 from PyQt5.QtCore import pyqtSignal, Qt, QEvent
-from PyQt5.QtGui import QIcon, QDropEvent
+from PyQt5.QtGui import QIcon, QDropEvent, QPixmap, QPainter, QFont
 from core.style_manager import ThemeManager
 from core.data_manager import DataManager
+from core.runtime_paths import resolve_icon_path_value
 
 # 图标缓存，减少重复的文件系统操作
 category_icon_cache = {}
 
-# 自定义分类列表控件，支持拖拽排序
+
+def _create_text_icon(text: str) -> QIcon:
+    """把 emoji / 短文本渲染成列表图标"""
+    safe_text = (text or '').strip()[:2] or '?'
+    cache_key = f"text::{safe_text}"
+    if cache_key in category_icon_cache:
+        return category_icon_cache[cache_key]
+
+    pixmap = QPixmap(24, 24)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    font = QFont()
+    font.setPixelSize(16)
+    painter.setFont(font)
+    painter.drawText(pixmap.rect(), Qt.AlignCenter, safe_text)
+    painter.end()
+
+    icon = QIcon(pixmap)
+    category_icon_cache[cache_key] = icon
+    return icon
+
+
 class DraggableCategoryListWidget(QListWidget):
     # 拖拽完成信号
     order_changed = pyqtSignal()
@@ -197,9 +220,13 @@ class CategoryView(QWidget):
         
         # 标题样式暂时保持本地，或者也可以移入 StyleManager (简单起见这里保留逻辑)
         if self.current_theme == 'blue_white':
-            self.title_label.setStyleSheet("font-weight: 600; padding: 12px; border-bottom: 1px solid #e6f2ff; background-color: #ffffff; color: #000000; font-size: 14px;")
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(148,163,184,0.10); border-radius: 14px; background-color: rgba(255,255,255,0.72); color: #1e293b; font-size: 14px;")
+        elif self.current_theme == 'purple_neon':
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(157,123,255,0.10); border-radius: 14px; background-color: rgba(30,24,56,0.68); color: #efe9ff; font-size: 14px;")
+        elif self.current_theme == 'red_orange':
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(255,138,61,0.10); border-radius: 14px; background-color: rgba(42,30,24,0.68); color: #fff1e6; font-size: 14px;")
         else:
-            self.title_label.setStyleSheet("font-weight: 600; padding: 12px; border-bottom: 1px solid rgba(144, 238, 144, 0.3); background-color: rgba(26, 28, 43, 1); color: #90ee90; font-size: 14px;")
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(111,231,135,0.10); border-radius: 14px; background-color: rgba(24,58,39,0.68); color: #f3fff5; font-size: 14px;")
     
     def select_category(self, category_id):
         """手动选择分类"""
@@ -232,14 +259,32 @@ class CategoryView(QWidget):
         current_selection = None
         if self.category_list.currentItem():
             current_selection = self.category_list.currentItem().data(Qt.UserRole)['id']
-        
+
         # 重新加载分类数据
         self.load_categories()
-        
+
         # 恢复之前的选中状态
         if current_selection:
             self.select_category(current_selection)
-    
+
+    def _resolve_category_icon(self, icon_value):
+        """解析分类图标，兼容资源文件和 emoji/短文本"""
+        icon_text = (icon_value or '').strip()
+        if not icon_text or icon_text == 'default_icon':
+            return QIcon()
+
+        if icon_text in category_icon_cache:
+            return category_icon_cache[icon_text]
+
+        candidate_path = resolve_icon_path_value(icon_text)
+        if candidate_path is not None:
+            icon = QIcon(os.fspath(candidate_path))
+            if not icon.isNull():
+                category_icon_cache[icon_text] = icon
+                return icon
+
+        return _create_text_icon(icon_text)
+
     def load_categories(self):
         """加载分类数据，只显示一级分类"""
         self.category_list.clear()
@@ -260,10 +305,14 @@ class CategoryView(QWidget):
         for category in root_categories:
             # 创建分类项，显示名称和可选图标
             name = category.get('name', '未知分类')
-            
-            # 优化：先创建列表项，延迟加载图标，避免启动时阻塞
+            icon_value = category.get('icon', '')
             item = QListWidgetItem(name)
             item.setData(Qt.UserRole, {'id': category.get('id', 0)})
+
+            icon = self._resolve_category_icon(icon_value)
+            if not icon.isNull():
+                item.setIcon(icon)
+
             self.category_list.addItem(item)
 
 if __name__ == "__main__":
@@ -282,7 +331,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     
     # 创建数据管理器
-    data_manager = DataManager(data_dir)
+    data_manager = DataManager(data_dir=data_dir)
     
     # 创建分类视图
     category_view = CategoryView(data_manager)

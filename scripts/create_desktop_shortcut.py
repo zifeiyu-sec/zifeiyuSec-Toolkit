@@ -1,33 +1,92 @@
 #!/usr/bin/env python3
 """
-Create a Windows desktop shortcut for this application.
+Create a Windows shortcut that launches this project via Python.
 
 Usage:
-    python scripts/create_desktop_shortcut.py [--name "子非鱼工具箱"]
+    python scripts/create_desktop_shortcut.py
 
-The script will by default create a shortcut on the current user's Desktop that
-points to `run_tool.vbs` (included in repository) so the app launches without a
-console window. If `image.png` exists in the repository root it will be used as
-the shortcut icon.
+By default the shortcut is created on the current user's Desktop and points to
+the preferred Python launcher plus ``main.py``. Launcher preference:
 
-The script tries to use `win32com.client` when available, otherwise it falls
-back to invoking PowerShell to create the .lnk file via COM.
+1. ``--python`` when provided
+2. ``.venv\\Scripts\\pythonw.exe``
+3. ``.venv\\Scripts\\python.exe``
+4. current interpreter's ``pythonw.exe``
+5. current interpreter's ``python.exe``
 """
-import os
-import sys
+
 import argparse
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 
+def _get_windows_desktop_directory():
+    if os.name != "nt":
+        return ""
+
+    try:
+        import ctypes
+
+        CSIDL_DESKTOPDIRECTORY = 0x10
+        SHGFP_TYPE_CURRENT = 0
+        buffer = ctypes.create_unicode_buffer(260)
+        result = ctypes.windll.shell32.SHGetFolderPathW(
+            None,
+            CSIDL_DESKTOPDIRECTORY,
+            None,
+            SHGFP_TYPE_CURRENT,
+            buffer,
+        )
+        if result == 0:
+            return buffer.value
+    except Exception:
+        return ""
+
+    return ""
+
+
 def get_desktop_path():
-    # First try the known USERPROFILE Desktop location
-    desktop = os.path.join(os.environ.get("USERPROFILE", ""), "Desktop")
-    if desktop and os.path.isdir(desktop):
-        return desktop
-    # Fallback to expanduser
-    desktop = os.path.expanduser("~/Desktop")
-    return desktop
+    candidates = [
+        _get_windows_desktop_directory(),
+        os.path.join(os.environ.get("USERPROFILE", ""), "Desktop"),
+        os.path.expanduser("~/Desktop"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isdir(candidate):
+            return candidate
+    return candidates[-1]
+
+
+def resolve_python_launcher(repo_root: Path, explicit_python: str = "") -> Path:
+    candidates = []
+
+    if explicit_python:
+        candidates.append(Path(explicit_python).expanduser())
+    else:
+        venv_scripts = repo_root / ".venv" / "Scripts"
+        candidates.extend([
+            venv_scripts / "pythonw.exe",
+            venv_scripts / "python.exe",
+        ])
+
+        current_python = Path(sys.executable).resolve()
+        if current_python.name.lower() == "python.exe":
+            candidates.append(current_python.with_name("pythonw.exe"))
+        candidates.append(current_python)
+
+    seen = set()
+    for candidate in candidates:
+        resolved = candidate if candidate.is_absolute() else (repo_root / candidate).resolve()
+        key = str(resolved).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        if resolved.exists() and resolved.is_file():
+            return resolved
+
+    raise FileNotFoundError("No usable Python launcher was found.")
 
 
 def create_shortcut_win32(shortcut_path, target, args, workdir, icon):
@@ -50,14 +109,16 @@ def create_shortcut_win32(shortcut_path, target, args, workdir, icon):
 
 
 def create_shortcut_powershell(shortcut_path, target, args, workdir, icon):
-    # Build PowerShell command to create shortcut via WScript.Shell COM object
-    def ps_quote(p: str):
-        # Use single quotes in PowerShell, escape single quotes by doubling
-        return "'" + p.replace("'", "''") + "'"
+    def ps_quote(value: str):
+        return "'" + value.replace("'", "''") + "'"
 
     cmd = (
-        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut(" + ps_quote(str(shortcut_path)) + ");"
-        "$s.TargetPath=" + ps_quote(str(target)) + ";"
+        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut("
+        + ps_quote(str(shortcut_path))
+        + ");"
+        + "$s.TargetPath="
+        + ps_quote(str(target))
+        + ";"
     )
     if args:
         cmd += "$s.Arguments=" + ps_quote(args) + ";"
@@ -67,7 +128,6 @@ def create_shortcut_powershell(shortcut_path, target, args, workdir, icon):
         cmd += "$s.IconLocation=" + ps_quote(str(icon)) + ";"
     cmd += "$s.Save();"
 
-    # Execute PowerShell command
     try:
         subprocess.run(["powershell", "-NoProfile", "-Command", cmd], check=True)
         return True
@@ -75,62 +135,57 @@ def create_shortcut_powershell(shortcut_path, target, args, workdir, icon):
         return False
 
 
+def build_shortcut_arguments(main_py: Path) -> str:
+    return subprocess.list2cmdline([str(main_py)])
+
+
+def resolve_icon(repo_root: Path):
+    for name in ("image.ico", "favicon.ico", "image.png"):
+        candidate = repo_root / name
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name", "-n", default="子非鱼工具箱", help="Shortcut name")
-    parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[1]),
-                        help="Repository root (default: inferred)")
+    parser.add_argument("--name", "-n", default="子非鱼安全工具箱", help="Shortcut name")
+    parser.add_argument(
+        "--repo-root",
+        default=str(Path(__file__).resolve().parents[1]),
+        help="Repository root (default: inferred)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="",
+        help="Shortcut output directory (default: current user's Desktop)",
+    )
+    parser.add_argument("--python", default="", help="Explicit Python / Pythonw executable to use")
     args = parser.parse_args()
 
-    repo_root = Path(args.repo_root)
-    desktop = Path(get_desktop_path())
-    if not desktop.exists():
-        print("Desktop path not found:", desktop)
+    repo_root = Path(args.repo_root).resolve()
+    output_dir = Path(args.output_dir).expanduser() if args.output_dir else Path(get_desktop_path())
+    if not output_dir.exists():
+        print("Shortcut output path not found:", output_dir)
+        sys.exit(1)
+
+    main_py = repo_root / "main.py"
+    if not main_py.exists():
+        print("main.py not found:", main_py)
+        sys.exit(1)
+
+    try:
+        target = resolve_python_launcher(repo_root, args.python)
+    except FileNotFoundError as exc:
+        print(str(exc))
         sys.exit(1)
 
     shortcut_name = args.name.strip() + ".lnk"
-    shortcut_path = desktop / shortcut_name
-
-    # Prefer run_tool.vbs (hides console). Fall back to run_tool.bat if missing.
-    vbs = repo_root / "run_tool.vbs"
-    bat = repo_root / "run_tool.bat"
-    if vbs.exists():
-        target = vbs
-    elif bat.exists():
-        target = bat
-    else:
-        # As last resort, point to pythonw running main.py in repo root
-        pythonw = sys.executable.replace("python.exe", "pythonw.exe")
-        main_py = repo_root / "main.py"
-        if Path(pythonw).exists() and main_py.exists():
-            target = pythonw
-            # We'll pass main.py as argument
-            run_args = str(main_py)
-        else:
-            print("No suitable target found (no run_tool.vbs/run_tool.bat and pythonw missing).")
-            sys.exit(1)
-
-    run_args = ''
+    shortcut_path = output_dir / shortcut_name
+    run_args = build_shortcut_arguments(main_py)
     workdir = str(repo_root)
-    # Choose icon: prefer image.ico first, then image.png, else resources icon if exists
-    icon = repo_root / "image.ico"
-    if not icon.exists():
-        icon = repo_root / "image.png"
-        if not icon.exists():
-            svg_icon = repo_root / "resources" / "icons" / "new_default_icon.ico"
-            icon = svg_icon if svg_icon.exists() else None
+    icon = resolve_icon(repo_root)
 
-    # If target is pythonw with main.py passed as argument
-    if isinstance(target, Path) and target.name.lower().startswith('python') and target.suffix.lower() in ('.exe',):
-        # set target to pythonw and args to main.py
-        run_args = str(repo_root / 'main.py')
-    elif isinstance(target, Path) and target.suffix.lower() == '.vbs':
-        # For vbs, target can be the vbs file itself
-        run_args = ''
-    elif isinstance(target, Path) and target.suffix.lower() == '.bat':
-        run_args = ''
-
-    # Create shortcut using win32com if available, otherwise PowerShell
     created = create_shortcut_win32(shortcut_path, target, run_args, workdir, icon)
     if not created:
         created = create_shortcut_powershell(shortcut_path, target, run_args, workdir, icon)
@@ -138,10 +193,10 @@ def main():
     if created:
         print(f"Shortcut created: {shortcut_path}")
         sys.exit(0)
-    else:
-        print("Failed to create shortcut. Try running with administrator privileges or ensure PowerShell is available.")
-        sys.exit(2)
+
+    print("Failed to create shortcut. Ensure PowerShell COM automation is available.")
+    sys.exit(2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

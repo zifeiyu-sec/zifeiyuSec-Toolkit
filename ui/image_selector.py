@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 
+from core.logger import logger
+
 class ImageSelectorDialog(QDialog):
     """图片选择对话框，用于选择工具卡片的背景图片"""
     def __init__(self, image_manager, current_image=None, parent=None):
@@ -257,6 +259,6 @@ if __name__ == "__main__":
     dialog = ImageSelectorDialog(image_manager)
     if dialog.exec_():
         selected_image = dialog.get_selected_image()
-        print(f"选中的图片: {selected_image}")
+        logger.info("图片选择示例选中了背景图: %s", selected_image)
     
     sys.exit()

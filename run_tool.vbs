@@ -1,51 +1,67 @@
-' SubFeiYu Toolbox Launch Script
-' Directly start the application without creating desktop shortcut
+' ZifeiyuSec source launcher
+' Launch the toolbox the same way as: python main.py
+
+Option Explicit
+
+Dim WshShell, fso
+Dim scriptPath, scriptDir, mainScript
+Dim localPythonw, localPython
 
 Set WshShell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 
-' Get script path and directory
 scriptPath = WScript.ScriptFullName
 scriptDir = fso.GetParentFolderName(scriptPath)
 mainScript = fso.BuildPath(scriptDir, "main.py")
+localPythonw = fso.BuildPath(fso.BuildPath(scriptDir, ".venv\Scripts"), "pythonw.exe")
+localPython = fso.BuildPath(fso.BuildPath(scriptDir, ".venv\Scripts"), "python.exe")
 
-' Check if main.py exists
 If Not fso.FileExists(mainScript) Then
     MsgBox "Error: main.py not found", vbCritical, "Launch Error"
     WScript.Quit 1
 End If
 
-' Try different Python commands
+WshShell.CurrentDirectory = scriptDir
+
+If fso.FileExists(localPythonw) Then
+    WshShell.Run """" & localPythonw & """ """ & mainScript & """", 0, False
+    WScript.Quit 0
+End If
+
+If fso.FileExists(localPython) Then
+    WshShell.Run """" & localPython & """ """ & mainScript & """", 0, False
+    WScript.Quit 0
+End If
+
 On Error Resume Next
 
-' Try pythonw (no console window)
 WshShell.Run "pythonw """ & mainScript & """", 0, False
 If Err.Number = 0 Then
     WScript.Quit 0
 End If
 Err.Clear
 
-' Try python
 WshShell.Run "python """ & mainScript & """", 0, False
 If Err.Number = 0 Then
     WScript.Quit 0
 End If
 Err.Clear
 
-' Try python3
-WshShell.Run "python3 """ & mainScript & """", 0, False
+WshShell.Run "pyw """ & mainScript & """", 0, False
 If Err.Number = 0 Then
     WScript.Quit 0
 End If
 Err.Clear
 
-' Try py
 WshShell.Run "py """ & mainScript & """", 0, False
 If Err.Number = 0 Then
     WScript.Quit 0
 End If
 Err.Clear
 
-' If all commands fail, show error message
-MsgBox "Failed to start application. Please ensure:" & vbCrLf & "1. Python is installed" & vbCrLf & "2. Python is in PATH" & vbCrLf & "3. All dependencies are installed", vbCritical, "Launch Error"
+MsgBox "Failed to start application. Please ensure:" & vbCrLf & _
+       "1. Python is installed" & vbCrLf & _
+       "2. Dependencies are installed" & vbCrLf & _
+       "3. The project can run with 'python main.py'", _
+       vbCritical, "Launch Error"
 WScript.Quit 1

@@ -3,6 +3,7 @@ import shutil
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor
 from PyQt5.QtCore import Qt
 from core.logger import logger
+from core.runtime_paths import bootstrap_runtime_layout, get_runtime_path
 
 
 class ImageManager:
@@ -12,10 +13,16 @@ class ImageManager:
         # 初始化图片目录
         if config_dir is not None:
             # 使用配置目录下的images文件夹
-            self.images_dir = os.path.join(config_dir, "images")
+            self.images_dir = os.path.join(os.path.abspath(config_dir), "images")
         else:
-            self.images_dir = images_dir
+            self.images_dir = (
+                os.fspath(get_runtime_path("images"))
+                if images_dir == "images"
+                else os.path.abspath(images_dir)
+            )
 
+        if images_dir == "images":
+            bootstrap_runtime_layout()
         self.ensure_images_directory()
 
     def ensure_images_directory(self):
@@ -222,4 +229,3 @@ class ImageManager:
         except (FileNotFoundError, PermissionError, IOError) as e:
             logger.error(f"调整图片大小失败: {e}")
             return False
-

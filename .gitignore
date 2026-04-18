@@ -1,42 +1,81 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
+*.pyo
+*.pyd
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
 
-# PyInstaller
-*.spec
-!ZifeiyuSec.spec  # 保留打包配置文件
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build / packaging
 build/
 dist/
-*.exe
+site/
 *.dll
+*.dylib
+*.exe
 *.pyd
 *.so
-*.dylib
+*.spec
+pip-wheel-metadata/
 
-# IDE
-.vscode/
+# IDE / editor
 .idea/
+.vscode/
+.claude/
+.trae/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
+Desktop.ini
 
 # Environment
 .env
 .env.local
 .env.*.local
+.python-version
 
 # Logs
 logs/
 *.log
+err*.txt
+out*.txt
+response.txt
 
-# Temporary files
-*.tmp
+# Temp / cache
+*.bak
 *.temp
+*.tmp
+*.orig
+.tmp_test_workspace/
+.tmp_test_workspace_probe/
+.test_workspace/
+.scratch_test/
+test_workspace_local/
+probe_*/
+codex_write_probe_*/
+abc_*/
+updates/
+data/*bak.json
+.local_release_backup/
 
-# Images
+# Local-only workspace data
+.runtime/
+Tools/
 images/README/
-
-# Settings
+resources/notes/_attachments/
 settings.ini

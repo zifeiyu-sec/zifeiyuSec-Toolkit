@@ -1,1 +1,519 @@
-{"categories":[{"name":"信息收集 (Information Gathering)","icon":"info_gather.svg","id":1,"priority":1,"subcategories":[{"name":"子域名与资产发现 (Subdomains)","id":102,"priority":2},{"name":"目录与敏感文件扫描 (Dir Scanning)","id":103,"priority":3},{"name":"网络空间测绘 (Search Engines)","id":101,"priority":1},{"name":"指纹识别 (Fingerprint)","id":105,"priority":5},{"name":"工商信息（Business）","id":107,"parent_id":1},{"name":"WAF识别","id":109,"parent_id":1},{"name":"综合信息收集（Comprehensive）","id":106,"parent_id":1},{"name":"ICP备案查询（icp)","id":108,"parent_id":1},{"name":"社工与 OSINT (Social Eng)","id":104,"priority":4},{"name":"IP和端口","id":110,"parent_id":1}]},{"name":"综合漏洞扫描 (Vuln Scanning)","icon":"radar.svg","id":2,"priority":2,"description":"存放 TscanPlus, Goby, Nuclei, Xray 等综合性工具","subcategories":[{"name":"综合漏扫工具 (All-in-One Scanners)","id":201,"priority":1},{"name":"漏洞验证框架 (PoC Frameworks)","id":202,"priority":2},{"name":"端口与服务扫描 (Port & Service)","id":203,"priority":3},{"name":"CMS 专项检测 (CMS Scanners)","id":205,"priority":5},{"name":"Web 专用扫描器 (Web Scanners)","id":204,"priority":4}]},{"name":"Web 攻防 (Web Exploitation)","icon":"web_attack.svg","id":3,"priority":3,"subcategories":[{"name":"抓包与代理 (Burp/Mitmproxy)","id":301,"priority":1},{"name":"WebShell 管理 (WebShell Managers)","id":302,"priority":2},{"name":"SQL 注入工具","id":303,"priority":3},{"name":"XSS 与前端攻击","id":304,"priority":4},{"name":"API 接口测试","id":305,"priority":5},{"name":"反序列化工具","id":306,"priority":6},{"name":"字典","id":307,"parent_id":3}]},{"name":"开发与调试 (Dev & Debug)","icon":"code_dev.svg","id":7,"priority":7,"subcategories":[{"name":"代码审计 (Source Code Audit)","id":707,"parent_id":7},{"name":"数据格式化 (JSON/XML/SQL)","id":701,"priority":1},{"name":"网络调试 (Curl/Netcat/TCP)","id":702,"priority":2},{"name":"正则与文本处理 (Regex/Text)","id":703,"priority":3},{"name":"脚本开发环境 (Python/Java)","id":704,"priority":4},{"name":"API 调试工具 (Postman/Insomnia)","id":705,"priority":5},{"name":"十六进制编辑 (Hex Editors)","id":706,"priority":6},{"name":"开发工具","id":708,"parent_id":7}]},{"name":"密码学与认证 (Crypto & Auth)","icon":"lock.svg","id":5,"priority":5,"subcategories":[{"name":"哈希识别与转换 (Hash Tools)","id":502,"priority":2},{"name":"编码解码工具 (Encode/Decode)","id":504,"priority":4},{"name":"字典生成与处理 (Wordlists)","id":503,"priority":3},{"name":"凭据提取 (Credential Dump)","id":506,"priority":6},{"name":"在线/离线破解 (Cracking)","id":501,"priority":1},{"name":"加密解密工具 (Encryption)","id":505,"priority":5}]},{"name":"内网与域渗透 (Intranet & AD)","icon":"network_internal.svg","id":4,"priority":4,"subcategories":[{"name":"代理与隧道 (Proxy & Tunnels)","id":401,"priority":1},{"name":"域渗透工具 (AD Exploitation)","id":402,"priority":2},{"name":"内网信息收集 (Internal Recon)","id":403,"priority":3},{"name":"横向移动 (Lateral Movement)","id":404,"priority":4},{"name":"C2 与远控 (C2 Frameworks)","id":405,"priority":5},{"name":"免杀与对抗 (Evasion)","id":406,"priority":6}]},{"name":"蓝队与应急响应 (Blue Team & IR)","icon":"shield.svg","id":6,"priority":6,"subcategories":[{"name":"系统应急响应 (System IR)","id":601,"priority":1},{"name":"Web 日志分析 (Log Analysis)","id":602,"priority":2},{"name":"流量分析与取证 (Traffic Analysis)","id":603,"priority":3},{"name":"恶意代码分析 (Malware Analysis)","id":604,"priority":4},{"name":"内存与硬盘取证 (Forensics)","id":605,"priority":5},{"name":"蜜罐与欺骗防御 (Honeypot)","id":606,"priority":6}]},{"name":"云与移动安全 (Cloud & Mobile)","icon":"cloud_mobile.svg","id":8,"priority":8,"subcategories":[{"name":"云平台安全 (Cloud Security)","id":801,"priority":1},{"name":"容器与 K8s (Container)","id":802,"priority":2},{"name":"安卓逆向 (Android Reversing)","id":803,"priority":3},{"name":"iOS 安全 (iOS Security)","id":804,"priority":4},{"name":"小程序/App 抓包","id":805,"priority":5}]},{"name":"其他工具及导航","icon":"default_icon","subcategories":[{"name":"红蓝综合工具","id":901,"parent_id":9},{"name":"安全团队论坛","id":902,"parent_id":9},{"name":"靶场","id":903,"parent_id":9},{"name":"漏洞库","id":904,"parent_id":9},{"name":"导航站点","id":905,"parent_id":9}],"id":9},{"name":"攻击面安全工具（Offensive Security Tools)","icon":"default_icon","subcategories":[{"name":"聚合平台","id":1001,"parent_id":10},{"name":"综合性渗透测试工具(Comprehensive penetration testing)","id":1002,"parent_id":10}],"id":10},{"name":"社会工程学","icon":"default_icon","subcategories":[{"name":"社工利器","id":1101,"parent_id":11}],"id":11}]}
+{
+  "categories": [
+    {
+      "name": "情报侦察与 OSINT",
+      "icon": "info_gather.svg",
+      "id": 1,
+      "priority": 1,
+      "subcategories": [
+        {
+          "name": "网络空间测绘",
+          "id": 101,
+          "priority": 1
+        },
+        {
+          "name": "子域名与资产发现",
+          "id": 102,
+          "priority": 2
+        },
+        {
+          "name": "目录与敏感文件扫描",
+          "id": 103,
+          "priority": 3
+        },
+        {
+          "name": "社工与泄露情报",
+          "id": 104,
+          "priority": 4
+        },
+        {
+          "name": "指纹识别",
+          "id": 105,
+          "priority": 5
+        },
+        {
+          "name": "综合信息收集",
+          "id": 106,
+          "priority": 6
+        },
+        {
+          "name": "企业与实名信息",
+          "id": 107,
+          "priority": 7
+        },
+        {
+          "name": "ICP备案与注册信息",
+          "id": 108,
+          "priority": 8
+        },
+        {
+          "name": "WAF 识别",
+          "id": 109,
+          "priority": 9
+        },
+        {
+          "name": "在线网络探测",
+          "id": 110,
+          "priority": 10
+        }
+      ]
+    },
+    {
+      "name": "漏洞扫描与利用",
+      "icon": "radar.svg",
+      "id": 2,
+      "priority": 2,
+      "subcategories": [
+        {
+          "name": "综合漏洞扫描",
+          "id": 201,
+          "priority": 1
+        },
+        {
+          "name": "漏洞验证与 PoC",
+          "id": 202,
+          "priority": 2
+        },
+        {
+          "name": "端口与服务扫描",
+          "id": 203,
+          "priority": 3
+        },
+        {
+          "name": "Web 漏洞扫描",
+          "id": 204,
+          "priority": 4
+        },
+        {
+          "name": "CMS 专项检测",
+          "id": 205,
+          "priority": 5
+        }
+      ]
+    },
+    {
+      "name": "蓝队分析与应急响应",
+      "icon": "shield.svg",
+      "id": 6,
+      "priority": 6,
+      "subcategories": [
+        {
+          "name": "检测与分析",
+          "id": 1509,
+          "parent_id": 6
+        },
+        {
+          "name": "终端安全",
+          "id": 1510,
+          "parent_id": 6
+        },
+        {
+          "name": "应急响应",
+          "id": 601,
+          "priority": 1
+        },
+        {
+          "name": "恶意代码分析",
+          "id": 604,
+          "priority": 4
+        },
+        {
+          "name": "数字取证",
+          "id": 605,
+          "priority": 5
+        },
+        {
+          "name": "安全运营",
+          "id": 1511,
+          "parent_id": 6
+        },
+        {
+          "name": "威胁情报与关联分析",
+          "id": 1507,
+          "parent_id": 6
+        },
+        {
+          "name": "蓝队综合工具",
+          "id": 606,
+          "priority": 6
+        }
+      ]
+    },
+    {
+      "name": "Web 安全测试",
+      "icon": "web_attack.svg",
+      "id": 3,
+      "priority": 3,
+      "subcategories": [
+        {
+          "name": "抓包与安全代理",
+          "id": 301,
+          "priority": 1
+        },
+        {
+          "name": "WebShell 管理",
+          "id": 302,
+          "priority": 2
+        },
+        {
+          "name": "API 接口测试",
+          "id": 305,
+          "priority": 5
+        },
+        {
+          "name": "反序列化与RCE",
+          "id": 306,
+          "priority": 6
+        },
+        {
+          "name": "字典与Payload",
+          "id": 307,
+          "priority": 7
+        },
+        {
+          "name": "注入类漏洞",
+          "id": 1512,
+          "parent_id": 3
+        },
+        {
+          "name": "前端漏洞",
+          "id": 1513,
+          "parent_id": 3
+        },
+        {
+          "name": "逻辑类漏洞",
+          "id": 1514,
+          "parent_id": 3
+        },
+        {
+          "name": "文件与上传漏洞",
+          "id": 1515,
+          "parent_id": 3
+        },
+        {
+          "id": 1516,
+          "name": "待分类（天狐导入）",
+          "priority": 8,
+          "parent_id": 3
+        }
+      ]
+    },
+    {
+      "name": "AI 安全与大模型",
+      "icon": "AI",
+      "id": 15,
+      "priority": 13,
+      "subcategories": [
+        {
+          "name": "Prompt 注入与越狱",
+          "id": 1501,
+          "priority": 1
+        },
+        {
+          "name": "模型安全评估",
+          "id": 1502,
+          "priority": 2
+        },
+        {
+          "name": "RAG 与知识库安全",
+          "id": 1503,
+          "priority": 3
+        },
+        {
+          "name": "模型部署与推理",
+          "id": 1504,
+          "priority": 4
+        },
+        {
+          "name": "Agent 与自动化",
+          "id": 1505,
+          "priority": 5
+        },
+        {
+          "name": "数据集与语料处理",
+          "id": 1506,
+          "priority": 6
+        }
+      ]
+    },
+    {
+      "name": "内网与域安全",
+      "icon": "network_internal.svg",
+      "id": 4,
+      "priority": 4,
+      "subcategories": [
+        {
+          "name": "代理与隧道",
+          "id": 401,
+          "priority": 1
+        },
+        {
+          "name": "AD 图谱与攻击",
+          "id": 402,
+          "priority": 2
+        },
+        {
+          "name": "内网信息收集",
+          "id": 403,
+          "priority": 3
+        },
+        {
+          "name": "横向移动",
+          "id": 404,
+          "priority": 4
+        },
+        {
+          "name": "C2 与远控",
+          "id": 405,
+          "priority": 5
+        },
+        {
+          "name": "免杀与对抗",
+          "id": 406,
+          "priority": 6
+        }
+      ]
+    },
+    {
+      "name": "开发与效率工具",
+      "icon": "code_dev.svg",
+      "id": 7,
+      "priority": 7,
+      "subcategories": [
+        {
+          "name": "数据格式化",
+          "id": 701,
+          "priority": 1
+        },
+        {
+          "name": "网络调试",
+          "id": 702,
+          "priority": 2
+        },
+        {
+          "name": "正则与文本处理",
+          "id": 703,
+          "priority": 3
+        },
+        {
+          "name": "IDE 与编辑器",
+          "id": 704,
+          "priority": 4
+        },
+        {
+          "name": "API 调试工具",
+          "id": 705,
+          "priority": 5
+        },
+        {
+          "name": "十六进制编辑",
+          "id": 706,
+          "priority": 6
+        },
+        {
+          "name": "代码审计",
+          "id": 707,
+          "priority": 7
+        },
+        {
+          "name": "通用开发工具",
+          "id": 708,
+          "priority": 8
+        }
+      ]
+    },
+    {
+      "name": "密码学与凭据",
+      "icon": "lock.svg",
+      "id": 5,
+      "priority": 5,
+      "subcategories": [
+        {
+          "name": "在线与离线破解",
+          "id": 501,
+          "priority": 1
+        },
+        {
+          "name": "哈希识别与转换",
+          "id": 502,
+          "priority": 2
+        },
+        {
+          "name": "字典生成与处理",
+          "id": 503,
+          "priority": 3
+        },
+        {
+          "name": "编码解码与数据处理",
+          "id": 504,
+          "priority": 4
+        },
+        {
+          "name": "加密解密工具",
+          "id": 505,
+          "priority": 5
+        },
+        {
+          "name": "凭据提取",
+          "id": 506,
+          "priority": 6
+        }
+      ]
+    },
+    {
+      "name": "云原生与移动安全",
+      "icon": "cloud_mobile.svg",
+      "id": 8,
+      "priority": 8,
+      "subcategories": [
+        {
+          "name": "云平台安全",
+          "id": 801,
+          "priority": 1
+        },
+        {
+          "name": "容器与 K8s",
+          "id": 802,
+          "priority": 2
+        },
+        {
+          "name": "安卓安全",
+          "id": 803,
+          "priority": 3
+        },
+        {
+          "name": "iOS 安全",
+          "id": 804,
+          "priority": 4
+        },
+        {
+          "name": "小程序与 App 抓包",
+          "id": 805,
+          "priority": 5
+        }
+      ]
+    },
+    {
+      "name": "靶场与资源导航",
+      "icon": "🎯",
+      "id": 9,
+      "priority": 9,
+      "subcategories": [
+        {
+          "name": "红蓝综合工具",
+          "id": 901,
+          "priority": 1
+        },
+        {
+          "name": "安全社区与论坛",
+          "id": 902,
+          "priority": 2
+        },
+        {
+          "name": "靶场与练习平台",
+          "id": 903,
+          "priority": 3
+        },
+        {
+          "name": "漏洞库与情报库",
+          "id": 904,
+          "priority": 4
+        },
+        {
+          "name": "导航站点",
+          "id": 905,
+          "priority": 5
+        }
+      ]
+    },
+    {
+      "name": "逆向与二进制安全",
+      "icon": "⚙️",
+      "id": 12,
+      "priority": 10,
+      "subcategories": [
+        {
+          "name": "通用逆向环境",
+          "id": 1201,
+          "priority": 1
+        },
+        {
+          "name": "调试与动态分析",
+          "id": 1202,
+          "priority": 2
+        },
+        {
+          "name": "反汇编与反编译",
+          "id": 1203,
+          "priority": 3
+        },
+        {
+          "name": "壳与混淆处理",
+          "id": 1204,
+          "priority": 4
+        },
+        {
+          "name": "漏洞利用开发辅助",
+          "id": 1205,
+          "priority": 5
+        }
+      ]
+    },
+    {
+      "name": "硬件与物联网安全",
+      "icon": "📟",
+      "id": 13,
+      "priority": 11,
+      "subcategories": [
+        {
+          "name": "嵌入式调试",
+          "id": 1301,
+          "priority": 1
+        },
+        {
+          "name": "RFID 与 NFC 安全",
+          "id": 1302,
+          "priority": 2
+        },
+        {
+          "name": "工控与 PLC 安全",
+          "id": 1303,
+          "priority": 3
+        },
+        {
+          "name": "车联网与设备安全",
+          "id": 1304,
+          "priority": 4
+        }
+      ]
+    },
+    {
+      "name": "压力与抗压测试",
+      "icon": "📈",
+      "id": 14,
+      "priority": 12,
+      "subcategories": [
+        {
+          "name": "Web 压测与并发",
+          "id": 1401,
+          "priority": 1
+        },
+        {
+          "name": "API 与微服务压测",
+          "id": 1402,
+          "priority": 2
+        },
+        {
+          "name": "网络层与协议压测",
+          "id": 1403,
+          "priority": 3
+        },
+        {
+          "name": "综合压力测试工具",
+          "id": 1404,
+          "priority": 4
+        }
+      ]
+    }
+  ]
+}
