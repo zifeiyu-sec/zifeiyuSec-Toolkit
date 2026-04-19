@@ -23,6 +23,10 @@ class UpdateServiceError(RuntimeError):
     """Raised when update operations fail."""
 
 
+class NoPublishedReleaseError(UpdateServiceError):
+    """Raised when the GitHub repository has no published release yet."""
+
+
 @dataclass
 class UpdateInfo:
     current_version: str
@@ -315,6 +319,8 @@ class UpdateService:
         except UnicodeEncodeError as exc:
             raise UpdateServiceError("更新请求头编码失败，请检查更新配置。") from exc
         except HTTPError as exc:
+            if exc.code == 404 and "/releases/latest" in str(url):
+                raise NoPublishedReleaseError("当前仓库还没有发布可用版本。请先在 GitHub Releases 发布版本，或配置 manifest 更新源。") from exc
             raise UpdateServiceError(f"更新请求失败（HTTP {exc.code}）：{url}") from exc
         except URLError as exc:
             raise UpdateServiceError(f"更新请求失败：{exc.reason}") from exc

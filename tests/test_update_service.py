@@ -3,11 +3,11 @@ import json
 import sys
 import unittest
 from pathlib import Path
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from unittest.mock import patch
 
 from _support import cleanup_test_dir, make_test_dir
-from core.update_service import UpdateService, is_version_newer
+from core.update_service import NoPublishedReleaseError, UpdateService, is_version_newer
 
 
 class _FakeSettings:
@@ -157,6 +157,22 @@ class UpdateServiceHelperTests(unittest.TestCase):
 
         with patch("core.update_service.urlopen", return_value=_FakeResponse([b"{not-json"])):  # type: ignore[arg-type]
             with self.assertRaisesRegex(RuntimeError, "有效 JSON"):
+                service.check_for_updates()
+
+    def test_check_for_updates_reports_no_published_release_clearly(self):
+        temp_path = make_test_dir("update_service_no_release")
+        self.addCleanup(lambda: cleanup_test_dir(temp_path))
+        service = UpdateService("toolkit", "3.1.0", settings=None, config_dir=str(temp_path))
+        error = HTTPError(
+            "https://api.github.com/repos/example/toolkit/releases/latest",
+            404,
+            "Not Found",
+            hdrs=None,
+            fp=None,
+        )
+
+        with patch("core.update_service.urlopen", side_effect=error):
+            with self.assertRaisesRegex(NoPublishedReleaseError, "还没有发布可用版本"):
                 service.check_for_updates()
 
     def test_download_update_archive_streams_payload_and_reports_progress(self):

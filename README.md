@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ```powershell
 python main.py
 ```
-
+工具操作文档：https://blog.voidsec.site/archives/1776607844961
 ### 3. 首次运行说明
 
 程序首次启动时会自动初始化运行目录，用于存放用户自己的配置、运行数据和笔记内容。

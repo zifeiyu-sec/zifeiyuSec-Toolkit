@@ -104,6 +104,45 @@ class ToolConfigDialogTests(unittest.TestCase):
         self.assertIn("非终端工具不会使用这里的内容", dialog.args_edit.toolTip())
         self.assertIn("打开工具", dialog.args_edit.toolTip())
 
+    def test_should_extract_local_file_icon_only_for_exe(self):
+        dialog = self._create_dialog()
+        exe_path = self.icon_dir / "demo.exe"
+        bat_path = self.icon_dir / "demo.bat"
+        exe_path.write_bytes(b"exe")
+        bat_path.write_bytes(b"@echo off")
+
+        self.assertTrue(dialog._should_extract_local_file_icon(str(exe_path)))
+        self.assertFalse(dialog._should_extract_local_file_icon(str(bat_path)))
+
+    def test_icon_preview_uses_theme_adaptive_default_icon(self):
+        dialog = self._create_dialog()
+        light_icon = self.icon_dir / "write-github.svg"
+        dark_icon = self.icon_dir / "black-github.png"
+        light_icon.write_text("<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'></svg>", encoding="utf-8")
+        dark_icon.write_bytes(
+            bytes.fromhex(
+                "89504E470D0A1A0A0000000D49484452000000010000000108060000001F15C4890000000D49444154789C6360606060000000050001A5F645400000000049454E44AE426082"
+            )
+        )
+
+        def fake_get_icon_cache_key(path, theme_name=None):
+            if path == "default_icon":
+                return str(dark_icon if theme_name == "dark_green" else light_icon)
+            return str(path)
+
+        with patch("ui.tool_config_dialog.get_icon_cache_key", side_effect=fake_get_icon_cache_key):
+            dialog.current_theme = "dark_green"
+            dialog.selected_icon_name = ""
+            dialog._update_icon_preview()
+            dark_preview = dialog.icon_preview.pixmap()
+
+            dialog.current_theme = "light"
+            dialog._update_icon_preview()
+            light_preview = dialog.icon_preview.pixmap()
+
+        self.assertIsNotNone(dark_preview)
+        self.assertIsNotNone(light_preview)
+
 
 if __name__ == "__main__":
     unittest.main()

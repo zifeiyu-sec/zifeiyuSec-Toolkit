@@ -19,6 +19,7 @@ from core.runtime_paths import ensure_runtime_dir, resolve_icon_path_value
 from core.style_manager import ThemeManager
 from core.ui_scale import preferred_dialog_size, scaled
 from ui.favicon_downloader import FaviconDownloader
+from ui.icon_loader import get_icon_cache_key
 
 class ToolConfigDialog(QDialog):
     """工具配置对话框，用于添加或编辑工具信息"""
@@ -548,6 +549,17 @@ class ToolConfigDialog(QDialog):
         parent_dir = os.path.dirname(abs_path)
         return parent_dir or abs_path
 
+    def _should_extract_local_file_icon(self, path):
+        normalized = (path or '').strip()
+        if not normalized:
+            return False
+
+        abs_path = os.path.abspath(normalized)
+        if not os.path.isfile(abs_path):
+            return False
+
+        return os.path.splitext(abs_path)[1].casefold() == '.exe'
+
     def on_save(self):
         """保存工具配置"""
         # 验证必填字段
@@ -617,8 +629,8 @@ class ToolConfigDialog(QDialog):
                 # 忽略错误，使用默认图标
                 pass
             
-            # 如果仍然没有图标，且是本地可执行文件，尝试提取系统图标
-            if not self.selected_icon_name and os.path.isfile(path):
+            # 如果仍然没有图标，且是本地 .exe 文件，尝试提取系统图标
+            if not self.selected_icon_name and self._should_extract_local_file_icon(path):
                 try:
                     # 使用 QFileIconProvider 提取图标
                     file_info = QFileInfo(path)
@@ -817,37 +829,26 @@ class ToolConfigDialog(QDialog):
     
     def _update_icon_preview(self):
         try:
-            # 处理图标文件路径
             icon_name = self.selected_icon_name or self.default_icon_name
-            
-            # 处理绝对路径和相对路径
-            if os.path.isabs(icon_name):
-                icon_path = icon_name
-            else:
-                icon_path = os.path.join(self.icon_dir, icon_name)
-            
-            # 检查文件是否存在
-            if not os.path.exists(icon_path) or not os.path.isfile(icon_path):
-                # 如果文件不存在或不是文件，使用默认图标
-                icon_path = os.path.join(self.icon_dir, self.default_icon_name)
-            
-            # 确保默认图标路径有效
-            if not os.path.exists(icon_path) or not os.path.isfile(icon_path):
-                # 如果默认图标也不存在，直接返回
+            icon_path = get_icon_cache_key(icon_name, theme_name=self.current_theme)
+
+            if not icon_path or not os.path.exists(icon_path) or not os.path.isfile(icon_path):
+                icon_path = get_icon_cache_key(self.default_icon_name, theme_name=self.current_theme)
+
+            if not icon_path or not os.path.exists(icon_path) or not os.path.isfile(icon_path):
                 return
-            
+
             pixmap = QPixmap(icon_path)
             if not pixmap.isNull():
                 preview_size = max(48, min(self.icon_preview.width() - 12, self.icon_preview.height() - 12))
                 self.icon_preview.setPixmap(pixmap.scaled(preview_size, preview_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             else:
-                # 如果图标文件损坏，也使用默认图标
-                default_icon_path = os.path.join(self.icon_dir, self.default_icon_name)
-                if os.path.exists(default_icon_path) and os.path.isfile(default_icon_path):
+                default_icon_path = get_icon_cache_key(self.default_icon_name, theme_name=self.current_theme)
+                if default_icon_path and os.path.exists(default_icon_path) and os.path.isfile(default_icon_path):
                     pixmap = QPixmap(default_icon_path)
                     if not pixmap.isNull():
                         preview_size = max(48, min(self.icon_preview.width() - 12, self.icon_preview.height() - 12))
-                self.icon_preview.setPixmap(pixmap.scaled(preview_size, preview_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                        self.icon_preview.setPixmap(pixmap.scaled(preview_size, preview_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         except Exception as e:
             # 捕获所有异常，防止因图标问题导致崩溃
             logger.warning("刷新图标预览失败: %s", e)
