@@ -4,7 +4,7 @@
 
 项目基于 PyQt5，适合长期维护个人或团队常用工具清单，减少“工具散落在各个目录、参数不好记、笔记难沉淀”的问题。
 
-![image-20260419042717344](.\images\README\image-20260419042717344.png)
+<img width="1533" height="851" alt="image" src="https://github.com/user-attachments/assets/804e986b-c144-4dcf-9167-9171c2f94606" />
 
 ## 系统要求
 
@@ -172,7 +172,8 @@ tests/       测试代码
 
 无论你是刚入门，还是已经有自己的使用习惯，都欢迎来交流。希望这个工具箱不仅仅是一个项目，也能成为大家一起学习和分享的一个小入口。
 
-![](.\images\README\image-20251128014833635.png)
+<img width="296" height="308" alt="image" src="https://github.com/user-attachments/assets/a618070f-ca0b-4a1d-bace-3d3141a7417c" />
+
 
 ## 免责声明
 
