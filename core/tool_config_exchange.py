@@ -3,9 +3,32 @@ import os
 import re
 from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
+from urllib.parse import quote_plus, unquote, urlparse
 from urllib.request import Request, urlopen
 
 from core.task_control import iter_response_chunks, raise_if_cancelled
+from core.icon_validation import detect_icon_extension, is_probably_icon_data
+from core.tool_metadata import (
+    DOCUMENT_EXTENSIONS as TOOL_DOCUMENT_EXTENSIONS,
+    TERMINAL_SOURCE_TYPES as TOOL_TERMINAL_SOURCE_TYPES,
+    infer_import_tool_type_label,
+)
+from core.import_services import (
+    CategoryMapper,
+    ImportIconResolver,
+    NativeConfigImporter,
+    OfficialSyncService,
+    TianhuImporter,
+)
+from core.tianhu_icon_registry import iter_tianhu_icon_names, iter_tianhu_icon_source_urls
+from core.runtime_paths import (
+    ensure_runtime_dir,
+    get_bundle_path,
+    get_runtime_path,
+    looks_like_command_name,
+    resolve_configured_path_value,
+    resolve_icon_path_value,
+)
 
 
 class ToolConfigExchangeService:
@@ -14,7 +37,14 @@ class ToolConfigExchangeService:
     DEFAULT_ICON = "write-github.svg"
     TIANHU_IMPORT_TAG = "天狐导入"
     TIANHU_DEFAULT_ICON = "fox.ico"
+    TIANHU3_DEFAULT_ICON = "tianhu_import.svg"
     TIANHU_SUPPORTED_VERSION = "2.0"
+    TIANHU3_SUPPORTED_VERSION = "3.0"
+    TIANHU_SUPPORTED_VERSIONS = {TIANHU_SUPPORTED_VERSION, TIANHU3_SUPPORTED_VERSION}
+    TIANHU_ICON_EXTENSIONS = {".svg", ".png", ".ico", ".jpg", ".jpeg"}
+    TIANHU_ICON_LIBRARY_DIR = "tianhu"
+    TIANHU_ICON_LIBRARY_COMMON_DIR = "common"
+    TIANHU_ICON_SEARCH_LIMIT = 24
     TIANHU_UNCLASSIFIED_SUBCATEGORY = "待分类（天狐导入）"
     TIANHU_DEFAULT_FALLBACK_CATEGORY = "开发与效率工具"
     TIANHU2_SHARED_CATEGORIES = {"最近启动", "我的收藏"}
@@ -31,13 +61,10 @@ class ToolConfigExchangeService:
     }
 
     WEB_TOOL_TYPES = {"网页"}
-    TERMINAL_TOOL_TYPES = {"命令行", "python", "批处理"}
+    TERMINAL_TOOL_TYPES = TOOL_TERMINAL_SOURCE_TYPES
     JAVA8_GUI_TYPE = "java8(图形化)"
     JAVA11_GUI_TYPE = "java11(图形化)"
-    DOCUMENT_EXTENSIONS = {
-        ".txt", ".md", ".pdf", ".doc", ".docx", ".xls", ".xlsx",
-        ".ppt", ".pptx", ".csv", ".json", ".yaml", ".yml",
-    }
+    DOCUMENT_EXTENSIONS = TOOL_DOCUMENT_EXTENSIONS
     TIANHU2_SOURCE_CATEGORIES = {
         "webshell管理工具",
         "信息收集工具",
@@ -50,6 +77,7 @@ class ToolConfigExchangeService:
         "爆破工具",
         "网页工具",
     }
+    TIANHU3_SOURCE_CATEGORIES = TIANHU2_SOURCE_CATEGORIES | {"应急响应"}
     TIANHU2_REQUIRED_TOOL_FIELDS = {
         "name",
         "category",
@@ -67,15 +95,36 @@ class ToolConfigExchangeService:
         "后渗透工具": ("内网与域安全", "内网信息收集"),
         "爆破工具": ("密码学与凭据", "在线与离线破解"),
         "免杀工具": ("内网与域安全", "免杀与对抗"),
+        "应急响应": ("蓝队分析与应急响应", "应急响应"),
         "网页工具": ("靶场与资源导航", "导航站点"),
         "其他工具": ("开发与效率工具", "通用开发工具"),
     }
+    TIANHU_ICON_ALIASES = [
+        ("burp", "burpsuite_1.png"),
+        ("goby", "Goby_icon.png"),
+        ("nuclei", "Nuclei_GUI_icon_1.png"),
+        ("nmap", "nmap.png"),
+        ("yakit", "Yakit_icon.png"),
+        ("proxifier", "Proxifier_icon_1.png"),
+        ("wireshark", "wireshark.ico"),
+        ("cyberchef", "CyberChef_icon.png"),
+        ("amass", "amass.png"),
+        ("fofa", "fofa.info_favicon_1.ico"),
+        ("hunter", "hunter.qianxin.com_favicon_1.ico"),
+        ("quake", "quake.ico"),
+        ("shodan", "shodan.png"),
+        ("censys", "censys.ico"),
+        ("ctfhub", "ctfhub.png"),
+        ("ctfshow", "ctfshow.png"),
+        ("fox", "fox.ico"),
+        ("tianhu", "tianhu_import.svg"),
+    ]
     TIANHU_CATEGORY_MATCH_RULES = [
         (("webshell", "冰蝎", "哥斯拉", "蚁剑", "中国蚁剑", "behinder", "godzilla", "antsword", "alien", "cknife", "webshell管理"), ("Web 安全测试", "WebShell 管理")),
         (("burp", "mitmproxy", "fiddler", "proxifier", "charles", "wireshark", "http toolkit", "reqable", "yakit"), ("Web 安全测试", "抓包与安全代理")),
         (("frp", "gost", "nps", "clash", "v2ray", "xray", "chisel", "ligolo", "suo5"), ("内网与域安全", "代理与隧道")),
-        (("sqlmap", "sql注入", "super sql", "ghauri", "bbqsql"), ("Web 安全测试", "SQL 注入")),
-        (("shiro", "fastjson", "jackson", "deserial", "ysoserial", "反序列化"), ("Web 安全测试", "反序列化工具")),
+        (("sqlmap", "sql注入", "super sql", "ghauri", "bbqsql"), ("Web 安全测试", "注入类漏洞")),
+        (("shiro", "fastjson", "jackson", "deserial", "ysoserial", "反序列化"), ("Web 安全测试", "反序列化与RCE")),
         (("fofa", "hunter", "quake", "zoomeye", "shodan", "censys", "criminalip", "fullhunt", "netlas", "daydaymap", "binaryedge", "threatbook"), ("情报侦察与 OSINT", "网络空间测绘")),
         (("oneforall", "subfinder", "amass", "ksubdomain", "subdomain"), ("情报侦察与 OSINT", "子域名与资产发现")),
         (("dirsearch", "gobuster", "feroxbuster", "dirbuster", "sensitive", "敏感文件"), ("情报侦察与 OSINT", "目录与敏感文件扫描")),
@@ -83,6 +132,7 @@ class ToolConfigExchangeService:
         (("whois", "备案", "icp"), ("情报侦察与 OSINT", "ICP备案与注册信息")),
         (("零零信安", "0.zone", "haveibeenpwned", "泄露", "暗网"), ("情报侦察与 OSINT", "社工与泄露情报")),
         (("blueteamtools", "蓝队分析辅助工具箱"), ("蓝队分析与应急响应", "蓝队综合工具")),
+        (("应急响应", "应急", "响应", "取证", "日志", "蓝队", "edr", "forensics", "事件分析"), ("蓝队分析与应急响应", "应急响应")),
         (("企查查", "qcc", "爱企查", "aiqicha", "天眼查", "tianyancha", "七麦", "qimai", "小蓝本", "xiaolanben"), ("情报侦察与 OSINT", "企业与实名信息")),
         (("ip138", "chinaz", "站长工具", "site.ip138"), ("情报侦察与 OSINT", "在线网络探测")),
         (("cyberchef", "base64", "url编码", "编码", "解码", "decode", "encode", "jwt", "unicode"), ("密码学与凭据", "编码解码与数据处理")),
@@ -115,6 +165,17 @@ class ToolConfigExchangeService:
 
     def __init__(self, data_manager):
         self.data_manager = data_manager
+        self._tianhu_icon_source_cache = {}
+        self._tianhu_icon_online_search_count = 0
+        self.category_mapper = CategoryMapper(self)
+        self.import_icon_resolver = ImportIconResolver(self)
+        self.native_importer = NativeConfigImporter(self)
+        self.official_sync_service = OfficialSyncService(self)
+        self.tianhu_importer = TianhuImporter(
+            self,
+            category_mapper=self.category_mapper,
+            icon_resolver=self.import_icon_resolver,
+        )
 
     def _export_sort_key(self, tool):
         return (
@@ -186,6 +247,9 @@ class ToolConfigExchangeService:
         }
 
     def import_native_tools(self, file_path):
+        return self.native_importer.import_file(file_path).to_legacy_result()
+
+    def _import_native_tools_legacy(self, file_path):
         payload = self._read_json(file_path)
         if isinstance(payload, dict):
             payload_source = str(payload.get("source", "") or "").strip().lower()
@@ -218,7 +282,8 @@ class ToolConfigExchangeService:
 
         if imported_tools:
             existing_tools.extend(imported_tools)
-            self.data_manager.save_tools(existing_tools)
+            if not self.data_manager.save_tools(existing_tools):
+                raise OSError("导入原生工具配置失败，保存工具配置未成功。")
 
         return {
             "imported": len(imported_tools),
@@ -234,6 +299,14 @@ class ToolConfigExchangeService:
                 return
 
     def sync_official_tools_from_url(self, source_url, update_existing=True, cancel_requested=None, progress_callback=None):
+        return self.official_sync_service.sync_from_url(
+            source_url,
+            update_existing=update_existing,
+            cancel_requested=cancel_requested,
+            progress_callback=progress_callback,
+        ).to_legacy_result()
+
+    def _sync_official_tools_from_url_legacy(self, source_url, update_existing=True, cancel_requested=None, progress_callback=None):
         url_text = str(source_url or "").strip()
         if not url_text:
             raise ValueError("未配置官方工具库地址。")
@@ -329,7 +402,30 @@ class ToolConfigExchangeService:
             "update_existing": should_update,
         }
 
-    def import_tianhu_tools(self, source_path):
+    def import_tianhu_tools(
+        self,
+        source_path,
+        cancel_requested=None,
+        progress_callback=None,
+        download_missing_icons=False,
+    ):
+        return self.tianhu_importer.import_file(
+            source_path,
+            cancel_requested=cancel_requested,
+            progress_callback=progress_callback,
+            download_missing_icons=download_missing_icons,
+        ).to_legacy_result()
+
+    def _import_tianhu_tools_legacy(
+        self,
+        source_path,
+        cancel_requested=None,
+        progress_callback=None,
+        download_missing_icons=False,
+    ):
+        self._report_progress(progress_callback, "正在读取天狐配置...")
+        raise_if_cancelled(cancel_requested, "已取消导入天狐工具。")
+        self._tianhu_icon_online_search_count = 0
         tools_payload, settings, source_root, detected_version = self._load_tianhu_payload(source_path)
         categories = list(self.data_manager.load_categories() or [])
 
@@ -342,8 +438,19 @@ class ToolConfigExchangeService:
         category_stats = {}
         categories_changed = False
 
-        for raw_tool in tools_payload:
-            normalized = self._convert_tianhu_tool(raw_tool, source_root, settings, categories)
+        total_tools = len(tools_payload)
+        for index, raw_tool in enumerate(tools_payload, start=1):
+            raise_if_cancelled(cancel_requested, "已取消导入天狐工具。")
+            if index == 1 or index == total_tools or index % 25 == 0:
+                self._report_progress(progress_callback, f"正在导入天狐工具... {index}/{total_tools}")
+            normalized = self._convert_tianhu_tool(
+                raw_tool,
+                source_root,
+                settings,
+                categories,
+                detected_version,
+                download_missing_icons=download_missing_icons,
+            )
             fingerprint = self._tool_fingerprint(normalized)
             if fingerprint in seen_fingerprints:
                 skipped += 1
@@ -370,7 +477,9 @@ class ToolConfigExchangeService:
                 tool.pop("_resolved_category_name", None)
                 tool.pop("_resolved_subcategory_name", None)
             existing_tools.extend(imported_tools)
-            self.data_manager.save_tools(existing_tools)
+            self._report_progress(progress_callback, "正在保存天狐导入结果...")
+            if not self.data_manager.save_tools(existing_tools):
+                raise OSError("导入天狐工具失败，保存工具配置未成功。")
 
         return {
             "imported": len(imported_tools),
@@ -487,8 +596,8 @@ class ToolConfigExchangeService:
                 settings = {}
             source_root = self._guess_tianhu_root(payload, tools_payload)
             detected_version = self._detect_tianhu_version(payload, tools_payload)
-            if detected_version != self.TIANHU_SUPPORTED_VERSION:
-                raise ValueError("当前仅支持导入天狐 2.0 导出配置，请确认导出文件来自天狐 2.0。")
+            if detected_version not in self.TIANHU_SUPPORTED_VERSIONS:
+                raise ValueError("当前仅支持导入天狐 2.0 / 3.0 导出配置，请确认导出文件来自天狐工具箱。")
             return tools_payload, settings, source_root, detected_version
 
         if os.path.isdir(normalized_source):
@@ -502,14 +611,14 @@ class ToolConfigExchangeService:
                     settings = raw_settings
             payload = {"tools": tools_payload, "settings": settings}
             detected_version = self._detect_tianhu_version(payload, tools_payload)
-            if detected_version != self.TIANHU_SUPPORTED_VERSION:
-                raise ValueError("当前仅支持导入天狐 2.0 导出配置，请确认目录来自天狐 2.0。")
+            if detected_version not in self.TIANHU_SUPPORTED_VERSIONS:
+                raise ValueError("当前仅支持导入天狐 2.0 / 3.0 导出配置，请确认目录来自天狐工具箱。")
             return tools_payload, settings, normalized_source, detected_version
 
         raise FileNotFoundError(f"天狐配置不存在: {source_text}")
 
     def _detect_tianhu_version(self, payload, tools_payload):
-        if not isinstance(payload, dict) or not tools_payload or not isinstance(tools_payload, list):
+        if not tools_payload or not isinstance(tools_payload, list):
             return ""
 
         valid_tools = [
@@ -517,6 +626,12 @@ class ToolConfigExchangeService:
             if isinstance(item, dict) and self.TIANHU2_REQUIRED_TOOL_FIELDS.issubset(item.keys())
         ]
         if not valid_tools or len(valid_tools) != len(tools_payload):
+            return ""
+
+        if isinstance(payload, list):
+            return self.TIANHU3_SUPPORTED_VERSION
+
+        if not isinstance(payload, dict):
             return ""
 
         categories = payload.get("categories")
@@ -552,6 +667,11 @@ class ToolConfigExchangeService:
             return self.TIANHU_SUPPORTED_VERSION
         if signature_key_count >= 4:
             return self.TIANHU_SUPPORTED_VERSION
+        normalized_tianhu3_categories = {item.casefold() for item in self.TIANHU3_SOURCE_CATEGORIES}
+        if normalized_categories & normalized_tianhu3_categories:
+            return self.TIANHU3_SUPPORTED_VERSION
+        if normalized_tool_categories & normalized_tianhu3_categories:
+            return self.TIANHU3_SUPPORTED_VERSION
 
         return ""
 
@@ -590,7 +710,15 @@ class ToolConfigExchangeService:
                 return os.sep.join(parts[: index + 1])
         return ""
 
-    def _convert_tianhu_tool(self, raw_tool, tianhu_root, settings, categories):
+    def _convert_tianhu_tool(
+        self,
+        raw_tool,
+        tianhu_root,
+        settings,
+        categories,
+        detected_version,
+        download_missing_icons=False,
+    ):
         name = str(raw_tool.get("name", "") or "").strip()
         source_category = str(raw_tool.get("category", "") or "").strip()
         source_type = str(raw_tool.get("type", "") or "").strip()
@@ -618,7 +746,13 @@ class ToolConfigExchangeService:
             "category_id": category_id,
             "subcategory_id": subcategory_id,
             "background_image": "",
-            "icon": self.TIANHU_DEFAULT_ICON,
+            "icon": self._resolve_tianhu_icon(
+                raw_tool,
+                final_path,
+                is_web_tool,
+                detected_version,
+                allow_online_lookup=download_missing_icons,
+            ),
             "is_favorite": False,
             "arguments": params,
             "working_directory": working_directory,
@@ -628,7 +762,7 @@ class ToolConfigExchangeService:
             "usage_count": 0,
             "last_used": None,
             "import_source": "tianhu",
-            "import_source_version": self.TIANHU_SUPPORTED_VERSION,
+            "import_source_version": detected_version,
             "import_source_root": tianhu_root,
             "source_category": source_category,
             "source_type": source_type,
@@ -641,6 +775,381 @@ class ToolConfigExchangeService:
 
         self._apply_tianhu_interpreter(tool, raw_tool, settings, tianhu_root)
         return tool
+
+    def _resolve_tianhu_icon(self, raw_tool, final_path, is_web_tool, detected_version, allow_online_lookup=False):
+        icon_name = self._find_tianhu_library_icon(raw_tool, final_path, is_web_tool, detected_version)
+        if icon_name:
+            return icon_name
+
+        icon_name = self._find_tianhu_existing_icon(raw_tool, final_path, is_web_tool)
+        if icon_name:
+            return icon_name
+
+        if not allow_online_lookup:
+            return self._resolve_tianhu_default_icon(detected_version)
+
+        downloaded_icon = self._download_tianhu_tool_icon(raw_tool, is_web_tool)
+        if downloaded_icon:
+            return downloaded_icon
+
+        return self._resolve_tianhu_default_icon(detected_version)
+
+    def _resolve_tianhu_default_icon(self, detected_version):
+        candidates = []
+        if str(detected_version or "").strip() == self.TIANHU3_SUPPORTED_VERSION:
+            candidates.append(self.TIANHU3_DEFAULT_ICON)
+        candidates.extend([self.TIANHU_DEFAULT_ICON, self.DEFAULT_ICON])
+
+        for candidate in candidates:
+            resolved = resolve_icon_path_value(candidate)
+            if resolved:
+                return os.fspath(resolved.name)
+
+        return candidates[0]
+
+    def _find_tianhu_existing_icon(self, raw_tool, final_path, is_web_tool):
+        seen = set()
+        for candidate in self._build_tianhu_icon_candidates(raw_tool, final_path, is_web_tool):
+            normalized = str(candidate or "").strip()
+            if not normalized or normalized in seen:
+                continue
+            seen.add(normalized)
+            resolved = resolve_icon_path_value(normalized)
+            if resolved and resolved.suffix.casefold() in self.TIANHU_ICON_EXTENSIONS:
+                return self._format_icon_value(resolved)
+        return ""
+
+    def _find_tianhu_library_icon(self, raw_tool, final_path, is_web_tool, detected_version):
+        seen = set()
+        for key in self._build_tianhu_icon_library_keys(raw_tool, final_path, is_web_tool):
+            for candidate in self._build_tianhu_icon_library_candidates(key, detected_version):
+                if candidate in seen:
+                    continue
+                seen.add(candidate)
+                resolved = resolve_icon_path_value(candidate)
+                if resolved and resolved.suffix.casefold() in self.TIANHU_ICON_EXTENSIONS:
+                    return self._format_icon_value(resolved)
+        return ""
+
+    def _build_tianhu_icon_library_candidates(self, key, detected_version):
+        normalized_key = self._normalize_tianhu_icon_key(key)
+        if not normalized_key:
+            return []
+
+        version = str(detected_version or "").strip()
+        library_roots = []
+        if version in self.TIANHU_SUPPORTED_VERSIONS:
+            library_roots.append((self.TIANHU_ICON_LIBRARY_DIR, version))
+        library_roots.append((self.TIANHU_ICON_LIBRARY_DIR, self.TIANHU_ICON_LIBRARY_COMMON_DIR))
+
+        candidates = []
+        for root_parts in library_roots:
+            candidates.append("/".join((*root_parts, normalized_key)))
+        return candidates
+
+    def _build_tianhu_icon_library_keys(self, raw_tool, final_path, is_web_tool):
+        seen = set()
+
+        if isinstance(raw_tool, dict):
+            for field_name in ("name", "path", "url", "description", "group"):
+                value = raw_tool.get(field_name, "")
+                for key in self._expand_tianhu_icon_key(value):
+                    if key and key not in seen:
+                        seen.add(key)
+                        yield key
+
+            tags = raw_tool.get("tags", [])
+            if isinstance(tags, (list, tuple, set)):
+                tag_values = tags
+            else:
+                tag_values = [tags]
+            for tag in tag_values:
+                for key in self._expand_tianhu_icon_key(tag):
+                    if key and key not in seen:
+                        seen.add(key)
+                        yield key
+
+        for value in self._build_tianhu_icon_candidates(raw_tool, final_path, is_web_tool):
+            for key in self._expand_tianhu_icon_key(value):
+                if key and key not in seen:
+                    seen.add(key)
+                    yield key
+
+    def _expand_tianhu_icon_key(self, value):
+        text = str(value or "").strip()
+        if not text:
+            return []
+
+        keys = []
+        basename = os.path.basename(text.replace("\\", "/"))
+        stem = os.path.splitext(basename)[0] if basename else text
+        for item in (text, basename, stem):
+            normalized = self._normalize_tianhu_icon_key(item)
+            if normalized:
+                keys.append(normalized)
+
+        for token in re.findall(r"[a-zA-Z0-9][a-zA-Z0-9._+-]{1,}", text):
+            normalized = self._normalize_tianhu_icon_key(token)
+            if normalized:
+                keys.append(normalized)
+
+        return keys
+
+    def _normalize_tianhu_icon_key(self, value):
+        text = unquote(str(value or "").strip()).casefold()
+        if not text:
+            return ""
+
+        text = os.path.basename(text.replace("\\", "/"))
+        text = os.path.splitext(text)[0]
+        text = re.sub(r"[^a-z0-9]+", "_", text)
+        return text.strip("_")
+
+    def _format_icon_value(self, resolved):
+        resolved_text = os.path.abspath(os.fspath(resolved))
+        for root in (
+            get_runtime_path("resources", "icons"),
+            get_bundle_path("resources", "icons"),
+        ):
+            root_text = os.path.abspath(os.fspath(root))
+            try:
+                common_path = os.path.commonpath([resolved_text, root_text])
+            except ValueError:
+                continue
+            if common_path == root_text:
+                return os.path.relpath(resolved_text, root_text).replace(os.sep, "/")
+        return os.fspath(resolved.name)
+
+    def _build_tianhu_icon_candidates(self, raw_tool, final_path, is_web_tool):
+        search_text = self._build_tianhu_keyword_text(raw_tool)
+        candidates = []
+
+        for icon_name in iter_tianhu_icon_names(raw_tool):
+            candidates.append(icon_name)
+
+        raw_path = str(raw_tool.get("path", "") or "").strip()
+        path_name = os.path.basename(str(final_path or "").strip()) if final_path else ""
+        path_stem = os.path.splitext(path_name)[0] if path_name else ""
+        for value in (path_name, path_stem, raw_path, os.path.basename(raw_path)):
+            text = str(value or "").strip()
+            if text:
+                candidates.append(text)
+
+        if is_web_tool:
+            candidates.extend(self._build_tianhu_web_icon_candidates(raw_tool.get("url", "")))
+
+        for keyword, icon_name in self.TIANHU_ICON_ALIASES:
+            if keyword and keyword in search_text:
+                candidates.append(icon_name)
+
+        return candidates
+
+    def _download_tianhu_tool_icon(self, raw_tool, is_web_tool):
+        if bool(is_web_tool):
+            downloaded_icon = self._download_tianhu_web_icon(raw_tool.get("url", ""))
+            if downloaded_icon:
+                return downloaded_icon
+
+        for source_url in iter_tianhu_icon_source_urls(raw_tool):
+            downloaded_icon = self._download_tianhu_web_icon(source_url)
+            if downloaded_icon:
+                return downloaded_icon
+
+        tool_name = str(raw_tool.get("name", "") or "").strip()
+        if not tool_name:
+            return ""
+
+        cache_key = tool_name.casefold()
+        if cache_key in self._tianhu_icon_source_cache:
+            search_url = self._tianhu_icon_source_cache[cache_key]
+        else:
+            if self._tianhu_icon_online_search_count >= self.TIANHU_ICON_SEARCH_LIMIT:
+                return ""
+            self._tianhu_icon_online_search_count += 1
+            search_url = self._search_tianhu_icon_source_url(tool_name)
+            self._tianhu_icon_source_cache[cache_key] = search_url
+
+        if search_url:
+            downloaded_icon = self._download_tianhu_web_icon(search_url)
+            if downloaded_icon:
+                return downloaded_icon
+
+        return ""
+
+    def _build_tianhu_web_icon_candidates(self, url):
+        text = str(url or "").strip()
+        if not text:
+            return []
+
+        try:
+            parsed = urlparse(text)
+        except Exception:
+            return []
+
+        domain = str(parsed.netloc or "").strip().casefold()
+        if not domain:
+            return []
+
+        candidates = [
+            f"{domain}_favicon_1.ico",
+            f"{domain}_favicon.ico",
+            f"{domain}.ico",
+            f"{domain}.png",
+        ]
+        last_label = domain.split(".")[0]
+        if last_label and last_label != domain:
+            candidates.extend([
+                f"{last_label}.ico",
+                f"{last_label}.png",
+            ])
+        return candidates
+
+    def _download_tianhu_web_icon(self, url, timeout=4.0, icon_dir=None, target_name=None):
+        text = str(url or "").strip()
+        if not text:
+            return ""
+
+        try:
+            parsed = urlparse(text)
+        except Exception:
+            return ""
+
+        if not parsed.scheme or not parsed.netloc:
+            return ""
+
+        domain = parsed.netloc.strip()
+        base = f"{parsed.scheme}://{domain}"
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            )
+        }
+        if icon_dir is None:
+            icon_dir = ensure_runtime_dir("resources", "icons")
+        else:
+            icon_dir = os.fspath(icon_dir)
+            os.makedirs(icon_dir, exist_ok=True)
+
+        for candidate in (
+            f"{base}/favicon.ico",
+            f"{base}/favicon.png",
+            f"{base}/favicon.svg",
+            f"{base}/apple-touch-icon.png",
+            f"https://{domain}/favicon.ico",
+            f"http://{domain}/favicon.ico",
+        ):
+            downloaded = self._download_tianhu_icon_candidate(
+                candidate,
+                domain,
+                headers,
+                timeout,
+                icon_dir,
+                target_name=target_name,
+            )
+            if downloaded:
+                return downloaded
+        return ""
+
+    def _search_tianhu_icon_source_url(self, tool_name, timeout=4.0):
+        text = str(tool_name or "").strip()
+        if not text:
+            return ""
+
+        search_url = f"https://duckduckgo.com/html/?q={quote_plus(text + ' official site icon')}"
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            )
+        }
+
+        try:
+            request = Request(search_url, headers=headers)
+            with urlopen(request, timeout=timeout) as response:
+                html = response.read().decode("utf-8", errors="ignore")
+        except (HTTPError, URLError, OSError, ValueError):
+            return ""
+
+        for candidate in self._extract_tianhu_search_result_urls(html):
+            if candidate:
+                return candidate
+        return ""
+
+    def _extract_tianhu_search_result_urls(self, html):
+        if not html:
+            return []
+
+        candidates = []
+        patterns = [
+            r'href="[^"]*uddg=([^"&]+)',
+            r'href="(https?://[^"]+)"',
+        ]
+        for pattern in patterns:
+            for match in re.findall(pattern, html, flags=re.IGNORECASE):
+                candidate = unquote(match).strip()
+                if not candidate:
+                    continue
+                if candidate.startswith("//"):
+                    candidate = "https:" + candidate
+                if candidate.startswith(("http://", "https://")) and "duckduckgo.com" not in candidate.casefold():
+                    candidates.append(candidate)
+        seen = set()
+        ordered = []
+        for candidate in candidates:
+            if candidate in seen:
+                continue
+            seen.add(candidate)
+            ordered.append(candidate)
+        return ordered
+
+    def _download_tianhu_icon_candidate(self, candidate, domain, headers, timeout, icon_dir, target_name=None):
+        try:
+            req = Request(candidate, headers=headers)
+            with urlopen(req, timeout=timeout) as response:
+                data = response.read()
+                if not data or len(data) < 10:
+                    return ""
+
+                content_type = (response.headers.get("Content-Type", "") or "").lower()
+                if not is_probably_icon_data(data, source_url=candidate, content_type=content_type):
+                    return ""
+                ext = self._detect_icon_extension(candidate, content_type, data=data)
+                filename = self._save_tianhu_icon_file(icon_dir, domain, ext, data, target_name=target_name)
+                if filename:
+                    return filename
+        except Exception:
+            return ""
+        return ""
+
+    def _detect_icon_extension(self, source_url, content_type, data=b""):
+        return detect_icon_extension(source_url=source_url, content_type=content_type, data=data)
+
+    def _save_tianhu_icon_file(self, icon_dir, domain, ext, data, target_name=None):
+        safe_domain = str(domain or "").replace(":", "_").replace("/", "_")
+        base_name = str(target_name or "").strip()
+        if base_name:
+            safe_base = re.sub(r"[^A-Za-z0-9._-]+", "_", base_name).strip("._-") or safe_domain
+            filename = f"{safe_base}{ext}"
+        else:
+            filename = f"{safe_domain}_favicon{ext}"
+        path = os.path.join(os.fspath(icon_dir), filename)
+
+        counter = 1
+        while os.path.exists(path):
+            if base_name:
+                filename = f"{safe_base}_{counter}{ext}"
+            else:
+                filename = f"{safe_domain}_favicon_{counter}{ext}"
+            path = os.path.join(os.fspath(icon_dir), filename)
+            counter += 1
+
+        try:
+            with open(path, "wb") as file_handle:
+                file_handle.write(data)
+            return filename
+        except Exception:
+            return ""
 
     def _is_tianhu_web_tool(self, source_type, raw_url, raw_path):
         source_type_normalized = str(source_type or "").strip().casefold()
@@ -725,6 +1234,9 @@ class ToolConfigExchangeService:
 
         normalized = text.replace("/", os.sep).replace("\\", os.sep)
         if os.path.isabs(normalized):
+            if not tianhu_root and normalized.startswith((os.sep, "\\", "/")):
+                normalized = normalized.lstrip("\\/")
+                return os.path.normpath(normalized)
             return os.path.normpath(normalized)
 
         if tianhu_root:
@@ -733,10 +1245,29 @@ class ToolConfigExchangeService:
         return os.path.normpath(normalized)
 
     def _derive_working_directory(self, path):
-        absolute_path = os.path.abspath(path)
-        if os.path.isdir(absolute_path) or self._path_looks_like_directory(path):
-            return absolute_path
-        return os.path.dirname(absolute_path) or absolute_path
+        text = str(path or "").strip()
+        if not text:
+            return ""
+        if looks_like_command_name(text):
+            return ""
+
+        base_dir = getattr(self.data_manager, "config_dir", None)
+        try:
+            resolved_path = resolve_configured_path_value(
+                text,
+                base_dir=base_dir,
+                allow_command_name=True,
+            )
+        except (OSError, ValueError):
+            resolved_path = None
+
+        if resolved_path is None:
+            return ""
+
+        resolved_text = os.fspath(resolved_path)
+        if os.path.isdir(resolved_text) or self._path_looks_like_directory(text):
+            return resolved_text
+        return os.path.dirname(resolved_text) or resolved_text
 
     def _path_looks_like_directory(self, path):
         text = str(path or "").strip()
@@ -754,21 +1285,13 @@ class ToolConfigExchangeService:
         return ext in {".bat", ".cmd", ".ps1", ".py"}
 
     def _infer_type_label(self, path, source_type, is_web_tool):
-        if is_web_tool:
-            return "网页"
-
-        source_type_key = str(source_type or "").strip().casefold()
-        if source_type_key in self.TERMINAL_TOOL_TYPES:
-            return "终端"
-
-        if path and (os.path.isdir(path) or self._path_looks_like_directory(path)):
-            return "目录"
-
-        ext = os.path.splitext(str(path or "").strip())[1].lower()
-        if ext in self.DOCUMENT_EXTENSIONS:
-            return "文档"
-
-        return "应用"
+        return infer_import_tool_type_label(
+            path,
+            source_type=source_type,
+            is_web_tool=is_web_tool,
+            terminal_source_types=self.TERMINAL_TOOL_TYPES,
+            document_extensions=self.DOCUMENT_EXTENSIONS,
+        )
 
     def _map_tianhu_category(self, raw_tool):
         source_category = str(raw_tool.get("category", "") or "").strip()

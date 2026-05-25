@@ -1,8 +1,40 @@
 import difflib
+import re
+
+
+_SEARCH_TOKEN_RE = re.compile(r"[\w\u4e00-\u9fff]+", re.UNICODE)
 
 
 class MainWindowSearchMixin:
     """MainWindow 搜索逻辑混入。"""
+
+    def clear_active_search(self, restore_view=True):
+        """Clear the search box without triggering an intermediate refresh."""
+        timer = getattr(self, "search_debounce_timer", None)
+        if timer is not None:
+            timer.stop()
+        self._pending_search_text = ""
+
+        search_input = getattr(self, "search_input", None)
+        if search_input is None:
+            return False
+
+        had_search = bool((search_input.text() or "").strip())
+        if had_search:
+            search_input.blockSignals(True)
+            search_input.clear()
+            search_input.blockSignals(False)
+            if restore_view:
+                self._restore_view_mode_after_search()
+            else:
+                self._view_mode_before_search = None
+        return had_search
+
+    def _restore_view_mode_after_search(self):
+        previous_mode = getattr(self, "_view_mode_before_search", None)
+        if previous_mode:
+            self.current_view_mode = previous_mode
+        self._view_mode_before_search = None
 
     def schedule_search(self, text):
         """对搜索输入做防抖，避免每个按键都触发完整搜索。"""
@@ -40,17 +72,30 @@ class MainWindowSearchMixin:
         """处理搜索请求。"""
         query = (text or "").strip()
         if not query:
+            self._restore_view_mode_after_search()
             self.refresh_current_view()
             return
 
+        if getattr(self, "current_view_mode", "") != "search":
+            self._view_mode_before_search = getattr(self, "current_view_mode", "category")
+        self.is_in_favorites = False
+        self.current_view_mode = "search"
+        self._apply_view_state_layout()
         self._show_search_labels()
-        base_tools = self._get_search_scope_tools()
+        search_entries = self._get_tool_search_index()
+        base_tools = [entry["tool"] for entry in search_entries]
         query = query.lower()
 
         filtered_tools = []
         matched_ids = set()
-        for tool in base_tools:
-            score = self._score_tool_match(tool, query)
+        for entry in search_entries:
+            tool = entry["tool"]
+            score = self._score_tool_match_text(
+                entry["name"],
+                entry["description"],
+                query,
+                entry.get("fuzzy_candidates"),
+            )
             if score <= 0:
                 continue
 
@@ -60,10 +105,7 @@ class MainWindowSearchMixin:
             if tool.get("id") is not None:
                 matched_ids.add(tool.get("id"))
 
-        try:
-            note_hits = self.notes_manager.search_notes(query)
-        except Exception:
-            note_hits = []
+        note_hits = self._search_notes_cached(query)
 
         note_hits_by_key = {
             self.notes_manager.get_note_key(hit.get("tool_id"), hit.get("tool_name", "")): hit
@@ -112,7 +154,9 @@ class MainWindowSearchMixin:
     def _score_tool_match(self, tool, query):
         name = (tool.get("name") or "").lower()
         description = (tool.get("description") or "").lower()
+        return self._score_tool_match_text(name, description, query)
 
+    def _score_tool_match_text(self, name, description, query, fuzzy_candidates=None):
         score = 0
         if not query:
             return score
@@ -127,12 +171,10 @@ class MainWindowSearchMixin:
         if query in description:
             score = max(score, 68)
 
-        if len(query) <= 2:
+        if score or len(query) <= 2:
             return score
 
-        score_name = difflib.SequenceMatcher(None, query, name).ratio()
-        score_desc = difflib.SequenceMatcher(None, query, description).ratio()
-        fuzzy_score = max(score_name, score_desc)
+        fuzzy_score = self._score_fuzzy_candidate_tokens(name, description, query, fuzzy_candidates)
 
         if fuzzy_score >= 0.85:
             score = max(score, 64)
@@ -143,6 +185,117 @@ class MainWindowSearchMixin:
 
         return score
 
+    def _build_search_fuzzy_candidates(self, name, description):
+        candidates = [name]
+        candidates.extend(_SEARCH_TOKEN_RE.findall(name))
+        candidates.extend(_SEARCH_TOKEN_RE.findall(description)[:16])
+
+        seen = set()
+        result = []
+        for candidate in candidates:
+            candidate = str(candidate or "").strip()
+            if not candidate or candidate in seen:
+                continue
+            seen.add(candidate)
+            result.append(candidate)
+        return tuple(result)
+
+    def _score_fuzzy_candidate_tokens(self, name, description, query, fuzzy_candidates=None):
+        query_len = len(query)
+        candidates = fuzzy_candidates
+        if candidates is None:
+            candidates = self._build_search_fuzzy_candidates(name, description)
+
+        best_score = 0.0
+        for candidate in candidates:
+            candidate = str(candidate or "").strip()
+            if not candidate:
+                continue
+
+            candidate_len = len(candidate)
+            if candidate_len <= 1:
+                continue
+            if candidate_len > max(48, query_len * 4) and query_len < 12:
+                continue
+            if abs(candidate_len - query_len) > max(10, query_len * 2):
+                continue
+
+            ratio = difflib.SequenceMatcher(None, query, candidate).ratio()
+            if ratio > best_score:
+                best_score = ratio
+                if best_score >= 0.95:
+                    break
+        return best_score
+
+    def _build_tool_search_index(self, tools=None):
+        tools = list(self._get_search_scope_tools() if tools is None else tools)
+        signature = tuple(
+            (
+                tool.get("id"),
+                tool.get("name") or "",
+                tool.get("description") or "",
+            )
+            for tool in tools
+            if isinstance(tool, dict)
+        )
+        self._tool_search_index_signature = signature
+        self._tool_search_index = [
+            {
+                "tool": tool,
+                "name": (tool.get("name") or "").lower(),
+                "description": (tool.get("description") or "").lower(),
+                "fuzzy_candidates": self._build_search_fuzzy_candidates(
+                    (tool.get("name") or "").lower(),
+                    (tool.get("description") or "").lower(),
+                ),
+            }
+            for tool in tools
+            if isinstance(tool, dict)
+        ]
+        return self._tool_search_index
+
+    def _get_tool_search_index(self):
+        tools = self._get_search_scope_tools()
+        signature = tuple(
+            (
+                tool.get("id"),
+                tool.get("name") or "",
+                tool.get("description") or "",
+            )
+            for tool in tools
+            if isinstance(tool, dict)
+        )
+        if (
+            getattr(self, "_tool_search_index", None) is None
+            or getattr(self, "_tool_search_index_signature", None) != signature
+        ):
+            return self._build_tool_search_index(tools)
+        return self._tool_search_index
+
+    def invalidate_search_index(self):
+        self._tool_search_index = None
+        self._tool_search_index_signature = None
+        self._note_search_cache = {}
+
+    def _search_notes_cached(self, query):
+        cache = getattr(self, "_note_search_cache", None)
+        if cache is None:
+            cache = {}
+            self._note_search_cache = cache
+
+        if query in cache:
+            return cache[query]
+
+        try:
+            note_hits = self.notes_manager.search_notes(query)
+        except Exception:
+            note_hits = []
+
+        if len(cache) > 64:
+            cache.clear()
+        cache[query] = note_hits
+        return note_hits
+
     def _get_search_scope_tools(self):
         """获取全局搜索范围内的工具列表。"""
         return self.data_manager.load_tools()
@@ -152,7 +305,7 @@ class MainWindowSearchMixin:
         if self.is_in_favorites:
             return self.data_manager.get_favorite_tools()
 
-        current_category = self.category_view.current_category
+        current_category = self.category_view.current_category or getattr(self, "current_category", None)
         current_subcategory = self.subcategory_view.current_subcategory
 
         if current_category and current_subcategory:

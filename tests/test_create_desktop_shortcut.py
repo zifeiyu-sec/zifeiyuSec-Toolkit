@@ -18,7 +18,7 @@ class CreateDesktopShortcutTests(unittest.TestCase):
         self.addCleanup(lambda: cleanup_test_dir(self.temp_root))
 
     def test_build_shortcut_arguments_quotes_path_with_spaces(self):
-        main_py = Path(r"S:\code\Tools\zifeiyuSec2.0 - 副本\main.py")
+        main_py = self.temp_root / "project with spaces" / "main.py"
 
         arguments = create_desktop_shortcut.build_shortcut_arguments(main_py)
 

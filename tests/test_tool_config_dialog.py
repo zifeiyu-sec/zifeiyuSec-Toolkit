@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QGroupBox, QWidget
 
 from _support import cleanup_test_dir, make_test_dir
 from ui.tool_config_dialog import ToolConfigDialog
@@ -104,6 +105,89 @@ class ToolConfigDialogTests(unittest.TestCase):
         self.assertIn("非终端工具不会使用这里的内容", dialog.args_edit.toolTip())
         self.assertIn("打开工具", dialog.args_edit.toolTip())
 
+    def test_dialog_size_tracks_parent_window_size(self):
+        parent = QWidget()
+        parent.resize(1000, 700)
+        self.addCleanup(parent.deleteLater)
+
+        with patch("ui.tool_config_dialog.ensure_runtime_dir", return_value=self.icon_dir):
+            dialog = ToolConfigDialog(
+                tool_data={"id": 1, "name": "Test", "path": "", "description": ""},
+                categories=[],
+                parent=parent,
+            )
+        self.addCleanup(dialog.deleteLater)
+
+        screen = dialog.screen() or self.app.primaryScreen()
+        available_geometry = screen.availableGeometry() if screen is not None else None
+        min_width = 560
+        min_height = 600
+        max_width = 820
+        max_height = 900
+        if available_geometry is not None:
+            max_width = min(max_width, int(available_geometry.width() * 0.82))
+            max_height = min(max_height, int(available_geometry.height() * 0.96))
+            min_width = min(min_width, max_width)
+            min_height = min(min_height, max_height)
+
+        expected_width = max(min_width, min(int(parent.width() * 0.62), max_width))
+        expected_height = max(min_height, min(int(parent.height() * 0.90), max_height))
+
+        self.assertEqual(expected_width, dialog.width())
+        self.assertEqual(expected_height, dialog.height())
+
+    def test_dialog_content_uses_comfortable_metrics(self):
+        parent = QWidget()
+        parent.resize(1000, 700)
+        self.addCleanup(parent.deleteLater)
+
+        with patch("ui.tool_config_dialog.ensure_runtime_dir", return_value=self.icon_dir):
+            dialog = ToolConfigDialog(
+                tool_data={"id": 1, "name": "Test", "path": "", "description": ""},
+                categories=[],
+                parent=parent,
+            )
+        self.addCleanup(dialog.deleteLater)
+
+        self.assertGreaterEqual(dialog.icon_preview.width(), 52)
+        self.assertGreaterEqual(dialog.icon_button.minimumHeight(), 24)
+        self.assertGreaterEqual(dialog.description_edit.maximumHeight(), 100)
+
+        for group in dialog.findChildren(QGroupBox):
+            margins = group.layout().contentsMargins()
+            self.assertLessEqual(margins.left(), 9)
+            self.assertLessEqual(margins.top(), 9)
+            self.assertLessEqual(margins.right(), 9)
+            self.assertLessEqual(margins.bottom(), 9)
+
+    def test_dialog_uses_themed_frameless_title_bar(self):
+        dialog = self._create_dialog()
+
+        self.assertTrue(dialog.windowFlags() & Qt.FramelessWindowHint)
+        self.assertEqual("toolConfigTitleBar", dialog.title_bar.objectName())
+        self.assertEqual(dialog.windowTitle(), dialog.title_label.text())
+        self.assertEqual("toolConfigCloseButton", dialog.close_button.objectName())
+        self.assertIn("QWidget#toolConfigTitleBar", dialog.styleSheet())
+        self.assertIn("QPushButton#toolConfigCloseButton", dialog.styleSheet())
+
+    def test_dialog_styles_follow_selected_theme_without_background_image(self):
+        expectations = {
+            "dark_green": ("rgba(0,229,255,0.46)", "rgba(5,18,18,0.56)"),
+            "purple_neon": ("rgba(255,207,92,0.52)", "rgba(12,2,20,0.50)"),
+            "red_orange": ("rgba(255,205,92,0.76)", "rgba(74,0,0,0.54)"),
+            "blue_white": ("rgba(151,213,244,0.62)", "rgba(220,244,253,0.66)"),
+            "celadon_mist": ("rgba(137,220,223,0.62)", "rgba(214,243,241,0.66)"),
+        }
+
+        dialog = self._create_dialog()
+        for theme_name, expected_fragments in expectations.items():
+            dialog.set_theme(theme_name)
+
+            for expected_fragment in expected_fragments:
+                self.assertIn(expected_fragment, dialog.styleSheet())
+            self.assertIn("toolConfigScrollArea", dialog.styleSheet())
+            self.assertNotIn("background-image", dialog.styleSheet())
+
     def test_should_extract_local_file_icon_only_for_exe(self):
         dialog = self._create_dialog()
         exe_path = self.icon_dir / "demo.exe"
@@ -113,6 +197,38 @@ class ToolConfigDialogTests(unittest.TestCase):
 
         self.assertTrue(dialog._should_extract_local_file_icon(str(exe_path)))
         self.assertFalse(dialog._should_extract_local_file_icon(str(bat_path)))
+
+    def test_relative_path_helpers_resolve_against_base_dir(self):
+        config_dir = make_test_dir(f"tool_config_dialog_base_{self._testMethodName}")
+        self.addCleanup(lambda: cleanup_test_dir(config_dir))
+        tool_path = config_dir / "tools" / "demo.exe"
+        tool_path.parent.mkdir(parents=True, exist_ok=True)
+        tool_path.write_bytes(b"exe")
+
+        with patch("ui.tool_config_dialog.ensure_runtime_dir", return_value=self.icon_dir):
+            dialog = ToolConfigDialog(
+                tool_data={"id": 1, "name": "Test", "path": "", "description": ""},
+                categories=[],
+                base_dir=config_dir,
+            )
+        self.addCleanup(dialog.deleteLater)
+
+        self.assertEqual(os.fspath(tool_path.parent), dialog._derive_working_directory("tools/demo.exe"))
+        self.assertTrue(dialog._should_extract_local_file_icon("tools/demo.exe"))
+
+    def test_path_command_working_directory_uses_base_dir(self):
+        config_dir = make_test_dir(f"tool_config_dialog_cmd_{self._testMethodName}")
+        self.addCleanup(lambda: cleanup_test_dir(config_dir))
+
+        with patch("ui.tool_config_dialog.ensure_runtime_dir", return_value=self.icon_dir):
+            dialog = ToolConfigDialog(
+                tool_data={"id": 1, "name": "Test", "path": "", "description": ""},
+                categories=[],
+                base_dir=config_dir,
+            )
+        self.addCleanup(dialog.deleteLater)
+
+        self.assertEqual(os.fspath(config_dir), dialog._derive_working_directory("nmap"))
 
     def test_icon_preview_uses_theme_adaptive_default_icon(self):
         dialog = self._create_dialog()

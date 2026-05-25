@@ -1,18 +1,14 @@
-import shutil
-import tempfile
 import unittest
-from pathlib import Path
 
 from core.notes_manager import NotesManager
+from _support import cleanup_test_dir, make_test_dir
 
 
 class TestNotesManager(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = Path(tempfile.mkdtemp(prefix="notes-manager-test-"))
+        self.temp_dir = make_test_dir(f"notes_manager_{self._testMethodName}")
+        self.addCleanup(lambda: cleanup_test_dir(self.temp_dir))
         self.manager = NotesManager(repo_root=self.temp_dir)
-
-    def tearDown(self):
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_save_note_uses_tool_id_based_path(self):
         saved = self.manager.save_note("hello", tool_id=123, tool_name="Nuclei")

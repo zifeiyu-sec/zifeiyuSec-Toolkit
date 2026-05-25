@@ -49,6 +49,23 @@ class FaviconDownloaderTests(unittest.TestCase):
         self.assertTrue(file_name.endswith(".png"))
         self.assertTrue((self.icon_dir / file_name).is_file())
 
+    def test_html_payload_is_not_saved_as_icon(self):
+        downloader = FaviconDownloader(None, "https://example.com/favicon.ico", str(self.icon_dir))
+        fake_html = b"<!doctype html><html><body>blocked</body></html>"
+
+        with patch(
+            "ui.favicon_downloader.urllib.request.urlopen",
+            return_value=_FakeResponse(
+                fake_html,
+                "image/x-icon",
+                "https://example.com/favicon.ico",
+            ),
+        ):
+            file_name = downloader._download_favicon_logic("https://example.com/favicon.ico")
+
+        self.assertEqual("", file_name)
+        self.assertEqual([], list(self.icon_dir.iterdir()))
+
 
 if __name__ == "__main__":
     unittest.main()

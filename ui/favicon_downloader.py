@@ -5,6 +5,7 @@ from urllib.parse import urljoin, urlparse
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
+from core.icon_validation import detect_icon_extension, is_probably_icon_data
 from core.logger import logger
 
 
@@ -122,8 +123,10 @@ class FaviconDownloader(QThread):
                 data = resp.read()
                 if not data or len(data) < 10:
                     return ""
+                if not is_probably_icon_data(data, source_url=final_url or source_url, content_type=content_type):
+                    return ""
 
-                ext = self._detect_extension(final_url or source_url, content_type)
+                ext = self._detect_extension(final_url or source_url, content_type, data=data)
                 return self._save_icon(data, domain, ext)
         except Exception:
             return ""
@@ -175,28 +178,17 @@ class FaviconDownloader(QThread):
                 data = resp.read()
                 if not data or len(data) < 10:
                     return ""
+                content_type = resp.headers.get('Content-Type', '')
+                if not is_probably_icon_data(data, source_url=candidate, content_type=content_type):
+                    return ""
 
-                ext = self._detect_extension(candidate, resp.headers.get('Content-Type', ''))
+                ext = self._detect_extension(candidate, content_type, data=data)
                 return self._save_icon(data, domain, ext)
         except Exception:
             return ""
 
-    def _detect_extension(self, source_url, content_type):
-        content_type = (content_type or '').lower()
-        if 'png' in content_type:
-            return '.png'
-        if 'svg' in content_type:
-            return '.svg'
-        if 'jpeg' in content_type or 'jpg' in content_type:
-            return '.jpg'
-        if 'ico' in content_type or 'icon' in content_type:
-            return '.ico'
-
-        path = urlparse(source_url).path.lower()
-        for ext in ('.svg', '.png', '.ico', '.jpg', '.jpeg'):
-            if path.endswith(ext):
-                return '.jpg' if ext == '.jpeg' else ext
-        return '.ico'
+    def _detect_extension(self, source_url, content_type, data=b""):
+        return detect_icon_extension(source_url=source_url, content_type=content_type, data=data)
 
     def _looks_like_supported_image(self, source_url, content_type):
         content_type = (content_type or '').lower()

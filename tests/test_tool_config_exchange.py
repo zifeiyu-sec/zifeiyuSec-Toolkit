@@ -9,6 +9,25 @@ from core.data_manager import DataManager
 from core.tool_config_exchange import ToolConfigExchangeService
 
 
+class _FakeResponse:
+    def __init__(self, data, content_type, final_url):
+        self._data = data
+        self._final_url = final_url
+        self.headers = {"Content-Type": content_type}
+
+    def read(self):
+        return self._data
+
+    def geturl(self):
+        return self._final_url
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
 class ToolConfigExchangeTests(unittest.TestCase):
     def setUp(self):
         self.config_dir = make_test_dir(f"tool_exchange_{self._testMethodName}")
@@ -35,6 +54,7 @@ class ToolConfigExchangeTests(unittest.TestCase):
                 "subcategories": [
                     {"id": 201, "name": "综合漏洞扫描", "priority": 1},
                     {"id": 202, "name": "漏洞验证与 PoC", "priority": 2},
+                    {"id": 203, "name": "端口与服务扫描", "priority": 3},
                 ],
             },
             {
@@ -44,9 +64,9 @@ class ToolConfigExchangeTests(unittest.TestCase):
                 "subcategories": [
                     {"id": 301, "name": "抓包与安全代理", "priority": 1},
                     {"id": 302, "name": "WebShell 管理", "priority": 2},
-                    {"id": 303, "name": "SQL 注入", "priority": 3},
+                    {"id": 303, "name": "注入类漏洞", "priority": 3},
                     {"id": 305, "name": "API 接口测试", "priority": 4},
-                    {"id": 306, "name": "反序列化工具", "priority": 5},
+                    {"id": 306, "name": "反序列化与RCE", "priority": 5},
                 ],
             },
             {
@@ -66,6 +86,21 @@ class ToolConfigExchangeTests(unittest.TestCase):
                 "subcategories": [
                     {"id": 504, "name": "编码解码与数据处理", "priority": 1},
                     {"id": 505, "name": "加密解密工具", "priority": 2},
+                ],
+            },
+            {
+                "id": 6,
+                "name": "蓝队分析与应急响应",
+                "priority": 5,
+                "subcategories": [
+                    {"id": 601, "name": "检测与分析", "priority": 1},
+                    {"id": 602, "name": "终端安全", "priority": 2},
+                    {"id": 603, "name": "应急响应", "priority": 3},
+                    {"id": 604, "name": "恶意代码分析", "priority": 4},
+                    {"id": 605, "name": "数字取证", "priority": 5},
+                    {"id": 606, "name": "安全运营", "priority": 6},
+                    {"id": 607, "name": "威胁情报与关联分析", "priority": 7},
+                    {"id": 608, "name": "蓝队综合工具", "priority": 8},
                 ],
             },
             {
@@ -97,6 +132,7 @@ class ToolConfigExchangeTests(unittest.TestCase):
             },
         ]
         self.assertTrue(self.data_manager.save_categories(categories))
+        self.assertTrue(self.data_manager.save_tools([]))
 
     def _write_json(self, file_name, payload):
         target = self.config_dir / file_name
@@ -125,6 +161,9 @@ class ToolConfigExchangeTests(unittest.TestCase):
             },
             "tools": tools,
         }
+
+    def _build_tianhu_v3_payload(self, tools):
+        return list(tools)
 
     def test_export_native_tools_is_config_only_and_sorted(self):
         tools = [
@@ -233,6 +272,29 @@ class ToolConfigExchangeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.exchange.import_native_tools(str(import_path))
 
+    def test_import_native_tools_raises_when_save_fails(self):
+        payload = {
+            "schema": "zifeiyu-toolkit-tools",
+            "version": 2,
+            "source": "zifeiyu",
+            "export_mode": "config_only",
+            "tools": [
+                {
+                    "name": "Save Failure",
+                    "path": "tools/save-failure.exe",
+                    "description": "imported",
+                    "category_name": "情报侦察与 OSINT",
+                    "subcategory_name": "网络空间测绘",
+                    "type_label": "应用",
+                }
+            ],
+        }
+        import_path = self._write_json("import-save-failure.json", payload)
+
+        with patch.object(self.data_manager, "save_tools", return_value=False):
+            with self.assertRaisesRegex(OSError, "导入原生工具配置失败"):
+                self.exchange.import_native_tools(str(import_path))
+
     def test_import_tianhu_v2_maps_known_tools_and_creates_placeholder_for_unknown_tools(self):
         payload = self._build_tianhu_v2_payload([
             {
@@ -299,6 +361,325 @@ class ToolConfigExchangeTests(unittest.TestCase):
             if subcategory["name"] == self.exchange.TIANHU_UNCLASSIFIED_SUBCATEGORY
         )
         self.assertEqual(placeholder["id"], custom_tool["subcategory_id"])
+
+    def test_import_tianhu_v2_uses_registry_icon_when_tool_name_matches(self):
+        payload = self._build_tianhu_v2_payload([
+            {
+                "name": "BurpSuit-Pro",
+                "category": "抓包与代理工具",
+                "custom_interpreter_name": "",
+                "custom_interpreter_type": "",
+                "description": "Burp proxy",
+                "group": "Web",
+                "params": "",
+                "path": "",
+                "tags": ["burp"],
+                "type": "网页",
+                "url": "https://portswigger.net/burp",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu_v2_burp.json", payload)
+
+        result = self.exchange.import_tianhu_tools(str(import_path))
+
+        self.assertEqual(1, result["imported"])
+        self.assertEqual("2.0", result["detected_version"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("tianhu/common/burp.png", imported["icon"])
+
+    def test_import_tianhu_uses_local_icon_library_by_normalized_tool_name(self):
+        payload = self._build_tianhu_v3_payload([
+            {
+                "name": "DirSearch目录探测工具",
+                "category": "信息收集工具",
+                "description": "directory scanner",
+                "group": "Web",
+                "params": "",
+                "path": "",
+                "tags": ["dirsearch"],
+                "type": "GUI应用",
+                "url": "",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu_v3_dirsearch_icon.json", payload)
+
+        result = self.exchange.import_tianhu_tools(str(import_path))
+
+        self.assertEqual(1, result["imported"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("tianhu/3.0/dirsearch.svg", imported["icon"])
+
+    def test_import_tianhu_prefers_tool_name_icon_library_key_before_legacy_aliases(self):
+        payload = self._build_tianhu_v3_payload([
+            {
+                "name": "Zoomeye(钟馗之眼)",
+                "category": "网页工具",
+                "description": "space search",
+                "group": "Web",
+                "params": "",
+                "path": "",
+                "tags": ["zoomeye"],
+                "type": "网页",
+                "url": "https://www.zoomeye.org",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu_v3_zoomeye_icon.json", payload)
+
+        result = self.exchange.import_tianhu_tools(str(import_path))
+
+        self.assertEqual(1, result["imported"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("tianhu/common/zoomeye.ico", imported["icon"])
+
+    def test_import_tianhu_v2_searches_web_for_missing_icons_before_defaulting(self):
+        payload = self._build_tianhu_v2_payload([
+            {
+                "name": "LegacyUnknownTool",
+                "category": "其他工具",
+                "custom_interpreter_name": "",
+                "custom_interpreter_type": "",
+                "description": "unknown legacy",
+                "group": "misc",
+                "params": "",
+                "path": "",
+                "tags": ["unknown"],
+                "type": "GUI应用",
+                "url": "",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu_v2_search.json", payload)
+
+        with patch.object(self.exchange, "_search_tianhu_icon_source_url", return_value="https://legacy.example/tool"):
+            with patch.object(self.exchange, "_download_tianhu_web_icon", return_value="legacy.ico"):
+                result = self.exchange.import_tianhu_tools(str(import_path), download_missing_icons=True)
+
+        self.assertEqual(1, result["imported"])
+        self.assertEqual("2.0", result["detected_version"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("legacy.ico", imported["icon"])
+
+    def test_import_tianhu_v3_top_level_list_uses_icons_and_maps_emergency_category(self):
+        payload = self._build_tianhu_v3_payload([
+            {
+                "name": "FOFA",
+                "category": "网页工具",
+                "description": "空间测绘入口",
+                "group": "内置工具",
+                "params": "",
+                "path": "",
+                "tags": ["fofa"],
+                "type": "网页",
+                "url": "https://fofa.info",
+                "weight": 1,
+            },
+            {
+                "name": "WinLogCheckV3.4.1",
+                "category": "应急响应",
+                "description": "日志分析",
+                "group": "应急响应",
+                "params": "",
+                "path": r"/tools/gui_yjxy/WinLogCheckV3.4.1.exe",
+                "tags": ["log"],
+                "type": "GUI应用",
+                "url": "",
+                "weight": 2,
+            },
+            {
+                "name": "Nmap",
+                "category": "漏洞扫描与利用工具",
+                "description": "端口扫描",
+                "group": "内置工具",
+                "params": "-h",
+                "path": r"/tools/gui_other/nmap/nmap.exe",
+                "tags": ["nmap"],
+                "type": "命令行",
+                "url": "",
+                "weight": 3,
+            },
+        ])
+        import_path = self._write_json("tianhu_v3.json", payload)
+
+        result = self.exchange.import_tianhu_tools(str(import_path))
+
+        self.assertEqual(3, result["imported"])
+        self.assertEqual("3.0", result["detected_version"])
+
+        tools_by_name = {tool["name"]: tool for tool in self.data_manager.load_tools()}
+        fofa = tools_by_name["FOFA"]
+        winlog = tools_by_name["WinLogCheckV3.4.1"]
+        nmap = tools_by_name["Nmap"]
+
+        self.assertEqual(1, fofa["category_id"])
+        self.assertEqual(101, fofa["subcategory_id"])
+        self.assertEqual("tianhu/common/fofa.ico", fofa["icon"])
+        self.assertTrue(fofa["is_web_tool"])
+
+        self.assertEqual(6, winlog["category_id"])
+        self.assertEqual(603, winlog["subcategory_id"])
+        self.assertEqual("tianhu/3.0/winlogcheckv3_4_1.svg", winlog["icon"])
+
+        self.assertEqual(2, nmap["category_id"])
+        self.assertEqual(203, nmap["subcategory_id"])
+        self.assertEqual("tianhu/common/nmap.png", nmap["icon"])
+        self.assertEqual(os.path.normpath(r"tools\gui_other\nmap\nmap.exe"), os.path.normpath(nmap["path"]))
+
+    def test_import_tianhu_v3_uses_downloaded_icon_when_no_local_match_exists(self):
+        payload = self._build_tianhu_v3_payload([
+            {
+                "name": "NoLocalIconTool",
+                "category": "应急响应",
+                "description": "应急分析入口",
+                "group": "应急工具",
+                "params": "",
+                "path": "",
+                "tags": ["missing-icon"],
+                "type": "网页",
+                "url": "https://missing-icon-test.invalid/tool/",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu_v3_download.json", payload)
+
+        with patch.object(self.exchange, "_download_tianhu_web_icon", return_value="findall.ico"):
+            result = self.exchange.import_tianhu_tools(str(import_path), download_missing_icons=True)
+
+        self.assertEqual(1, result["imported"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("findall.ico", imported["icon"])
+        self.assertEqual(6, imported["category_id"])
+        self.assertEqual(603, imported["subcategory_id"])
+
+    def test_import_tianhu_v3_uses_registry_icon_when_tool_name_matches(self):
+        payload = self._build_tianhu_v3_payload([
+            {
+                "name": "BurpSuit-Pro",
+                "category": "Web 安全测试",
+                "description": "Burp",
+                "group": "Web",
+                "params": "",
+                "path": "",
+                "tags": ["burp"],
+                "type": "网页",
+                "url": "",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu_v3_burp.json", payload)
+
+        result = self.exchange.import_tianhu_tools(str(import_path))
+
+        self.assertEqual(1, result["imported"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("tianhu/common/burp.png", imported["icon"])
+
+    def test_import_tianhu_v3_searches_web_for_missing_icons_before_defaulting(self):
+        payload = self._build_tianhu_v3_payload([
+            {
+                "name": "UnknownToolX",
+                "category": "漏洞扫描与利用工具",
+                "description": "unknown",
+                "group": "misc",
+                "params": "",
+                "path": "",
+                "tags": ["unknown"],
+                "type": "GUI应用",
+                "url": "",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu_v3_search.json", payload)
+
+        with patch.object(self.exchange, "_search_tianhu_icon_source_url", return_value="https://unknown.example/tool"):
+            with patch.object(self.exchange, "_download_tianhu_web_icon", return_value="unknown.ico"):
+                result = self.exchange.import_tianhu_tools(str(import_path), download_missing_icons=True)
+
+        self.assertEqual(1, result["imported"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("unknown.ico", imported["icon"])
+
+    def test_download_tianhu_web_icon_rejects_html_payload(self):
+        icon_dir = self.config_dir / "downloaded_icons"
+        fake_html = b"<!doctype html><html><body>blocked</body></html>"
+
+        with patch(
+            "core.tool_config_exchange.urlopen",
+            return_value=_FakeResponse(
+                fake_html,
+                "image/x-icon",
+                "https://example.com/favicon.ico",
+            ),
+        ):
+            result = self.exchange._download_tianhu_web_icon(
+                "https://example.com/tool",
+                icon_dir=icon_dir,
+                target_name="example",
+            )
+
+        self.assertEqual("", result)
+        self.assertEqual([], list(icon_dir.glob("*")) if icon_dir.exists() else [])
+
+    def test_import_tianhu_bare_command_keeps_empty_working_directory(self):
+        payload = self._build_tianhu_v2_payload([
+            {
+                "name": "nmap",
+                "category": "漏洞扫描与利用工具",
+                "custom_interpreter_name": "",
+                "custom_interpreter_type": "",
+                "description": "PATH command",
+                "group": "CLI",
+                "params": "-h",
+                "path": "nmap",
+                "tags": ["nmap"],
+                "type": "应用",
+                "url": "",
+                "weight": 1,
+            }
+        ], settings={
+            "python_path": "",
+            "java8_path": "",
+            "java11_path": "",
+            "custom_interpreters": [],
+            "favorite_tools": [],
+            "recent_tools": [],
+            "theme": "dark",
+            "display_mode": "grid",
+            "update_check": False,
+        })
+        import_path = self._write_json("tianhu_nmap_command.json", payload)
+
+        result = self.exchange.import_tianhu_tools(str(import_path))
+
+        self.assertEqual(1, result["imported"])
+        imported = self.data_manager.load_tools()[0]
+        self.assertEqual("nmap", imported["path"])
+        self.assertEqual("", imported["working_directory"])
+
+    def test_import_tianhu_tools_raises_when_save_fails(self):
+        payload = self._build_tianhu_v2_payload([
+            {
+                "name": "FOFA",
+                "category": "信息收集工具",
+                "custom_interpreter_name": "",
+                "custom_interpreter_type": "",
+                "description": "空间测绘入口",
+                "group": "内置工具",
+                "params": "",
+                "path": "",
+                "tags": ["fofa"],
+                "type": "网页",
+                "url": "https://fofa.info",
+                "weight": 1,
+            }
+        ])
+        import_path = self._write_json("tianhu-save-failure.json", payload)
+
+        with patch.object(self.data_manager, "save_tools", return_value=False):
+            with self.assertRaisesRegex(OSError, "导入天狐工具失败"):
+                self.exchange.import_tianhu_tools(str(import_path))
 
     def test_import_tianhu_v2_maps_sqlmap_to_injection_subcategory(self):
         payload = self._build_tianhu_v2_payload([
@@ -508,8 +889,8 @@ class ToolConfigExchangeTests(unittest.TestCase):
                     "name": "FOFA",
                     "path": "https://fofa.info",
                     "description": "OSINT",
-                    "category_name": "鎯呮姤渚﹀療涓?OSINT",
-                    "subcategory_name": "缃戠粶绌洪棿娴嬬粯",
+                    "category_name": "情报侦察与 OSINT",
+                    "subcategory_name": "网络空间测绘",
                     "is_web_tool": True,
                     "icon": "github_1_1_1.svg",
                     "tags": ["osint"],
@@ -563,8 +944,8 @@ class ToolConfigExchangeTests(unittest.TestCase):
                     "name": "FOFA",
                     "path": "https://fofa.info/new",
                     "description": "new-description",
-                    "category_name": "鎯呮姤渚﹀療涓?OSINT",
-                    "subcategory_name": "缃戠粶绌洪棿娴嬬粯",
+                    "category_name": "情报侦察与 OSINT",
+                    "subcategory_name": "网络空间测绘",
                     "background_image": "",
                     "icon": "new.svg",
                     "tags": ["remote-tag"],
@@ -622,8 +1003,8 @@ class ToolConfigExchangeTests(unittest.TestCase):
                     "name": "FOFA",
                     "path": "https://fofa.info/new",
                     "description": "new-description",
-                    "category_name": "鎯呮姤渚﹀療涓?OSINT",
-                    "subcategory_name": "缃戠粶绌洪棿娴嬬粯",
+                    "category_name": "情报侦察与 OSINT",
+                    "subcategory_name": "网络空间测绘",
                     "tags": ["remote-tag"],
                     "is_web_tool": True,
                 }

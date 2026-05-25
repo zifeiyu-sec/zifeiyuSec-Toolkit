@@ -41,6 +41,8 @@ class SubcategoryView(QWidget):
         self.current_category = None
         self.current_subcategory = None
         self.current_theme = 'dark_green'  # 默认深色主题
+        self.setObjectName("subcategoryPanel")
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.init_ui()
     
     def init_ui(self):
@@ -82,16 +84,32 @@ class SubcategoryView(QWidget):
         # 注意：子分类视图样式与主分类视图非常相似，这里复用 category_view 样式
         # 如果需要区分，可以在 StyleManager 新增 get_subcategory_view_style
         theme_manager = ThemeManager()
+        if self.current_theme == 'blue_white':
+            self.setStyleSheet("QWidget#subcategoryPanel { background: rgba(224,247,255,0.34); border: 1px solid rgba(151,213,244,0.56); border-radius: 24px; }")
+        elif self.current_theme == 'celadon_mist':
+            self.setStyleSheet("QWidget#subcategoryPanel { background: rgba(208,250,250,0.34); border: 1px solid rgba(137,220,223,0.56); border-radius: 24px; }")
+        elif self.current_theme == 'dark_green':
+            self.setStyleSheet("QWidget#subcategoryPanel { background: rgba(0,10,12,0.28); border: 1px solid rgba(0,229,255,0.42); border-right: 1px solid rgba(255,51,102,0.28); border-bottom: 1px solid rgba(255,51,102,0.18); border-radius: 12px; }")
+        elif self.current_theme == 'purple_neon':
+            self.setStyleSheet("QWidget#subcategoryPanel { background: rgba(13,2,22,0.32); border: 1px solid rgba(255,207,92,0.54); border-right: 1px solid rgba(189,58,255,0.34); border-bottom: 1px solid rgba(255,207,92,0.38); border-radius: 24px; }")
+        elif self.current_theme == 'red_orange':
+            self.setStyleSheet("QWidget#subcategoryPanel { background: rgba(102,0,0,0.44); border: 1px solid rgba(255,205,92,0.72); border-right: 1px solid rgba(255,86,48,0.46); border-bottom: 1px solid rgba(255,205,92,0.58); border-radius: 24px; }")
+        else:
+            self.setStyleSheet("QWidget#subcategoryPanel { background: rgba(24,58,39,0.70); border: 1px solid rgba(111,231,135,0.12); border-radius: 24px; }")
         list_style = theme_manager.get_category_view_style(self.current_theme)
         self.subcategory_list.setStyleSheet(list_style)
         
         # 标题样式暂时保持本地
         if self.current_theme == 'blue_white':
-            self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(255,255,255,0.72); font-weight: 700; border: 1px solid rgba(148,163,184,0.10); border-radius: 14px; color: #1e293b; font-size: 14px;")
+            self.title_label.setStyleSheet("padding: 10px 14px; background-color: rgba(232,249,255,0.60); font-weight: 700; border: 1px solid rgba(151,213,244,0.58); border-radius: 18px; color: #1b547b; font-size: 14px;")
+        elif self.current_theme == 'celadon_mist':
+            self.title_label.setStyleSheet("padding: 9px 12px 11px 12px; background-color: rgba(226,255,255,0.74); font-weight: 700; border: 1px solid rgba(137,220,223,0.58); border-radius: 16px; color: #0f6970; font-size: 14px;")
+        elif self.current_theme == 'dark_green':
+            self.title_label.setStyleSheet("padding: 10px 14px; background-color: rgba(0,18,16,0.34); font-weight: 700; border-top: 1px solid rgba(0,255,65,0.76); border-bottom: 1px solid rgba(0,255,65,0.76); border-left: 1px solid rgba(0,229,255,0.42); border-right: 1px solid rgba(255,51,102,0.26); border-radius: 10px; color: #00ff41; font-size: 14px;")
         elif self.current_theme == 'purple_neon':
-            self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(30,24,56,0.68); font-weight: 700; border: 1px solid rgba(157,123,255,0.10); border-radius: 14px; color: #efe9ff; font-size: 14px;")
+            self.title_label.setStyleSheet("padding: 10px 14px; background-color: rgba(45,7,67,0.38); font-weight: 700; border-top: 1px solid rgba(255,232,147,0.86); border-bottom: 1px solid rgba(255,207,92,0.72); border-left: 1px solid rgba(189,58,255,0.42); border-right: 1px solid rgba(189,58,255,0.42); border-radius: 18px; color: #fff0b8; font-size: 14px;")
         elif self.current_theme == 'red_orange':
-            self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(42,30,24,0.68); font-weight: 700; border: 1px solid rgba(255,138,61,0.10); border-radius: 14px; color: #fff1e6; font-size: 14px;")
+            self.title_label.setStyleSheet("padding: 10px 14px; background-color: rgba(112,0,0,0.54); font-weight: 700; border-top: 1px solid rgba(255,232,147,0.96); border-bottom: 1px solid rgba(255,205,92,0.84); border-left: 1px solid rgba(255,86,48,0.50); border-right: 1px solid rgba(255,86,48,0.50); border-radius: 18px; color: #fff4c7; font-size: 14px;")
         else:
             self.title_label.setStyleSheet("padding: 10px 12px; background-color: rgba(24,58,39,0.68); font-weight: 700; border: 1px solid rgba(111,231,135,0.10); border-radius: 14px; color: #f3fff5; font-size: 14px;")
     

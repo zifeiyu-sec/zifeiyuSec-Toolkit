@@ -1,3 +1,4 @@
+import hashlib
 import json
 import sys
 import unittest
@@ -63,6 +64,72 @@ class UpdateWorkerTests(unittest.TestCase):
             close_fds=True,
             creationflags=ANY,
         )
+
+    def test_run_updater_session_rejects_sha256_mismatch_before_applying(self):
+        app_root = self.temp_path / "app"
+        app_root.mkdir()
+        (app_root / "main.py").write_text('print("old")\n', encoding="utf-8")
+
+        payload_root = self.temp_path / "payload" / "release"
+        payload_root.mkdir(parents=True)
+        (payload_root / "main.py").write_text('print("new")\n', encoding="utf-8")
+        zip_path = self._build_update_zip(payload_root)
+
+        session_path = self.temp_path / "session.json"
+        session_payload = {
+            "app_root": str(app_root.resolve()),
+            "zip_path": str(zip_path.resolve()),
+            "staging_dir": str((self.temp_path / "staging").resolve()),
+            "backup_dir": str((self.temp_path / "backup").resolve()),
+            "log_file": str((self.temp_path / "update.log").resolve()),
+            "parent_pid": 0,
+            "preserve_paths": [".runtime"],
+            "restart_cmd": [sys.executable, "-c", "print('restart')"],
+            "restart_cwd": str(app_root.resolve()),
+            "downloaded_sha256": "0" * 64,
+        }
+        session_path.write_text(json.dumps(session_payload, ensure_ascii=False), encoding="utf-8")
+
+        with patch("core.update_worker.subprocess.Popen") as popen_mock:
+            exit_code = run_updater_session(session_path)
+
+        self.assertEqual(1, exit_code)
+        self.assertEqual('print("old")\n', (app_root / "main.py").read_text(encoding="utf-8"))
+        popen_mock.assert_not_called()
+
+    def test_run_updater_session_rejects_missing_expected_executable(self):
+        app_root = self.temp_path / "app"
+        app_root.mkdir()
+        (app_root / "ZifeiyuSec.exe").write_bytes(b"old exe")
+
+        payload_root = self.temp_path / "payload" / "release"
+        payload_root.mkdir(parents=True)
+        (payload_root / "main.py").write_text('print("source")\n', encoding="utf-8")
+        zip_path = self._build_update_zip(payload_root)
+        digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
+
+        session_path = self.temp_path / "session.json"
+        session_payload = {
+            "app_root": str(app_root.resolve()),
+            "zip_path": str(zip_path.resolve()),
+            "staging_dir": str((self.temp_path / "staging").resolve()),
+            "backup_dir": str((self.temp_path / "backup").resolve()),
+            "log_file": str((self.temp_path / "update.log").resolve()),
+            "parent_pid": 0,
+            "preserve_paths": [".runtime"],
+            "restart_cmd": [sys.executable, "-c", "print('restart')"],
+            "restart_cwd": str(app_root.resolve()),
+            "downloaded_sha256": digest,
+            "expected_executable": "ZifeiyuSec.exe",
+        }
+        session_path.write_text(json.dumps(session_payload, ensure_ascii=False), encoding="utf-8")
+
+        with patch("core.update_worker.subprocess.Popen") as popen_mock:
+            exit_code = run_updater_session(session_path)
+
+        self.assertEqual(1, exit_code)
+        self.assertEqual(b"old exe", (app_root / "ZifeiyuSec.exe").read_bytes())
+        popen_mock.assert_not_called()
 
 
 if __name__ == "__main__":

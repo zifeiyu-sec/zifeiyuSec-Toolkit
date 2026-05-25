@@ -1,9 +1,18 @@
 import os
 import re
+import shutil
+import tempfile
 import json as std_json
 from datetime import datetime
+from core.icon_validation import is_valid_icon_file
 from core.logger import logger
-from core.runtime_paths import get_bundle_path, get_runtime_path, resolve_icon_path_value
+from core.runtime_paths import (
+    get_bundle_path,
+    get_runtime_path,
+    resolve_accessible_path_value,
+    resolve_configured_path_value,
+    resolve_icon_path_value,
+)
 
 # 使用更快的JSON解析库orjson
 try:
@@ -100,6 +109,14 @@ def _load_tools_from_storage(tools_file, tools_split_dir):
     return []
 
 
+def _load_tools_from_split_storage(tools_split_dir):
+    """Load tools from split files only, without falling back to the aggregate file."""
+    tools = []
+    for file_path in _get_active_split_tool_files(tools_split_dir):
+        tools.extend(_load_json_records(file_path))
+    return tools
+
+
 def _serialize_json(data):
     if 'orjson' in json.__name__:
         return json.dumps(data, option=json.OPT_INDENT_2)
@@ -107,9 +124,30 @@ def _serialize_json(data):
 
 
 def _write_json_file(file_path, data):
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, 'wb') as f:
-        f.write(_serialize_json(data))
+    target_path = os.path.abspath(file_path)
+    target_dir = os.path.dirname(target_path)
+    os.makedirs(target_dir, exist_ok=True)
+    payload = _serialize_json(data)
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            'wb',
+            delete=False,
+            dir=target_dir,
+            prefix=f".{os.path.basename(target_path)}.",
+            suffix=".tmp",
+        ) as f:
+            temp_path = f.name
+            f.write(payload)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(temp_path, target_path)
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
 
 
 def _should_wrap_records(file_path, root_key='tools', default_wrap=False):
@@ -135,17 +173,32 @@ def _slugify_file_part(value):
     return text or 'category'
 
 
+def _canonical_tool_record_payload(tool):
+    return std_json.dumps(tool, ensure_ascii=False, sort_keys=True, separators=(',', ':'), default=str)
+
+
+def _canonical_tool_record_list(tools):
+    return sorted(
+        _canonical_tool_record_payload(tool)
+        for tool in (tools or [])
+        if isinstance(tool, dict)
+    )
+
+
 class DataManager:
     """数据管理器，负责处理工具分类和工具数据的存储与读取"""
     DEPRECATED_TOOL_FIELDS = ("tags",)
     def __init__(self, config_dir=None, data_dir=None):
         """初始化数据管理器"""
         if config_dir is not None:
-            self.data_dir = os.path.join(os.path.abspath(config_dir), "data")
+            self.config_dir = os.path.abspath(config_dir)
+            self.data_dir = os.path.join(self.config_dir, "data")
         elif data_dir is not None:
             self.data_dir = os.path.abspath(data_dir)
+            self.config_dir = os.path.dirname(self.data_dir)
         else:
             self.data_dir = os.fspath(get_runtime_path("data"))
+            self.config_dir = os.path.dirname(self.data_dir)
 
         self.categories_file = os.path.join(self.data_dir, "categories.json")
         self.tools_file = os.path.join(self.data_dir, "tools.json")
@@ -195,6 +248,16 @@ class DataManager:
 
     def _invalidate_tools_cache(self):
         self._set_tools_cache(None, ())
+        self._normalization_cache = None
+        self._normalization_cache_key = None
+
+    def invalidate_cache(self):
+        """Public cache reset used after external data restores."""
+        self._categories_cache = None
+        self._tools_cache = None
+        self._last_categories_modified = 0
+        self._last_tools_modified = ()
+        self._category_tools_cache = {}
         self._normalization_cache = None
         self._normalization_cache_key = None
 
@@ -338,6 +401,109 @@ class DataManager:
                     os.remove(existing_path)
                 except OSError as e:
                     logger.error("删除旧拆分工具文件失败 %s: %s", existing_path, str(e))
+
+    def _audit_tools_split_consistency(self, aggregate_tools=None):
+        aggregate_tools = list(aggregate_tools if aggregate_tools is not None else self._load_tools_sync())
+        split_files = _get_active_split_tool_files(self.tools_split_dir)
+        if not split_files:
+            if not aggregate_tools:
+                return {
+                    'consistent': True,
+                    'reason': 'empty',
+                    'aggregate_count': 0,
+                    'split_count': 0,
+                    'split_file_count': 0,
+                    'missing_in_split': 0,
+                    'extra_in_split': 0,
+                    'message': '聚合 tools.json 为空，当前不需要拆分镜像。',
+                }
+            return {
+                'consistent': False,
+                'reason': 'missing_split_files',
+                'aggregate_count': len(aggregate_tools or []),
+                'split_count': 0,
+                'split_file_count': 0,
+                'missing_in_split': len(aggregate_tools or []),
+                'extra_in_split': 0,
+                'message': '拆分镜像文件不存在或为空，可通过重建镜像恢复。',
+            }
+
+        try:
+            split_tools = _load_tools_from_split_storage(self.tools_split_dir)
+        except (OSError, ValueError, TypeError) as e:
+            return {
+                'consistent': False,
+                'reason': 'split_read_error',
+                'aggregate_count': len(aggregate_tools),
+                'split_count': 0,
+                'split_file_count': len(split_files),
+                'missing_in_split': len(aggregate_tools),
+                'extra_in_split': 0,
+                'message': f'读取拆分镜像失败: {e}',
+            }
+
+        aggregate_payloads = _canonical_tool_record_list(aggregate_tools)
+        split_payloads = _canonical_tool_record_list(split_tools)
+        aggregate_counter = {}
+        split_counter = {}
+        for payload in aggregate_payloads:
+            aggregate_counter[payload] = aggregate_counter.get(payload, 0) + 1
+        for payload in split_payloads:
+            split_counter[payload] = split_counter.get(payload, 0) + 1
+
+        missing = 0
+        extra = 0
+        all_payloads = set(aggregate_counter) | set(split_counter)
+        for payload in all_payloads:
+            aggregate_count = aggregate_counter.get(payload, 0)
+            split_count = split_counter.get(payload, 0)
+            if aggregate_count > split_count:
+                missing += aggregate_count - split_count
+            elif split_count > aggregate_count:
+                extra += split_count - aggregate_count
+
+        consistent = missing == 0 and extra == 0
+        return {
+            'consistent': consistent,
+            'reason': 'ok' if consistent else 'content_mismatch',
+            'aggregate_count': len(aggregate_tools),
+            'split_count': len(split_tools),
+            'split_file_count': len(split_files),
+            'missing_in_split': missing,
+            'extra_in_split': extra,
+            'message': (
+                f'聚合 tools.json 与 {len(split_files)} 个拆分镜像一致。'
+                if consistent
+                else f'聚合工具 {len(aggregate_tools)} 个，拆分镜像 {len(split_tools)} 个，缺失 {missing} 个，额外 {extra} 个。'
+            ),
+        }
+
+    def audit_tools_split_consistency(self):
+        return self._audit_tools_split_consistency()
+
+    def rebuild_tools_split_mirror(self, backup=True):
+        """Rebuild split tool mirror files from the aggregate tools file."""
+        tools = list(self.load_tools() or [])
+        backup_path = None
+
+        if backup and os.path.isdir(self.tools_split_dir) and _get_split_tool_files(self.tools_split_dir):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = f"{self.tools_split_dir}.backup_{timestamp}"
+            suffix = 1
+            while os.path.exists(backup_path):
+                backup_path = f"{self.tools_split_dir}.backup_{timestamp}_{suffix}"
+                suffix += 1
+            shutil.copytree(self.tools_split_dir, backup_path)
+
+        self._save_tools_split_files(tools)
+        self._invalidate_tools_cache()
+        consistency = self._audit_tools_split_consistency(tools)
+        return {
+            'success': bool(consistency.get('consistent')),
+            'tools': len(tools),
+            'backup_path': backup_path,
+            'consistency': consistency,
+        }
 
     def load_categories(self):
         """加载所有分类和子分类数据，使用缓存机制减少重复加载"""
@@ -492,9 +658,12 @@ class DataManager:
                 categories = self.load_categories()
                 valid_category_ids = {category.get('id') for category in categories if category.get('id') is not None}
                 split_mode = any(tool.get('category_id') in valid_category_ids for tool in tools)
-            if split_mode:
-                self._save_tools_split_files(tools)
             self._write_tools_aggregate_file(tools)
+            if split_mode:
+                try:
+                    self._save_tools_split_files(tools)
+                except Exception as split_error:
+                    logger.warning("保存拆分工具文件失败，聚合工具文件已保存: %s", str(split_error))
             self._invalidate_tools_cache()
             return True
         except Exception as e:
@@ -551,12 +720,85 @@ class DataManager:
                 return self.save_tools(tools)
         return False
 
-    def delete_tool(self, tool_id):
+    def _discard_pending_usage_updates(self, tool_ids):
+        for tool_id in tool_ids:
+            self._pending_usage_updates.pop(tool_id, None)
+
+    def delete_tools(self, tool_ids):
+        """Delete tools by id and return a summary dict."""
+        requested_ids = {tool_id for tool_id in (tool_ids or []) if tool_id is not None}
         tools = self.load_tools()
-        filtered_tools = [tool for tool in tools if tool['id'] != tool_id]
-        if len(filtered_tools) < len(tools):
-            return self.save_tools(filtered_tools)
-        return False
+        if not requested_ids:
+            return {
+                "success": True,
+                "requested": 0,
+                "deleted": 0,
+                "remaining": len(tools),
+            }
+
+        remaining_tools = []
+        deleted_ids = set()
+        for tool in tools:
+            tool_id = tool.get('id')
+            if tool_id in requested_ids:
+                deleted_ids.add(tool_id)
+                continue
+            remaining_tools.append(tool)
+
+        if not deleted_ids:
+            return {
+                "success": True,
+                "requested": len(requested_ids),
+                "deleted": 0,
+                "remaining": len(tools),
+            }
+
+        if not self.save_tools(remaining_tools):
+            return {
+                "success": False,
+                "requested": len(requested_ids),
+                "deleted": 0,
+                "remaining": len(tools),
+            }
+
+        self._discard_pending_usage_updates(deleted_ids)
+        return {
+            "success": True,
+            "requested": len(requested_ids),
+            "deleted": len(deleted_ids),
+            "remaining": len(remaining_tools),
+        }
+
+    def delete_all_tools(self):
+        """Clear all tool records without touching local tool files or notes."""
+        tools = self.load_tools()
+        if not tools:
+            return {
+                "success": True,
+                "requested": 0,
+                "deleted": 0,
+                "remaining": 0,
+            }
+
+        if not self.save_tools([]):
+            return {
+                "success": False,
+                "requested": len(tools),
+                "deleted": 0,
+                "remaining": len(tools),
+            }
+
+        self._pending_usage_updates.clear()
+        return {
+            "success": True,
+            "requested": len(tools),
+            "deleted": len(tools),
+            "remaining": 0,
+        }
+
+    def delete_tool(self, tool_id):
+        result = self.delete_tools([tool_id])
+        return bool(result.get("success") and result.get("deleted", 0) > 0)
 
     def toggle_favorite(self, tool_id):
         tools = self.load_tools()
@@ -731,6 +973,7 @@ class DataManager:
     def audit_tools_data(self):
         tools = self.load_tools()
         categories = self.load_categories()
+        split_consistency = self._audit_tools_split_consistency(tools)
 
         category_map = {}
         subcategory_map = {}
@@ -782,7 +1025,7 @@ class DataManager:
             elif not self._is_icon_resolvable(icon_value):
                 issues.append({
                     **issue_context,
-                    'issue_type': 'missing_icon',
+                    'issue_type': 'invalid_icon',
                     'title': '图标无效',
                     'message': f'图标资源无法解析：{icon_value}',
                 })
@@ -812,9 +1055,16 @@ class DataManager:
                         'title': '本地路径缺失',
                         'message': '本地工具没有配置路径。',
                     })
+                elif self._is_intentional_placeholder_path(path_value):
+                    issues.append({
+                        **issue_context,
+                        'issue_type': 'placeholder_path',
+                        'title': '本地路径未配置',
+                        'message': f'本地工具路径仍是占位值：{path_value}。请编辑工具并配置真实路径，或确认它只是模板占位。',
+                    })
                 else:
-                    full_path = path_value if os.path.isabs(path_value) else os.path.abspath(path_value)
-                    if not os.path.exists(full_path):
+                    resolved_path = resolve_accessible_path_value(path_value, base_dir=self.config_dir)
+                    if resolved_path is not None and not os.path.exists(os.fspath(resolved_path)):
                         issues.append({
                             **issue_context,
                             'issue_type': 'invalid_path',
@@ -822,8 +1072,14 @@ class DataManager:
                             'message': f'本地工具路径不存在：{path_value}',
                         })
 
-                    working_directory = (tool.get('working_directory') or '').strip()
-                    if working_directory and not os.path.isdir(working_directory):
+                working_directory = (tool.get('working_directory') or '').strip()
+                if working_directory and not self._is_intentional_placeholder_path(working_directory):
+                    resolved_working_directory = resolve_configured_path_value(
+                        working_directory,
+                        base_dir=self.config_dir,
+                        allow_command_name=False,
+                    )
+                    if resolved_working_directory is not None and not os.path.isdir(os.fspath(resolved_working_directory)):
                         issues.append({
                             **issue_context,
                             'issue_type': 'invalid_path',
@@ -889,15 +1145,32 @@ class DataManager:
                     'subcategory_name': subcategory_map.get(subcategory_id, {}).get('name', '') if subcategory_id is not None else '',
                     'issue_type': 'duplicate_name',
                     'title': '名称重复',
-                    'message': f'与其他工具重名，重复 ID: {duplicate_ids}，名称: {duplicate_names}',
+                    'message': f'与其他工具重名，重复 ID: {duplicate_ids}，名称: {duplicate_names}。建议人工确认来源、用途后改名或合并，不会自动删除任何工具。',
                 })
 
+        if not split_consistency.get('consistent', False):
+            issues.append({
+                'tool_id': None,
+                'tool_name': '工具数据拆分镜像',
+                'category_id': None,
+                'category_name': '运行时数据',
+                'subcategory_id': None,
+                'subcategory_name': '',
+                'issue_type': 'split_mismatch',
+                'title': '聚合/拆分数据不一致',
+                'message': split_consistency.get('message') or '聚合 tools.json 与拆分 tools/*.json 不一致。',
+                'split_consistency': split_consistency,
+            })
+
         issue_priority = {
-            'missing_icon': 0,
-            'invalid_path': 1,
-            'duplicate_name': 2,
-            'invalid_category': 3,
-            'field_inconsistency': 4,
+            'split_mismatch': 0,
+            'invalid_category': 1,
+            'invalid_path': 2,
+            'placeholder_path': 3,
+            'missing_icon': 4,
+            'invalid_icon': 5,
+            'duplicate_name': 6,
+            'field_inconsistency': 7,
         }
         issues.sort(key=lambda item: (
             issue_priority.get(item.get('issue_type'), 99),
@@ -915,6 +1188,10 @@ class DataManager:
             'counts': issue_counts,
             'total_tools': len(tools),
             'total_issues': len(issues),
+            'data_dir': self.data_dir,
+            'tools_file': self.tools_file,
+            'tools_split_dir': self.tools_split_dir,
+            'split_consistency': split_consistency,
         }
 
     def _normalize_tool_name(self, value):
@@ -926,12 +1203,17 @@ class DataManager:
         text = str(value or '').strip()
         return text.startswith('http://') or text.startswith('https://')
 
+    def _is_intentional_placeholder_path(self, value):
+        text = str(value or '').strip().upper()
+        return text.startswith('CHANGE_ME_')
+
     def _is_icon_resolvable(self, icon_value):
         try:
             icon_text = str(icon_value or '').strip()
             if not icon_text:
                 return False
-            return resolve_icon_path_value(icon_text) is not None
+            resolved_path = resolve_icon_path_value(icon_text)
+            return resolved_path is not None and is_valid_icon_file(resolved_path)
         except Exception:
             return False
 

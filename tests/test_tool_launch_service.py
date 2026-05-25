@@ -1,16 +1,14 @@
-import shutil
-import tempfile
 import unittest
-from pathlib import Path
 from unittest.mock import patch
 
 from core.tool_launch_service import ToolLaunchService
+from _support import cleanup_test_dir, make_test_dir
 
 
 class ToolLaunchServiceTests(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = Path(tempfile.mkdtemp(prefix="tool_launch_service_"))
-        self.addCleanup(lambda: shutil.rmtree(self.temp_dir, ignore_errors=True))
+        self.temp_dir = make_test_dir(f"tool_launch_service_{self._testMethodName}")
+        self.addCleanup(lambda: cleanup_test_dir(self.temp_dir))
         self.service = ToolLaunchService()
 
     def test_open_file_with_default_app_uses_shell_execute_in_tool_directory(self):
@@ -417,6 +415,56 @@ class ToolLaunchServiceTests(unittest.TestCase):
         self.assertEqual("web", result["launch_mode"])
         self.assertEqual("", result["error_message"])
         open_mock.assert_called_once_with("https://example.com")
+
+    def test_launch_tool_reports_web_browser_failure(self):
+        with patch("core.tool_launch_service.webbrowser.open", return_value=False) as open_mock:
+            result = self.service.launch_tool(
+                tool_data={"path": "https://example.com", "is_web_tool": True},
+            )
+
+        self.assertFalse(result["success"])
+        self.assertEqual("https://example.com", result["path"])
+        self.assertEqual("web", result["launch_mode"])
+        self.assertIn("默认浏览器未能打开链接", result["error_message"])
+        open_mock.assert_called_once_with("https://example.com")
+
+    def test_launch_tool_resolves_relative_path_against_base_dir(self):
+        tool_path = self.temp_dir / "tools" / "demo.exe"
+        tool_path.parent.mkdir(parents=True, exist_ok=True)
+        tool_path.write_text("stub", encoding="utf-8")
+
+        with patch("core.tool_launch_service.sys.platform", "win32"), patch.object(
+            self.service,
+            "_open_file_with_default_app",
+            return_value=None,
+        ) as open_file_mock:
+            result = self.service.launch_tool(
+                tool_data={"path": "tools/demo.exe", "is_web_tool": False},
+                base_dir=str(self.temp_dir),
+            )
+
+        self.assertTrue(result["success"])
+        self.assertEqual(str(tool_path), result["path"])
+        self.assertEqual(str(tool_path.parent), result["working_directory"])
+        open_file_mock.assert_called_once_with(str(tool_path), working_dir=str(tool_path.parent))
+
+    def test_launch_tool_keeps_bare_commands_on_path(self):
+        with patch("core.tool_launch_service.sys.platform", "win32"), patch(
+            "core.tool_launch_service.subprocess.Popen",
+            return_value=None,
+        ) as popen_mock:
+            result = self.service.launch_tool(
+                tool_data={"path": "nmap", "is_web_tool": False},
+                base_dir=str(self.temp_dir),
+            )
+
+        self.assertTrue(result["success"])
+        self.assertEqual("nmap", result["path"])
+        self.assertEqual(str(self.temp_dir), result["working_directory"])
+        self.assertEqual("nmap", result["command_preview"])
+        popen_mock.assert_called_once()
+        self.assertEqual(["nmap"], popen_mock.call_args.args[0])
+        self.assertEqual(str(self.temp_dir), popen_mock.call_args.kwargs["cwd"])
 
     def test_launch_tool_returns_failure_metadata_when_local_path_missing(self):
         missing_path = self.temp_dir / "missing.exe"

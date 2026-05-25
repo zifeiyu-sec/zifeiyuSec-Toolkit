@@ -22,6 +22,7 @@ ENV/
 # Build / packaging
 build/
 dist/
+release/
 site/
 *.dll
 *.dylib
@@ -29,6 +30,7 @@ site/
 *.pyd
 *.so
 *.spec
+!ZifeiyuSec.spec
 pip-wheel-metadata/
 
 # IDE / editor
@@ -63,6 +65,7 @@ response.txt
 *.orig
 .tmp_test_workspace/
 .tmp_test_workspace_probe/
+.tmp_key_verify/
 .test_workspace/
 .scratch_test/
 test_workspace_local/
@@ -75,7 +78,8 @@ data/*bak.json
 
 # Local-only workspace data
 .runtime/
-Tools/
+/Tools/
 images/README/
 resources/notes/_attachments/
 settings.ini
+需要开发的功能.md

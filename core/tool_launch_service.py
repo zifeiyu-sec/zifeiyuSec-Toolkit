@@ -4,6 +4,8 @@ import subprocess
 import sys
 import webbrowser
 
+from core.runtime_paths import resolve_configured_path_value
+
 
 class ToolLaunchService:
     """Launch local tools with basic Windows-aware process handling."""
@@ -56,18 +58,26 @@ class ToolLaunchService:
             return [text]
 
     @staticmethod
-    def _normalize_path(value: str) -> str:
-        text = (value or "").strip()
-        if not text:
-            return ""
-        return os.path.abspath(text) if not os.path.isabs(text) else text
+    def _base_dir_kwargs(base_dir: str):
+        return {"base_dir": base_dir} if base_dir else {}
 
-    def _resolve_working_directory(self, working_dir: str = "", fallback_path: str = "") -> str:
-        explicit_dir = self._normalize_path(working_dir)
+    @staticmethod
+    def _normalize_path(value: str, base_dir: str = "") -> str:
+        resolved = resolve_configured_path_value(value, base_dir=base_dir, allow_command_name=False)
+        return os.fspath(resolved) if resolved is not None else ""
+
+    def _resolve_launch_path(self, value: str, base_dir: str = "") -> str:
+        resolved = resolve_configured_path_value(value, base_dir=base_dir, allow_command_name=True)
+        if resolved is not None:
+            return os.fspath(resolved)
+        return str(value or "").strip()
+
+    def _resolve_working_directory(self, working_dir: str = "", fallback_path: str = "", base_dir: str = "") -> str:
+        explicit_dir = self._normalize_path(working_dir, base_dir=base_dir)
         if explicit_dir and os.path.isdir(explicit_dir):
             return explicit_dir
 
-        normalized_fallback = self._normalize_path(fallback_path)
+        normalized_fallback = self._normalize_path(fallback_path, base_dir=base_dir)
         if normalized_fallback:
             fallback_dir = (
                 normalized_fallback
@@ -85,6 +95,10 @@ class ToolLaunchService:
                 if os.path.isdir(normalized_fallback)
                 else os.path.dirname(normalized_fallback)
             )
+        if base_dir:
+            resolved_base_dir = self._normalize_path(base_dir)
+            if resolved_base_dir:
+                return resolved_base_dir
         return os.getcwd()
 
     def _should_use_terminal_startup_command(self, startup_command: str) -> bool:
@@ -282,8 +296,9 @@ class ToolLaunchService:
         startup_command: str = "",
         path: str = "",
         command_argv=None,
+        base_dir: str = "",
     ):
-        actual_working_dir = self._resolve_working_directory(working_dir, path)
+        actual_working_dir = self._resolve_working_directory(working_dir, path, base_dir=base_dir)
         formatted_command = self._format_terminal_startup_command(startup_command, path)
 
         if sys.platform.startswith("win"):
@@ -331,6 +346,7 @@ class ToolLaunchService:
 
     def _should_use_windows_shell_open(
         self,
+        path: str,
         _ext: str,
         _raw_arguments: str,
         run_in_terminal: bool,
@@ -339,6 +355,8 @@ class ToolLaunchService:
         if run_in_terminal:
             return False
         if custom_interpreter_path:
+            return False
+        if path and not os.path.isabs(path) and not any(sep in path for sep in ("/", "\\")) and not os.path.splitext(path)[1]:
             return False
         return True
 
@@ -502,6 +520,8 @@ class ToolLaunchService:
         ext = os.path.splitext(path)[1].lower()
         if custom_interpreter_path:
             return True
+        if path and not os.path.isabs(path) and not any(sep in path for sep in ("/", "\\")) and not ext:
+            return True
         if ext in (".cmd", ".bat", ".py", ".ps1", ".jar"):
             return True
         if ext == ".exe":
@@ -514,20 +534,23 @@ class ToolLaunchService:
         working_dir: str = None,
         tool_data: dict = None,
         prefer_config_command: bool = True,
+        base_dir: str = "",
     ):
         tool_data = tool_data or {}
-        normalized_path = self._normalize_path(path or tool_data.get("path", ""))
-        if normalized_path and not os.path.exists(normalized_path):
+        raw_path = str(path or tool_data.get("path", "") or "").strip()
+        resolved_path = resolve_configured_path_value(raw_path, base_dir=base_dir, allow_command_name=True)
+        normalized_path = os.fspath(resolved_path) if resolved_path is not None else raw_path
+        if resolved_path is not None and not os.path.exists(normalized_path):
             raise FileNotFoundError(f"工具路径不存在: {normalized_path}")
 
         arguments = str(tool_data.get("arguments", "") or "").strip()
         custom_interpreter_path = str(tool_data.get("custom_interpreter_path", "") or "").strip()
         custom_interpreter_type = str(tool_data.get("custom_interpreter_type", "") or "").strip().lower()
         configured_working_dir = (working_dir or "").strip() or str(tool_data.get("working_directory", "") or "").strip()
-        actual_working_dir = self._resolve_working_directory(configured_working_dir, normalized_path)
+        actual_working_dir = self._resolve_working_directory(configured_working_dir, normalized_path, base_dir=base_dir)
 
         if not normalized_path:
-            return self.open_terminal(working_dir=actual_working_dir)
+            return self.open_terminal(working_dir=actual_working_dir, **self._base_dir_kwargs(base_dir))
 
         if os.path.isdir(normalized_path):
             startup_command = arguments if prefer_config_command else ""
@@ -535,6 +558,7 @@ class ToolLaunchService:
                 working_dir=actual_working_dir,
                 startup_command=startup_command,
                 path=normalized_path,
+                **self._base_dir_kwargs(base_dir),
             )
 
         if sys.platform.startswith("win") and not prefer_config_command:
@@ -546,6 +570,7 @@ class ToolLaunchService:
                 working_dir=actual_working_dir,
                 startup_command=arguments,
                 path=normalized_path,
+                **self._base_dir_kwargs(base_dir),
             )
 
         if sys.platform.startswith("win"):
@@ -556,6 +581,7 @@ class ToolLaunchService:
                 return self.open_terminal(
                     working_dir=actual_working_dir,
                     path=normalized_path,
+                    **self._base_dir_kwargs(base_dir),
                 )
 
             ext = os.path.splitext(normalized_path)[1].lower()
@@ -567,42 +593,48 @@ class ToolLaunchService:
                 custom_interpreter_type=custom_interpreter_type,
             )
             terminal_argv = self._build_windows_terminal_argv(normalized_path, command_argv, ext)
-            return self.open_terminal(working_dir=actual_working_dir, command_argv=terminal_argv)
+            return self.open_terminal(working_dir=actual_working_dir, command_argv=terminal_argv, **self._base_dir_kwargs(base_dir))
 
         if sys.platform == "darwin":
             if arguments:
                 return self.open_terminal(
                     working_dir=actual_working_dir,
                     command_argv=["open", "-a", "Terminal", "--args", normalized_path, arguments],
+                    **self._base_dir_kwargs(base_dir),
                 )
             return self.open_terminal(
                 working_dir=actual_working_dir,
                 command_argv=["open", "-a", "Terminal", normalized_path],
+                **self._base_dir_kwargs(base_dir),
             )
 
         split_args = self._split_args(arguments) if arguments else []
         return self.open_terminal(
             working_dir=actual_working_dir,
             command_argv=["x-terminal-emulator", "-e", normalized_path, *split_args],
+            **self._base_dir_kwargs(base_dir),
         )
 
-    def launch_local_tool_with_diagnostics(self, path: str, working_dir: str = None, run_in_terminal: bool = False, tool_data: dict = None):
+    def launch_local_tool_with_diagnostics(self, path: str, working_dir: str = None, run_in_terminal: bool = False, tool_data: dict = None, base_dir: str = ""):
         if not path:
             raise ValueError("工具路径不能为空")
 
-        path = self._normalize_path(path)
         tool_data = tool_data or {}
         arguments = str(tool_data.get("arguments", "") or "").strip()
         custom_interpreter_path = str(tool_data.get("custom_interpreter_path", "") or "").strip()
         custom_interpreter_type = str(tool_data.get("custom_interpreter_type", "") or "").strip().lower()
+        raw_path = str(path or "").strip()
+        resolved_path = resolve_configured_path_value(raw_path, base_dir=base_dir, allow_command_name=True)
+        path_is_command = resolved_path is None
+        path = os.fspath(resolved_path) if resolved_path is not None else raw_path
 
-        if not os.path.exists(path):
+        if not path_is_command and not os.path.exists(path):
             raise FileNotFoundError(f"工具路径不存在: {path}")
 
-        actual_working_dir = self._resolve_working_directory(working_dir, path)
+        actual_working_dir = self._resolve_working_directory(working_dir, path, base_dir=base_dir)
         explicit_terminal_launch = self._has_explicit_terminal_launch(tool_data=tool_data, run_in_terminal=run_in_terminal)
 
-        if os.path.isdir(path):
+        if not path_is_command and os.path.isdir(path):
             if explicit_terminal_launch:
                 command_preview = self._format_terminal_startup_command(arguments, path)
                 self.open_tool_terminal(
@@ -610,6 +642,7 @@ class ToolLaunchService:
                     working_dir=actual_working_dir,
                     tool_data=tool_data,
                     prefer_config_command=True,
+                    **self._base_dir_kwargs(base_dir),
                 )
                 return self._result(
                     True,
@@ -636,7 +669,7 @@ class ToolLaunchService:
                 custom_interpreter_path=custom_interpreter_path,
             )
 
-            if self._should_use_windows_shell_open(ext, arguments, should_run_in_terminal, custom_interpreter_path):
+            if not path_is_command and self._should_use_windows_shell_open(path, ext, arguments, should_run_in_terminal, custom_interpreter_path):
                 self._open_file_with_default_app(path, working_dir=actual_working_dir)
                 return self._result(
                     True,
@@ -669,6 +702,7 @@ class ToolLaunchService:
                         working_dir=actual_working_dir,
                         tool_data=tool_data,
                         prefer_config_command=explicit_terminal_launch,
+                        **self._base_dir_kwargs(base_dir),
                     )
                 except OSError as exc:
                     if not self._is_windows_elevation_error(exc):
@@ -729,6 +763,7 @@ class ToolLaunchService:
                     working_dir=actual_working_dir,
                     tool_data=tool_data,
                     prefer_config_command=explicit_terminal_launch,
+                    **self._base_dir_kwargs(base_dir),
                 )
                 return self._result(
                     True,
@@ -736,6 +771,17 @@ class ToolLaunchService:
                     working_directory=actual_working_dir,
                     command_preview=command_preview,
                     launch_mode="terminal",
+                )
+            if path_is_command:
+                split_args = self._split_args(arguments) if arguments else []
+                command_argv = [path, *split_args] if split_args else [path]
+                subprocess.Popen(command_argv, cwd=actual_working_dir)
+                return self._result(
+                    True,
+                    path=path,
+                    working_directory=actual_working_dir,
+                    command_preview=self._stringify_command(command_argv),
+                    launch_mode="subprocess",
                 )
             subprocess.Popen(["open", path], cwd=actual_working_dir)
             return self._result(
@@ -762,6 +808,7 @@ class ToolLaunchService:
                 working_dir=actual_working_dir,
                 tool_data=tool_data,
                 prefer_config_command=explicit_terminal_launch,
+                **self._base_dir_kwargs(base_dir),
             )
             return self._result(
                 True,
@@ -771,12 +818,13 @@ class ToolLaunchService:
                 launch_mode="terminal",
             )
 
-        subprocess.Popen([path], cwd=actual_working_dir)
+        command_argv = [path, *self._split_args(arguments)] if path_is_command and arguments else [path]
+        subprocess.Popen(command_argv, cwd=actual_working_dir)
         return self._result(
             True,
             path=path,
             working_directory=actual_working_dir,
-            command_preview=self._stringify_command([path]),
+            command_preview=self._stringify_command(command_argv),
             launch_mode="subprocess",
         )
 
@@ -788,14 +836,22 @@ class ToolLaunchService:
             tool_data=tool_data,
         )["success"]
 
-    def launch_tool(self, tool_data: dict = None, path: str = "", working_dir: str = None, run_in_terminal: bool = False):
+    def launch_tool(self, tool_data: dict = None, path: str = "", working_dir: str = None, run_in_terminal: bool = False, base_dir: str = ""):
         tool_data = tool_data or {}
-        target_path = str(path or tool_data.get("path", "") or "").strip()
+        target_path = self._resolve_launch_path(path or tool_data.get("path", ""), base_dir=base_dir)
         is_web_tool = bool(tool_data.get("is_web_tool", False))
 
         if is_web_tool or target_path.startswith(("http://", "https://")):
             try:
-                webbrowser.open(target_path)
+                opened = webbrowser.open(target_path)
+                if not opened:
+                    return self._result(
+                        False,
+                        path=target_path,
+                        command_preview=target_path,
+                        launch_mode="web",
+                        error_message="默认浏览器未能打开链接。",
+                    )
                 return self._result(
                     True,
                     path=target_path,
@@ -817,11 +873,12 @@ class ToolLaunchService:
                 working_dir=working_dir,
                 run_in_terminal=run_in_terminal,
                 tool_data=tool_data,
+                **self._base_dir_kwargs(base_dir),
             )
         except (FileNotFoundError, PermissionError, OSError, ValueError) as exc:
             return self._result(
                 False,
                 path=target_path,
-                working_directory=self._resolve_working_directory(working_dir, target_path) if target_path else "",
+                working_directory=self._resolve_working_directory(working_dir, target_path, base_dir=base_dir) if target_path else "",
                 error_message=str(exc),
             )

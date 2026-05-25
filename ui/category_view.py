@@ -69,6 +69,8 @@ class CategoryView(QWidget):
         self.data_manager = data_manager
         self.current_category = None
         self.current_theme = 'dark_green'  # 默认主题
+        self.setObjectName("categoryPanel")
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.init_ui()
     
     def init_ui(self):
@@ -215,16 +217,32 @@ class CategoryView(QWidget):
         """根据当前主题应用样式"""
         # 从 StyleManager 获取样式
         theme_manager = ThemeManager()
+        if self.current_theme == 'blue_white':
+            self.setStyleSheet("QWidget#categoryPanel { background: rgba(224,247,255,0.34); border: 1px solid rgba(151,213,244,0.56); border-radius: 24px; }")
+        elif self.current_theme == 'celadon_mist':
+            self.setStyleSheet("QWidget#categoryPanel { background: rgba(208,250,250,0.34); border: 1px solid rgba(137,220,223,0.56); border-radius: 24px; }")
+        elif self.current_theme == 'dark_green':
+            self.setStyleSheet("QWidget#categoryPanel { background: rgba(0,10,12,0.28); border: 1px solid rgba(0,229,255,0.42); border-right: 1px solid rgba(255,51,102,0.28); border-bottom: 1px solid rgba(255,51,102,0.18); border-radius: 12px; }")
+        elif self.current_theme == 'purple_neon':
+            self.setStyleSheet("QWidget#categoryPanel { background: rgba(13,2,22,0.32); border: 1px solid rgba(255,207,92,0.54); border-right: 1px solid rgba(189,58,255,0.34); border-bottom: 1px solid rgba(255,207,92,0.38); border-radius: 24px; }")
+        elif self.current_theme == 'red_orange':
+            self.setStyleSheet("QWidget#categoryPanel { background: rgba(102,0,0,0.44); border: 1px solid rgba(255,205,92,0.72); border-right: 1px solid rgba(255,86,48,0.46); border-bottom: 1px solid rgba(255,205,92,0.58); border-radius: 24px; }")
+        else:
+            self.setStyleSheet("QWidget#categoryPanel { background: rgba(24,58,39,0.70); border: 1px solid rgba(111,231,135,0.12); border-radius: 24px; }")
         list_style = theme_manager.get_category_view_style(self.current_theme)
         self.category_list.setStyleSheet(list_style)
         
         # 标题样式暂时保持本地，或者也可以移入 StyleManager (简单起见这里保留逻辑)
         if self.current_theme == 'blue_white':
-            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(148,163,184,0.10); border-radius: 14px; background-color: rgba(255,255,255,0.72); color: #1e293b; font-size: 14px;")
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 16px; border: 1px solid rgba(151,213,244,0.58); border-radius: 18px; background-color: rgba(232,249,255,0.60); color: #1b547b; font-size: 14px;")
+        elif self.current_theme == 'celadon_mist':
+            self.title_label.setStyleSheet("font-weight: 700; padding: 10px 14px 12px 14px; border: 1px solid rgba(137,220,223,0.58); border-radius: 16px; background-color: rgba(226,255,255,0.74); color: #0f6970; font-size: 14px;")
+        elif self.current_theme == 'dark_green':
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 16px; border-top: 1px solid rgba(0,255,65,0.76); border-bottom: 1px solid rgba(0,255,65,0.76); border-left: 1px solid rgba(0,229,255,0.42); border-right: 1px solid rgba(255,51,102,0.26); border-radius: 10px; background-color: rgba(0,18,16,0.34); color: #00ff41; font-size: 14px;")
         elif self.current_theme == 'purple_neon':
-            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(157,123,255,0.10); border-radius: 14px; background-color: rgba(30,24,56,0.68); color: #efe9ff; font-size: 14px;")
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 16px; border-top: 1px solid rgba(255,232,147,0.86); border-bottom: 1px solid rgba(255,207,92,0.72); border-left: 1px solid rgba(189,58,255,0.42); border-right: 1px solid rgba(189,58,255,0.42); border-radius: 18px; background-color: rgba(45,7,67,0.38); color: #fff0b8; font-size: 14px;")
         elif self.current_theme == 'red_orange':
-            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(255,138,61,0.10); border-radius: 14px; background-color: rgba(42,30,24,0.68); color: #fff1e6; font-size: 14px;")
+            self.title_label.setStyleSheet("font-weight: 700; padding: 12px 16px; border-top: 1px solid rgba(255,232,147,0.96); border-bottom: 1px solid rgba(255,205,92,0.84); border-left: 1px solid rgba(255,86,48,0.50); border-right: 1px solid rgba(255,86,48,0.50); border-radius: 18px; background-color: rgba(112,0,0,0.54); color: #fff4c7; font-size: 14px;")
         else:
             self.title_label.setStyleSheet("font-weight: 700; padding: 12px 14px; border: 1px solid rgba(111,231,135,0.10); border-radius: 14px; background-color: rgba(24,58,39,0.68); color: #f3fff5; font-size: 14px;")
     
@@ -267,11 +285,11 @@ class CategoryView(QWidget):
         if current_selection:
             self.select_category(current_selection)
 
-    def _resolve_category_icon(self, icon_value):
+    def _resolve_category_icon(self, icon_value, category_name='', category_id=None):
         """解析分类图标，兼容资源文件和 emoji/短文本"""
         icon_text = (icon_value or '').strip()
         if not icon_text or icon_text == 'default_icon':
-            return QIcon()
+            icon_text = ''
 
         if icon_text in category_icon_cache:
             return category_icon_cache[icon_text]
@@ -283,7 +301,25 @@ class CategoryView(QWidget):
                 category_icon_cache[icon_text] = icon
                 return icon
 
-        return _create_text_icon(icon_text)
+        vector_fallbacks = {
+            9: 'radar.svg',
+            12: 'code_dev.svg',
+            13: 'cloud_mobile.svg',
+            14: 'network_internal.svg',
+            15: 'shield.svg',
+        }
+        fallback_name = vector_fallbacks.get(category_id)
+        if fallback_name:
+            fallback_path = resolve_icon_path_value(fallback_name)
+            if fallback_path is not None:
+                icon = QIcon(os.fspath(fallback_path))
+                if not icon.isNull():
+                    category_icon_cache[f"fallback::{category_id}"] = icon
+                    return icon
+
+        if not icon_text:
+            return QIcon()
+        return _create_text_icon(category_name or icon_text)
 
     def load_categories(self):
         """加载分类数据，只显示一级分类"""
@@ -309,7 +345,7 @@ class CategoryView(QWidget):
             item = QListWidgetItem(name)
             item.setData(Qt.UserRole, {'id': category.get('id', 0)})
 
-            icon = self._resolve_category_icon(icon_value)
+            icon = self._resolve_category_icon(icon_value, category_name=name, category_id=category.get('id'))
             if not icon.isNull():
                 item.setIcon(icon)
 

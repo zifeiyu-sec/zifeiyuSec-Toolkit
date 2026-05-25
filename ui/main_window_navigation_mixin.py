@@ -36,14 +36,14 @@ class MainWindowNavigationMixin:
 
     def handle_category_selected(self, category_id):
         """处理一级分类选择。"""
+        self.is_in_favorites = False
         self.current_category = category_id
         self.current_view_mode = "category"
         self._apply_view_state_layout()
         self.subcategory_view.load_subcategories(category_id)
 
         if self.has_active_search():
-            self.on_search(self.search_input.text())
-            return
+            self.clear_active_search(restore_view=False)
 
         category_name, _ = self._resolve_category_display_names(category_id)
         self._show_browse_labels(category_name)
@@ -52,13 +52,13 @@ class MainWindowNavigationMixin:
 
     def handle_subcategory_selected(self, category_id, subcategory_id):
         """处理二级分类选择。"""
+        self.is_in_favorites = False
         self.current_category = category_id
         self.current_view_mode = "category"
         self._apply_view_state_layout()
 
         if self.has_active_search():
-            self.on_search(self.search_input.text())
-            return
+            self.clear_active_search(restore_view=False)
 
         category_name, subcategory_name = self._resolve_category_display_names(category_id, subcategory_id)
         self._show_browse_labels(category_name, subcategory_name)
@@ -75,14 +75,15 @@ class MainWindowNavigationMixin:
         self._apply_view_state_layout()
 
         if self.is_in_favorites:
-            favorites = self.data_manager.get_favorite_tools()
-            self.category_info_label.setText("我的收藏")
-            self.view_mode_label.setText("视图: 收藏")
-            self._display_tools(favorites)
-            self.refresh_tool_count()
+            self.is_in_favorites = False
+            self.show_dashboard(self.data_manager.load_tools())
             return
 
-        current_category = getattr(self.category_view, "current_category", None)
+        if getattr(self, "current_view_mode", "") == "dashboard":
+            self.show_dashboard(self.data_manager.load_tools())
+            return
+
+        current_category = getattr(self.category_view, "current_category", None) or getattr(self, "current_category", None)
         current_subcategory = getattr(self.subcategory_view, "current_subcategory", None)
 
         if current_subcategory and self.current_view_mode == "category":

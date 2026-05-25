@@ -71,7 +71,7 @@
 - [resources/icons/](../resources/icons/)
 - [resources/notes/](../resources/notes/)
 
-这些文件会在首次运行时被复制或作为初始资源使用。
+这些文件会在首次运行时被复制或作为初始资源使用。已经生成 `.runtime/` 后，程序不会因为 `data/` 发生变化而自动覆盖用户运行时数据。调试界面显示异常时，请优先检查 `.runtime/data`，不要只看仓库模板。
 
 ### 3.2 运行时真实数据
 
@@ -84,9 +84,11 @@
 
 其中：
 
-- `.runtime/data/tools.json` 是运行时主工具数据
-- `.runtime/data/tools/*.json` 是按类别拆分的镜像文件
+- `.runtime/data/tools.json` 是运行时主工具数据，也是程序读取工具列表时的权威来源
+- `.runtime/data/tools/*.json` 是按类别拆分的镜像文件，用于维护和查看；如果它与聚合文件不一致，以 `tools.json` 为准
 - 笔记文件采用稳定命名 `tool_<id>.md`
+
+应用内“数据体检”会显示当前实际生效的数据目录，并检查重复工具名称、未配置占位路径、无效本地路径、无效图标、无效分类，以及聚合 `tools.json` 与拆分 `tools/*.json` 是否一致。若拆分镜像不一致，可以在数据体检中使用“重建拆分镜像”，该操作会以聚合 `tools.json` 为准重建镜像，并先备份旧拆分目录。
 
 ## 4. 工具配置字段
 
@@ -174,17 +176,25 @@
 `settings.example.ini` 中的 `[update]` 段包含更新源配置：
 
 - `github_repo`
-- `release_api_url`
+- `gitee_repo`
+- `github_release_api_url`
+- `gitee_release_api_url`
+- `release_api_url`（兼容旧版 GitHub API 覆盖配置）
 - `asset_name`
+- `asset_name_regex`
 - `manifest_url`
+- `release_page_url`
 - `check_on_start`
 
-程序支持两种更新信息来源：
+程序支持三种更新信息来源：
 
 - GitHub Release API
+- Gitee Release API
 - 自定义 manifest URL
 
-如果发布版本支持更新器，还会使用 `.runtime/updates/` 作为更新会话目录。
+`provider` 可设置为 `github`、`gitee` 或 `manifest`。GitHub 与 Gitee 发布源应保持相同 tag、相同版本号和相同 zip 内容，用户可根据网络情况选择任一源。`asset_name` 默认建议使用 `ZifeiyuSec-win64-v{version}.zip`，其中 `{version}` 会替换为最新版本号。
+
+一键更新仅支持打包发布版。源码运行时仍可检查更新，但需要手动拉取代码或下载发布包，避免更新器误覆盖源码目录。如果发布版本支持更新器，还会使用 `.runtime/updates/` 作为更新会话目录。
 
 ## 9. 发布与隐私边界
 
@@ -217,3 +227,15 @@ python scripts/repo_sanity_check.py
 - 使用 `settings.example.ini` 提供可参考配置
 - 让用户在本地运行后自动生成 `.runtime/`
 - 将个人工具路径、个人笔记、附件和运行时缓存全部保留在本地
+## 11. 手动备份与恢复
+
+应用内“配置”菜单提供按需备份和恢复入口，备份范围默认包括：
+
+- `.runtime/settings.ini`
+- `.runtime/data/`
+- `.runtime/resources/icons/`
+- `.runtime/resources/notes/`
+- `.runtime/images/`
+
+恢复时会先保留一份恢复前安全备份，再覆盖上述运行时数据。
+日志、更新缓存和备份目录本身不会被打进备份，也不会被恢复覆盖。

@@ -40,6 +40,26 @@ class RuntimePathsTests(unittest.TestCase):
 
         self.assertEqual([], missing)
 
+    def test_resolve_accessible_path_value_checks_base_dir_before_path_command(self):
+        local_tool = self.temp_root / "python.exe"
+        local_tool.write_text("stub", encoding="utf-8")
+        path_tool = self.temp_root / "bin" / "python.exe"
+        path_tool.parent.mkdir(parents=True, exist_ok=True)
+        path_tool.write_text("stub", encoding="utf-8")
+
+        with patch("core.runtime_paths.shutil.which", return_value=str(path_tool)):
+            self.assertEqual(
+                local_tool.resolve(),
+                runtime_paths.resolve_accessible_path_value("python.exe", base_dir=self.temp_root),
+            )
+
+        local_tool.unlink()
+        with patch("core.runtime_paths.shutil.which", return_value=str(path_tool)):
+            self.assertEqual(
+                path_tool.resolve(),
+                runtime_paths.resolve_accessible_path_value("python.exe", base_dir=self.temp_root),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#18372b"/>
+      <stop offset="0.36" stop-color="#112b21"/>
+      <stop offset="0.72" stop-color="#153428"/>
+      <stop offset="1" stop-color="#0b1f18"/>
+    </linearGradient>
+    <radialGradient id="leftGlow" cx="0.08" cy="0.78" r="0.64">
+      <stop offset="0" stop-color="#7ce6b3" stop-opacity="0.32"/>
+      <stop offset="0.44" stop-color="#b6f7d7" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="rightGlow" cx="0.94" cy="0.14" r="0.52">
+      <stop offset="0" stop-color="#9df5d1" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#d8fff0" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#89f4c0" stop-opacity="0"/>
+      <stop offset="0.26" stop-color="#89f4c0" stop-opacity="0.16"/>
+      <stop offset="0.66" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#67d6aa" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soften" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+  <rect width="1800" height="1100" fill="url(#bg)"/>
+  <rect width="1800" height="1100" fill="url(#leftGlow)"/>
+  <rect width="1800" height="1100" fill="url(#rightGlow)"/>
+  <path d="M-120 940 C 220 740, 430 968, 760 754 S 1310 642, 1940 442" fill="none" stroke="url(#wave)" stroke-width="44" filter="url(#soften)"/>
+  <path d="M-140 1010 C 210 810, 520 1062, 900 832 S 1380 706, 1960 618" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="16" filter="url(#soften)"/>
+  <path d="M-120 860 C 160 776, 406 838, 676 716 S 1232 562, 1928 520" fill="none" stroke="#70e0ae" stroke-opacity="0.12" stroke-width="12" filter="url(#soften)"/>
+  <rect width="1800" height="1100" fill="#ffffff" opacity="0.04"/>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title>tianhu import</title>
+  <desc>Default icon for tools imported from Tianhu toolbox</desc>
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#12263f"/>
+      <stop offset="1" stop-color="#0b1524"/>
+    </linearGradient>
+    <linearGradient id="fox" x1="18" y1="18" x2="48" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb24c"/>
+      <stop offset="1" stop-color="#ff6b2c"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="39" y1="14" x2="53" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8ee6ff"/>
+      <stop offset="1" stop-color="#2db9ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#bg)"/>
+  <path d="M19 18l10 5 3 9-10 4-7-8z" fill="url(#fox)"/>
+  <path d="M45 18l-10 5-3 9 10 4 7-8z" fill="url(#fox)"/>
+  <path d="M22 39l10-8 10 8-3 8H25z" fill="url(#fox)"/>
+  <path d="M27 42c1.6-2.4 3.3-3.6 5-3.6s3.4 1.2 5 3.6c-1.8 2.3-3.5 3.4-5 3.4s-3.2-1.1-5-3.4z" fill="#fff3de"/>
+  <circle cx="28.5" cy="31" r="2.3" fill="#fff3de"/>
+  <circle cx="35.5" cy="31" r="2.3" fill="#fff3de"/>
+  <path d="M46 12h6v6h-4v6h-4v-8a4 4 0 0 1 2-4z" fill="url(#accent)"/>
+  <path d="M14 46h13" stroke="#8ee6ff" stroke-linecap="round" stroke-width="3"/>
+  <path d="M14 52h20" stroke="#8ee6ff" stroke-linecap="round" stroke-width="3" opacity=".75"/>
+</svg>

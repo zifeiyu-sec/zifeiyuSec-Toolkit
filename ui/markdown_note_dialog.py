@@ -42,7 +42,7 @@ class MarkdownHighlighter(QSyntaxHighlighter):
         self._build_rules()
 
     def _color(self, dark: str, light: str) -> QColor:
-        return QColor(light if self.theme == 'blue_white' else dark)
+        return QColor(light if self.theme in ('blue_white', 'celadon_mist') else dark)
 
     def _format(self, color: str, *, bold: bool = False, italic: bool = False) -> QTextCharFormat:
         fmt = QTextCharFormat()
@@ -233,7 +233,7 @@ class MarkdownNoteDialog(QDialog):
         self.editor.setPlainText(content)
         self._last_saved_content = content
         self._dirty = False
-        self._update_status('已加载')
+        self._update_status('Loaded')
         self._update_stats()
         self._refresh_image_previews()
 
@@ -249,7 +249,7 @@ class MarkdownNoteDialog(QDialog):
         header_layout.addStretch()
         layout.addLayout(header_layout)
 
-        self.toolbar = QToolBar('Markdown 工具栏', self)
+        self.toolbar = QToolBar('Markdown Tools', self)
         self.toolbar.setMovable(False)
         self.toolbar.setFloatable(False)
         layout.addWidget(self.toolbar)
@@ -257,7 +257,7 @@ class MarkdownNoteDialog(QDialog):
 
         self.editor = QTextEdit(self)
         self.editor.setAcceptRichText(False)
-        self.editor.setPlaceholderText('在这里直接编写 Markdown 笔记...')
+        self.editor.setPlaceholderText('Write Markdown notes here...')
         self.editor.textChanged.connect(self._on_text_changed)
         self.editor.cursorPositionChanged.connect(self._on_cursor_position_changed)
         self.highlighter = MarkdownHighlighter(self.editor, self.theme)
@@ -281,8 +281,8 @@ class MarkdownNoteDialog(QDialog):
         layout.addWidget(self.preview_scroll)
 
         footer_layout = QHBoxLayout()
-        self.status_label = QLabel('未修改')
-        self.meta_label = QLabel('0 行 · 0 字')
+        self.status_label = QLabel('Unmodified')
+        self.meta_label = QLabel('0 lines ? 0 chars')
         footer_layout.addWidget(self.status_label)
         footer_layout.addStretch()
         footer_layout.addWidget(self.meta_label)
@@ -324,15 +324,15 @@ class MarkdownNoteDialog(QDialog):
 
         add_action('加粗', lambda: self._wrap_selection('**', '**', '文本'))
         add_action('斜体', lambda: self._wrap_selection('*', '*', '文本'))
-        add_action('删除线', lambda: self._wrap_selection('~~', '~~', '文本'))
+        add_action('Strike', lambda: self._wrap_selection('~~', '~~', 'text'))
         add_action('行内代码', lambda: self._wrap_selection('`', '`', 'code'))
-        add_action('代码块', self._insert_code_block)
+        add_action('Code block', self._insert_code_block)
         self.toolbar.addSeparator()
 
         add_action('引用', lambda: self._prefix_current_lines('> '))
         add_action('无序列表', lambda: self._prefix_current_lines('- '))
         add_action('有序列表', self._insert_ordered_list)
-        add_action('分割线', lambda: self._insert_block('\n---\n'))
+        add_action('Divider', lambda: self._insert_block('\n---\n'))
         self.toolbar.addSeparator()
 
         add_action('链接', self._insert_link)
@@ -345,12 +345,52 @@ class MarkdownNoteDialog(QDialog):
     def _apply_theme_styles(self):
         if self.theme == 'blue_white':
             self.setStyleSheet(
-                "QDialog { background: #f8fbff; color: #0f172a; }"
-                "QTextEdit { background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; selection-background-color: #bfdbfe; }"
-                "QToolBar { background: #eaf4ff; border: 1px solid #cbd5e1; spacing: 4px; padding: 6px; border-radius: 8px; }"
-                "QToolButton, QPushButton { background: #ffffff; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; }"
-                "QToolButton:hover, QPushButton:hover { background: #eff6ff; }"
-                "QLabel { color: #0f172a; }"
+                "QDialog { background: #edf8fc; color: #29445f; }"
+                "QTextEdit { background: rgba(255,255,255,0.72); color: #2e4a66; border: 1px solid rgba(255,255,255,0.82); border-radius: 18px; padding: 12px; selection-background-color: rgba(117,199,255,0.34); }"
+                "QToolBar { background: rgba(255,255,255,0.52); border: 1px solid rgba(255,255,255,0.78); spacing: 6px; padding: 8px; border-radius: 16px; }"
+                "QToolButton, QPushButton { background: rgba(255,255,255,0.78); color: #2e4a66; border: 1px solid rgba(255,255,255,0.78); padding: 7px 12px; border-radius: 12px; }"
+                "QToolButton:hover, QPushButton:hover { background: rgba(246,253,255,0.98); border-color: rgba(108,197,238,0.76); }"
+                "QLabel { color: #35506d; }"
+                "QScrollArea { background: transparent; }"
+            )
+        elif self.theme == 'celadon_mist':
+            self.setStyleSheet(
+                "QDialog { background: #eef6f3; color: #333333; }"
+                "QTextEdit { background: rgba(255,255,255,0.58); color: #333333; border: 1px solid rgba(255,255,255,0.52); border-radius: 18px; padding: 12px; selection-background-color: rgba(174,220,214,0.34); }"
+                "QToolBar { background: rgba(255,255,255,0.42); border: 1px solid rgba(255,255,255,0.50); spacing: 6px; padding: 8px; border-radius: 16px; }"
+                "QToolButton, QPushButton { background: rgba(255,255,255,0.56); color: #3f5c55; border: 1px solid rgba(255,255,255,0.54); padding: 7px 12px; border-radius: 12px; }"
+                "QToolButton:hover, QPushButton:hover { background: rgba(245,251,248,0.86); border-color: rgba(125,185,182,0.42); }"
+                "QLabel { color: #333333; }"
+                "QScrollArea { background: transparent; }"
+            )
+        elif self.theme == 'dark_green':
+            self.setStyleSheet(
+                "QDialog { background: rgba(16,39,29,0.98); color: #ecfff2; }"
+                "QTextEdit { background: rgba(247,255,250,0.08); color: #effff5; border: 1px solid rgba(233,255,240,0.16); border-radius: 18px; padding: 12px; selection-background-color: rgba(109,233,174,0.34); }"
+                "QToolBar { background: rgba(247,255,250,0.07); border: 1px solid rgba(233,255,240,0.14); spacing: 6px; padding: 8px; border-radius: 16px; }"
+                "QToolButton, QPushButton { background: rgba(247,255,250,0.10); color: #effff5; border: 1px solid rgba(233,255,240,0.16); padding: 7px 12px; border-radius: 12px; }"
+                "QToolButton:hover, QPushButton:hover { background: rgba(247,255,250,0.16); border-color: rgba(125,241,183,0.34); }"
+                "QLabel { color: #e8fbef; }"
+                "QScrollArea { background: transparent; }"
+            )
+        elif self.theme == 'purple_neon':
+            self.setStyleSheet(
+                "QDialog { background: rgba(8,2,13,0.98); color: #ffe6a3; }"
+                "QTextEdit { background: rgba(12,2,20,0.50); color: #ffe6a3; border: 1px solid rgba(255,207,92,0.44); border-radius: 18px; padding: 12px; selection-background-color: rgba(189,58,255,0.42); }"
+                "QToolBar { background: rgba(13,2,22,0.40); border: 1px solid rgba(255,207,92,0.42); spacing: 6px; padding: 8px; border-radius: 16px; }"
+                "QToolButton, QPushButton { background: rgba(45,7,67,0.46); color: #ffe6a3; border: 1px solid rgba(255,207,92,0.48); padding: 7px 12px; border-radius: 12px; }"
+                "QToolButton:hover, QPushButton:hover { background: rgba(189,58,255,0.30); border-color: rgba(255,232,147,0.86); color: #fff0b8; }"
+                "QLabel { color: #ffe6a3; }"
+                "QScrollArea { background: transparent; }"
+            )
+        elif self.theme == 'red_orange':
+            self.setStyleSheet(
+                "QDialog { background: rgba(22,0,0,0.98); color: #ffe6b0; }"
+                "QTextEdit { background: rgba(45,0,0,0.46); color: #ffe6b0; border: 1px solid rgba(255,198,72,0.42); border-radius: 18px; padding: 12px; selection-background-color: rgba(255,66,38,0.42); }"
+                "QToolBar { background: rgba(70,0,0,0.34); border: 1px solid rgba(255,198,72,0.34); spacing: 6px; padding: 8px; border-radius: 16px; }"
+                "QToolButton, QPushButton { background: rgba(82,0,0,0.44); color: #ffe6b0; border: 1px solid rgba(255,198,72,0.42); padding: 7px 12px; border-radius: 12px; }"
+                "QToolButton:hover, QPushButton:hover { background: rgba(255,66,38,0.26); border-color: rgba(255,220,112,0.78); }"
+                "QLabel { color: #fff0b8; }"
                 "QScrollArea { background: transparent; }"
             )
         else:
@@ -366,7 +406,7 @@ class MarkdownNoteDialog(QDialog):
 
     def _on_text_changed(self):
         self._dirty = True
-        self._update_status('编辑中...')
+        self._update_status('Editing...')
         self._update_stats()
         self._refresh_image_previews()
         self._rehighlight_timer.start()
@@ -412,14 +452,33 @@ class MarkdownNoteDialog(QDialog):
         title_label.setWordWrap(True)
         path_label = QLabel(os.path.basename(image_path), card)
         path_label.setWordWrap(True)
-        path_label.setStyleSheet('font-size: 11px; color: #64748b;' if self.theme == 'blue_white' else 'font-size: 11px; color: #94a3b8;')
+        if self.theme == 'blue_white':
+            path_label.setStyleSheet('font-size: 11px; color: #70849b;')
+        elif self.theme == 'celadon_mist':
+            path_label.setStyleSheet('font-size: 11px; color: #6b7773;')
+        elif self.theme == 'dark_green':
+            path_label.setStyleSheet('font-size: 11px; color: #b8d8c4;')
+        elif self.theme == 'purple_neon':
+            path_label.setStyleSheet('font-size: 11px; color: #c7a96c;')
+        elif self.theme == 'red_orange':
+            path_label.setStyleSheet('font-size: 11px; color: #d5aeb9;')
+        else:
+            path_label.setStyleSheet('font-size: 11px; color: #94a3b8;')
 
         card_layout.addWidget(image_label)
         card_layout.addWidget(title_label)
         card_layout.addWidget(path_label)
 
         if self.theme == 'blue_white':
-            card.setStyleSheet('QWidget { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; }')
+            card.setStyleSheet('QWidget { background: rgba(255,255,255,0.68); border: 1px solid rgba(255,255,255,0.78); border-radius: 14px; }')
+        elif self.theme == 'celadon_mist':
+            card.setStyleSheet('QWidget { background: rgba(255,255,255,0.56); border: 1px solid rgba(255,255,255,0.52); border-radius: 16px; }')
+        elif self.theme == 'dark_green':
+            card.setStyleSheet('QWidget { background: rgba(247,255,250,0.08); border: 1px solid rgba(233,255,240,0.16); border-radius: 14px; }')
+        elif self.theme == 'purple_neon':
+            card.setStyleSheet('QWidget { background: rgba(45,7,67,0.34); border: 1px solid rgba(255,207,92,0.42); border-radius: 14px; }')
+        elif self.theme == 'red_orange':
+            card.setStyleSheet('QWidget { background: rgba(45,0,0,0.46); border: 1px solid rgba(255,198,72,0.42); border-radius: 14px; }')
         else:
             card.setStyleSheet('QWidget { background: #111827; border: 1px solid #334155; border-radius: 8px; }')
         return card
@@ -459,10 +518,10 @@ class MarkdownNoteDialog(QDialog):
         text = self._current_text()
         lines = text.count('\n') + 1 if text else 0
         chars = len(text)
-        self.meta_label.setText(f'{lines} 行 · {chars} 字')
+        self.meta_label.setText(f'{lines} lines ? {chars} chars')
 
     def _update_status(self, text: str):
-        if self._last_saved_at and text in {'已保存', '已自动保存'}:
+        if self._last_saved_at and text in {'Saved', 'Auto saved'}:
             stamp = self._last_saved_at.strftime('%H:%M:%S')
             self.status_label.setText(f'{text} · {stamp}')
         else:
@@ -552,27 +611,27 @@ class MarkdownNoteDialog(QDialog):
             self,
             '选择图片',
             '',
-            '图片文件 (*.png *.jpg *.jpeg *.gif *.webp *.svg *.bmp);;所有文件 (*.*)'
+            'Image files (*.png *.jpg *.jpeg *.gif *.webp *.svg *.bmp);;All files (*.*)'
         )
         if not file_path:
             return
 
         attachment = self.notes.copy_attachment(file_path, tool_id=self.tool_id, tool_name=self.tool_name)
         if not attachment:
-            QMessageBox.warning(self, '插入失败', '保存图片附件失败。')
+            QMessageBox.warning(self, 'Insert failed', 'Failed to save image attachment.')
             return
 
         alt_text = os.path.splitext(os.path.basename(file_path))[0]
         self._insert_text_at_cursor(f'![{alt_text}]({attachment.get("relative_path", "")})')
 
     def _insert_attachment(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, '选择附件', '', '所有文件 (*.*)')
+        file_path, _ = QFileDialog.getOpenFileName(self, 'Select attachment', '', 'All files (*.*)')
         if not file_path:
             return
 
         attachment = self.notes.copy_attachment(file_path, tool_id=self.tool_id, tool_name=self.tool_name)
         if not attachment:
-            QMessageBox.warning(self, '插入失败', '保存附件失败。')
+            QMessageBox.warning(self, 'Insert failed', 'Failed to save attachment.')
             return
 
         label = os.path.basename(file_path)
@@ -582,14 +641,14 @@ class MarkdownNoteDialog(QDialog):
         content = self._current_text()
         if content == self._last_saved_content:
             self._dirty = False
-            self._update_status('已保存')
+            self._update_status('Saved')
             return True
 
         if self.notes.save_note(content, tool_id=self.tool_id, tool_name=self.tool_name):
             self._last_saved_content = content
             self._dirty = False
             self._last_saved_at = datetime.now()
-            self._update_status('已自动保存' if auto else '已保存')
+            self._update_status('Auto saved' if auto else 'Saved')
             return True
 
         self._update_status('自动保存失败' if auto else '保存失败')
@@ -601,15 +660,15 @@ class MarkdownNoteDialog(QDialog):
 
     def on_save(self):
         if self._save_content(auto=False):
-            QMessageBox.information(self, '保存', '笔记已保存。')
+            self._update_status('Saved')
         else:
-            QMessageBox.warning(self, '保存失败', '保存笔记时发生错误。')
+            QMessageBox.warning(self, 'Save failed', 'Failed to save note.')
 
     def closeEvent(self, event):
         self._autosave_timer.stop()
         self._rehighlight_timer.stop()
         if self._dirty and not self._save_content(auto=True):
-            QMessageBox.warning(self, '保存失败', '关闭前自动保存失败，请手动重试。')
+            QMessageBox.warning(self, 'Save failed', 'Auto-save before closing failed. Please save manually and retry.')
             event.ignore()
             return
         super().closeEvent(event)

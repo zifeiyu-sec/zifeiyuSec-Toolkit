@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a0e15"/>
+      <stop offset="0.30" stop-color="#14060c"/>
+      <stop offset="0.66" stop-color="#230913"/>
+      <stop offset="1" stop-color="#060204"/>
+    </linearGradient>
+    <radialGradient id="leftGlow" cx="0.10" cy="0.82" r="0.72">
+      <stop offset="0" stop-color="#ff5f87" stop-opacity="0.32"/>
+      <stop offset="0.36" stop-color="#ff7598" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="topGlow" cx="0.92" cy="0.14" r="0.50">
+      <stop offset="0" stop-color="#ff7d69" stop-opacity="0.18"/>
+      <stop offset="0.34" stop-color="#ff7091" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="centerHaze" cx="0.72" cy="0.62" r="0.36">
+      <stop offset="0" stop-color="#ff6b8c" stop-opacity="0.12"/>
+      <stop offset="0.60" stop-color="#ff8a69" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ribbonA" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9d7a" stop-opacity="0"/>
+      <stop offset="0.18" stop-color="#ff7895" stop-opacity="0.18"/>
+      <stop offset="0.52" stop-color="#fff2f6" stop-opacity="0.22"/>
+      <stop offset="0.82" stop-color="#ff6d93" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#ff9367" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ribbonB" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.28" stop-color="#ffd8e3" stop-opacity="0.10"/>
+      <stop offset="0.62" stop-color="#fff6f9" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ridge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff6b8c" stop-opacity="0.02"/>
+      <stop offset="0.24" stop-color="#ff96a8" stop-opacity="0.10"/>
+      <stop offset="0.62" stop-color="#fff2f6" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ff8968" stop-opacity="0.02"/>
+    </linearGradient>
+    <linearGradient id="arc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.30" stop-color="#ffd9e4" stop-opacity="0.08"/>
+      <stop offset="0.72" stop-color="#fff3f7" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soften" x="-12%" y="-12%" width="124%" height="124%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="float" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="34"/>
+    </filter>
+  </defs>
+
+  <rect width="1800" height="1100" fill="url(#bg)"/>
+  <rect width="1800" height="1100" fill="url(#leftGlow)"/>
+  <rect width="1800" height="1100" fill="url(#topGlow)"/>
+  <rect width="1800" height="1100" fill="url(#centerHaze)"/>
+
+  <ellipse cx="212" cy="922" rx="360" ry="212" fill="#ff638b" fill-opacity="0.13" filter="url(#float)"/>
+  <ellipse cx="1500" cy="170" rx="292" ry="170" fill="#ff745f" fill-opacity="0.08" filter="url(#float)"/>
+  <ellipse cx="1476" cy="834" rx="404" ry="176" fill="#ff6f8f" fill-opacity="0.06" filter="url(#float)"/>
+
+  <path d="M-168 946 C 176 710, 434 972, 754 770 S 1328 674, 1956 446" fill="none" stroke="url(#ribbonA)" stroke-width="52" filter="url(#soften)"/>
+  <path d="M-180 1038 C 204 810, 520 1066, 904 820 S 1400 706, 1970 620" fill="none" stroke="#fff4f8" stroke-opacity="0.15" stroke-width="17" filter="url(#soften)"/>
+  <path d="M-118 850 C 198 760, 440 834, 706 714 S 1244 568, 1938 522" fill="none" stroke="#ff92a8" stroke-opacity="0.14" stroke-width="13" filter="url(#soften)"/>
+  <path d="M-88 1048 C 236 878, 468 1010, 772 878 S 1310 760, 1888 686" fill="none" stroke="url(#ridge)" stroke-width="96" filter="url(#float)"/>
+  <path d="M54 972 C 402 838, 716 944, 1002 792 S 1412 644, 1874 602" fill="none" stroke="url(#ribbonB)" stroke-width="30" filter="url(#soften)"/>
+
+  <path d="M1172 22 C 1438 76, 1606 238, 1818 498" fill="none" stroke="#fff3f7" stroke-opacity="0.08" stroke-width="2"/>
+  <path d="M1120 72 C 1386 138, 1548 286, 1754 520" fill="none" stroke="#ffdce6" stroke-opacity="0.07" stroke-width="1.6"/>
+  <path d="M1080 120 C 1340 192, 1496 336, 1688 548" fill="none" stroke="url(#arc)" stroke-width="1.5"/>
+  <path d="M1042 170 C 1282 246, 1444 386, 1644 588" fill="none" stroke="url(#arc)" stroke-width="1.25"/>
+  <path d="M1014 224 C 1248 296, 1408 430, 1600 624" fill="none" stroke="url(#arc)" stroke-width="1"/>
+
+  <g opacity="0.13">
+    <circle cx="1492" cy="210" r="122" fill="none" stroke="#ffe8ee" stroke-width="1.2"/>
+    <circle cx="1492" cy="210" r="164" fill="none" stroke="#ffd3dd" stroke-width="1"/>
+  </g>
+
+  <g opacity="0.24">
+    <circle cx="278" cy="804" r="2.2" fill="#ffdce6"/>
+    <circle cx="336" cy="768" r="1.5" fill="#fff3f7"/>
+    <circle cx="1466" cy="278" r="1.8" fill="#ffe0e9"/>
+    <circle cx="1536" cy="326" r="1.4" fill="#fff5f8"/>
+    <circle cx="1622" cy="254" r="1.6" fill="#ffd4df"/>
+  </g>
+
+  <rect width="1800" height="1100" fill="#ffffff" opacity="0.035"/>
+</svg>

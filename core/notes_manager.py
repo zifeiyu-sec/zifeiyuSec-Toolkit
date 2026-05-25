@@ -37,6 +37,10 @@ class NotesManager:
         self._search_index_token = None
         self._tool_name_cache = {}
 
+    def invalidate_cache(self):
+        """Public cache reset used after external note restores."""
+        self._invalidate_search_index()
+
     def _get_search_index_token(self):
         note_files = sorted(self.notes_dir.glob('*.md'))
         return tuple(

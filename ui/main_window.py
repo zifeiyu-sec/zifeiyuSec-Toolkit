@@ -1,11 +1,14 @@
 import copy
 import os
 import sys
+import webbrowser
+from pathlib import Path
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
                             QToolBar, QAction, QMessageBox, QInputDialog, QApplication,
                             QLineEdit, QActionGroup, QMenu, QToolButton, QStatusBar, QFileDialog,
                             QLabel, QDialog, QStackedWidget, QGraphicsOpacityEffect)
-from PyQt5.QtCore import Qt, QSize, QSettings, QThread, QTimer, QEasingCurve, QPropertyAnimation
+from PyQt5.QtCore import Qt, QSize, QSettings, QThread, QTimer, QEasingCurve, QPropertyAnimation, QUrl
+from PyQt5.QtGui import QDesktopServices
 
 # 使用更快的JSON解析库orjson
 try:
@@ -22,7 +25,9 @@ except ImportError:
 from core.data_manager import DataManager
 from core.background_tasks_qt import CallableWorker
 from core.image_manager import ImageManager
-from core.logger import logger
+from core.logger import logger, get_current_log_file_path, get_latest_log_file_path
+from core.native_title_bar import apply_native_title_bar_theme
+from core.runtime_backup import RuntimeBackupError, RuntimeBackupService
 from core.runtime_paths import get_runtime_state_root
 from core.style_manager import ThemeManager
 from core.task_control import OperationCancelledError
@@ -34,12 +39,22 @@ from core.ui_scale import metrics_for_geometry, preferred_main_window_geometry, 
 from ui.category_view import CategoryView
 from ui.subcategory_view import SubcategoryView
 from ui.tool_model_view import ToolCardContainer
-from ui.favorites_grid_view import FavoritesGridContainer
 from ui.image_selector import ImageSelectorDialog
 from ui.icon_loader import icon_loader
+from ui.tool_bulk_delete_dialog import ToolBulkDeleteDialog
 from ui.tool_config_dialog import ToolConfigDialog
 from ui.notes_list_dialog import NotesListDialog
 from ui.data_health_dialog import DataHealthDialog
+from ui.theme_canvas import ThemedWindowCanvas
+from ui.startup_dashboard import DashboardContainer
+from ui.toast import ToastWidget
+from ui.main_window_controllers import (
+    ImportController,
+    NavigationSearchController,
+    RuntimeBackupController,
+    ToolRunController,
+    UpdateController,
+)
 from ui.main_window_navigation_mixin import MainWindowNavigationMixin
 from ui.main_window_search_mixin import MainWindowSearchMixin
 from ui.main_window_view_mixin import MainWindowViewMixin
@@ -54,7 +69,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         super().__init__()
         # 设置应用程序信息
         self.app_name = "子非鱼安全工具箱"
-        self.version = "3.1.0"
+        self.version = "3.2.3"
         
         self._ui_scale = 1.0
         self.MIN_CATEGORY_WIDTH = self.BASE_MIN_CATEGORY_WIDTH
@@ -66,10 +81,15 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         # 初始化管理器
         self.data_manager = DataManager(config_dir=self.config_dir)
-        self.image_manager = ImageManager(config_dir=self.config_dir)
+        self._image_manager = None
         self.notes_manager = NotesManager(repo_root=self.config_dir)
         self.tool_launcher = ToolLaunchService()
         self.tool_config_exchange = ToolConfigExchangeService(self.data_manager)
+        self.import_controller = ImportController(self)
+        self.update_controller = UpdateController(self)
+        self.runtime_backup_controller = RuntimeBackupController(self)
+        self.tool_run_controller = ToolRunController(self)
+        self.navigation_search_controller = NavigationSearchController(self)
 
         # 注意：不要在应用启动时强制创建默认背景图片（会增加启动延迟）
         # 默认背景将延迟在首次需要图片目录或列出图片时创建，以加快启动速度。
@@ -81,17 +101,13 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self.is_in_favorites = False
 
         # 当前列表视图模式：仅保留 category（分类视图）
-        self.current_view_mode = "category"
-        # 进入收藏页前的视图快照，用于返回时恢复
-        self._view_state_before_favorites = None
-        # 标记“是否由启动流程自动进入收藏页”
-        self._is_startup_favorites_entry = False
+        self.current_view_mode = "dashboard"
 
         # 使用 config_dir 下的 settings.ini 持久化用户设置（如主题）
         settings_file = os.path.join(self.config_dir, "settings.ini")
         # QSettings 将在 settings_file 路径读写 INI 格式的文件
         self.settings = QSettings(settings_file, QSettings.IniFormat)
-        self.update_service = UpdateService(self.app_name, self.version, self.settings, self.config_dir)
+        self._update_service = None
         self._latest_update_info = None
         self._check_update_on_start = str(self.settings.value("update/check_on_start", "false")).strip().lower() in {
             "1",
@@ -122,11 +138,37 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self._close_after_background_tasks = False
         self._content_fade_animation = None
         self._content_opacity_effect = None
+        self._last_display_container = None
+        self._tool_search_index = None
+        self._tool_search_index_signature = None
+        self._note_search_cache = {}
+        self._toast_widget = None
+        self._startup_tools_snapshot = []
         
         # 初始化UI
         self.init_ui()
         if self._check_update_on_start:
             QTimer.singleShot(1500, self._check_updates_on_startup)
+
+    @property
+    def image_manager(self):
+        if self._image_manager is None:
+            self._image_manager = ImageManager(config_dir=self.config_dir)
+        return self._image_manager
+
+    @image_manager.setter
+    def image_manager(self, value):
+        self._image_manager = value
+
+    @property
+    def update_service(self):
+        if self._update_service is None:
+            self._update_service = UpdateService(self.app_name, self.version, self.settings, self.config_dir)
+        return self._update_service
+
+    @update_service.setter
+    def update_service(self, value):
+        self._update_service = value
     
     def init_ui(self):
         """初始化用户界面"""
@@ -173,6 +215,8 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         self.new_tool_action = QAction("新增工具", self)
         self.new_tool_action.triggered.connect(self.on_new_tool)
+        self.home_action = QAction("主界面", self)
+        self.home_action.triggered.connect(self.on_home_action)
 
         self.refresh_action = QAction("刷新", self)
         self.refresh_action.triggered.connect(self.refresh_all)
@@ -188,6 +232,21 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         self.export_native_tools_action = QAction("导出配置", self)
         self.export_native_tools_action.triggered.connect(self.on_export_native_tools)
+
+        self.backup_runtime_action = QAction("备份运行时数据", self)
+        self.backup_runtime_action.triggered.connect(self.on_backup_runtime_config)
+
+        self.restore_runtime_action = QAction("还原运行时数据", self)
+        self.restore_runtime_action.triggered.connect(self.on_restore_runtime_config)
+
+        self.view_runtime_log_action = QAction("查看运行日志", self)
+        self.view_runtime_log_action.triggered.connect(self.on_show_runtime_log)
+
+        self.batch_delete_tools_action = QAction("批量删除工具", self)
+        self.batch_delete_tools_action.triggered.connect(self.on_batch_delete_tools)
+
+        self.delete_all_tools_action = QAction("删除全部工具", self)
+        self.delete_all_tools_action.triggered.connect(self.on_delete_all_tools)
 
         self.sync_official_tools_action = QAction("同步官方工具库", self)
         self.sync_official_tools_action.triggered.connect(self.on_sync_official_tools)
@@ -207,6 +266,9 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self.blue_white_theme_action = QAction("蓝白色主题", self, checkable=True)
         self.blue_white_theme_action.triggered.connect(lambda: self.switch_theme("blue_white"))
 
+        self.celadon_mist_theme_action = QAction("青碧国风主题", self, checkable=True)
+        self.celadon_mist_theme_action.triggered.connect(lambda: self.switch_theme("celadon_mist"))
+
         self.purple_neon_theme_action = QAction("紫霓主题", self, checkable=True)
         self.purple_neon_theme_action.triggered.connect(lambda: self.switch_theme("purple_neon"))
 
@@ -216,6 +278,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self.theme_action_group = QActionGroup(self)
         self.theme_action_group.addAction(self.dark_green_theme_action)
         self.theme_action_group.addAction(self.blue_white_theme_action)
+        self.theme_action_group.addAction(self.celadon_mist_theme_action)
         self.theme_action_group.addAction(self.purple_neon_theme_action)
         self.theme_action_group.addAction(self.red_orange_theme_action)
 
@@ -237,6 +300,14 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         
         # 添加工具按钮
         main_toolbar.addAction(self.new_tool_action)
+        self.home_button = QToolButton()
+        self.home_button.setObjectName("homeNavButton")
+        self.home_button.setDefaultAction(self.home_action)
+        self.home_button.setCursor(Qt.PointingHandCursor)
+        self.home_button.setMinimumWidth(scaled(106, self._ui_scale))
+        self.home_button.setToolTip("在启动工作台和分类主界面之间切换")
+        main_toolbar.addWidget(self.home_button)
+        self._apply_home_button_style()
         main_toolbar.addSeparator()
         
         # 搜索框
@@ -263,6 +334,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         theme_menu = QMenu(theme_button)
         theme_menu.addAction(self.dark_green_theme_action)
         theme_menu.addAction(self.blue_white_theme_action)
+        theme_menu.addAction(self.celadon_mist_theme_action)
         theme_menu.addAction(self.purple_neon_theme_action)
         theme_menu.addAction(self.red_orange_theme_action)
 
@@ -280,6 +352,13 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         config_menu.addAction(self.import_native_tools_action)
         config_menu.addAction(self.export_native_tools_action)
         config_menu.addSeparator()
+        config_menu.addAction(self.backup_runtime_action)
+        config_menu.addAction(self.restore_runtime_action)
+        config_menu.addAction(self.view_runtime_log_action)
+        config_menu.addSeparator()
+        config_menu.addAction(self.batch_delete_tools_action)
+        config_menu.addAction(self.delete_all_tools_action)
+        config_menu.addSeparator()
         config_menu.addAction(self.sync_official_tools_action)
         config_menu.addSeparator()
         config_menu.addAction(self.check_update_action)
@@ -291,13 +370,6 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         # 刷新按钮
         main_toolbar.addAction(self.refresh_action)
         
-        # 收藏按钮
-        main_toolbar.addSeparator()
-        self.favorites_button = QToolButton()
-        self.favorites_button.setText("收藏")
-        self.favorites_button.clicked.connect(self.on_show_favorites)
-        main_toolbar.addWidget(self.favorites_button)
-
         self.notes_button = QToolButton()
         self.notes_button.setText("笔记")
         self.notes_button.clicked.connect(self.on_show_notes)
@@ -340,11 +412,14 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
     def create_main_widget(self):
         """创建主窗口组件"""
         # 中心部件
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+        self.window_canvas = ThemedWindowCanvas()
+        self.window_canvas.setObjectName("windowCanvas")
+        self.window_canvas.setAttribute(Qt.WA_StyledBackground, True)
+        self.window_canvas.set_theme(self.current_theme)
+        self.setCentralWidget(self.window_canvas)
         
         # 主布局
-        main_layout = QHBoxLayout(central_widget)
+        main_layout = QHBoxLayout(self.window_canvas)
         
         # 分割器
         self.splitter = QSplitter(Qt.Horizontal)
@@ -390,7 +465,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         right_layout.addWidget(info_bar)
 
-        # 右侧工具区：主界面与收藏页使用不同容器，避免布局逻辑互相影响
+        # 右侧工具区：首页工作台和分类主界面使用不同容器。
         self.tool_stack = QStackedWidget()
         self.tool_stack.setObjectName("contentStack")
 
@@ -398,19 +473,19 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self._connect_tool_container_signals(self.tool_container)
         self.tool_container.set_layout_mode('main')
 
-        self.favorites_container = FavoritesGridContainer()
-        self._connect_tool_container_signals(self.favorites_container)
-        self.favorites_container.set_theme(self.current_theme)
+        self.dashboard_container = DashboardContainer()
+        self._connect_tool_container_signals(self.dashboard_container)
+        self.dashboard_container.set_theme(self.current_theme)
 
+        self.tool_stack.addWidget(self.dashboard_container)
         self.tool_stack.addWidget(self.tool_container)
-        self.tool_stack.addWidget(self.favorites_container)
-        self.tool_stack.setCurrentWidget(self.tool_container)
+        self.tool_stack.setCurrentWidget(self.dashboard_container)
 
         self._content_opacity_effect = QGraphicsOpacityEffect(self.tool_stack)
         self._content_opacity_effect.setOpacity(1.0)
         self.tool_stack.setGraphicsEffect(self._content_opacity_effect)
         self._content_fade_animation = QPropertyAnimation(self._content_opacity_effect, b"opacity", self)
-        self._content_fade_animation.setDuration(220)
+        self._content_fade_animation.setDuration(120)
         self._content_fade_animation.setStartValue(0.78)
         self._content_fade_animation.setEndValue(1.0)
         self._content_fade_animation.setEasingCurve(QEasingCurve.OutCubic)
@@ -420,8 +495,8 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         # 初始化时先显示空的工具容器，然后在后台加载工具
         try:
             # 先显示空的工具列表
+            self.dashboard_container.display_tools([])
             self.tool_container.display_tools([])
-            self.favorites_container.display_tools([])
             # 更新工具数量为0
             self.refresh_tool_count()
             
@@ -431,13 +506,14 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
                     logger.warning("初始加载工具失败: %s", str(error))
                     return
                 try:
-                    # 默认显示收藏页面
-                    self._is_startup_favorites_entry = True
-                    self.on_show_favorites()
+                    self._startup_tools_snapshot = list(tools or [])
+                    if getattr(self, "current_view_mode", "") == "dashboard":
+                        self.show_dashboard(tools)
+                    else:
+                        self.refresh_current_view()
+                    self._schedule_startup_prewarm(tools)
                 except Exception as e:
-                    logger.warning("显示收藏页面失败: %s", str(e))
-                finally:
-                    self._is_startup_favorites_entry = False
+                    logger.warning("显示首页工作台失败: %s", str(e))
             
             # 使用异步加载工具，避免启动时阻塞
             self.data_manager.load_tools(callback=on_tools_loaded)
@@ -446,8 +522,8 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         self.splitter.addWidget(right_widget)
         
-        # 设置初始大小和比例
-        self._apply_splitter_layout('browse')
+        # 启动时直接进入首页工作台，不再经过收藏页布局。
+        self._apply_view_state_layout()
 
         # 设置拉伸因子，确保各部分按比例缩放
         self.splitter.setStretchFactor(0, 1)  # 一级分类拉伸因子1
@@ -470,16 +546,76 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         container.tool_order_changed.connect(self.on_tool_order_changed)
 
     def _get_active_tool_container(self):
-        if self.is_in_favorites and hasattr(self, 'favorites_container'):
-            return self.favorites_container
+        if getattr(self, "current_view_mode", "") == "dashboard" and hasattr(self, "dashboard_container"):
+            return self.dashboard_container
         return getattr(self, 'tool_container', None)
+
+    def on_home_action(self):
+        if getattr(self, "current_view_mode", "") == "dashboard":
+            self.show_main_view()
+        else:
+            self.show_dashboard()
+
+    def on_show_dashboard(self):
+        self.show_dashboard()
+
+    def show_main_view(self):
+        self.clear_active_search(restore_view=False)
+        self.is_in_favorites = False
+        self.current_view_mode = "category"
+        self._apply_view_state_layout()
+
+        current_category = getattr(self.category_view, "current_category", None) or getattr(self, "current_category", None)
+        if current_category:
+            self.handle_category_selected(current_category)
+            return
+
+        first_item = self.category_view.category_list.item(0)
+        if first_item is not None:
+            data = first_item.data(Qt.UserRole) or {}
+            first_category_id = data.get("id")
+            if first_category_id and self.category_view.select_category(first_category_id):
+                return
+
+        self._show_empty_browse_state()
+
+    def show_dashboard(self, tools=None):
+        self.clear_active_search(restore_view=False)
+        self.is_in_favorites = False
+        self.current_view_mode = "dashboard"
+        self._apply_view_state_layout()
+        self.category_info_label.setText("首页工作台")
+        self.view_mode_label.setText("视图: 首页")
+        if tools is None:
+            tools = self.data_manager.load_tools()
+        self._startup_tools_snapshot = list(tools or [])
+        if hasattr(self, "dashboard_container"):
+            self.dashboard_container.display_tools(tools)
+        self.refresh_tool_count()
 
 
     def _display_tools(self, tools):
         container = self._get_active_tool_container()
         if container is not None:
+            previous_container = getattr(self, '_last_display_container', None)
             container.display_tools(tools)
-            self._restart_content_fade_animation()
+            if previous_container is not container:
+                self._restart_content_fade_animation()
+            else:
+                effect = getattr(self, '_content_opacity_effect', None)
+                if effect is not None:
+                    effect.setOpacity(1.0)
+            self._last_display_container = container
+
+    def _schedule_startup_prewarm(self, tools):
+        tools_snapshot = list(tools or [])
+        QTimer.singleShot(0, lambda: self._prewarm_startup_metadata(tools_snapshot))
+
+    def _prewarm_startup_metadata(self, tools):
+        try:
+            self.navigation_search_controller.prewarm_search_index(tools)
+        except Exception as e:
+            logger.debug("启动预热失败: %s", str(e))
 
     def _restart_content_fade_animation(self):
         animation = getattr(self, '_content_fade_animation', None)
@@ -489,6 +625,26 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         effect.setOpacity(0.78)
         animation.stop()
         animation.start()
+
+    def _show_toast(self, title, message="", kind="info", timeout_ms=3200):
+        text = str(message or title or "").strip()
+        if text:
+            self.statusBar.showMessage(text.replace("\n", "  "), max(2000, int(timeout_ms)))
+        if self._toast_widget is None:
+            self._toast_widget = ToastWidget(self)
+        self._toast_widget.show_message(
+            title,
+            message,
+            theme_name=self.current_theme,
+            kind=kind,
+            timeout_ms=timeout_ms,
+        )
+
+    def _notify_success(self, title, message=""):
+        self._show_toast(title, message, kind="success", timeout_ms=3600)
+
+    def _notify_info(self, title, message=""):
+        self._show_toast(title, message, kind="info", timeout_ms=3200)
 
     def _has_active_background_task(self):
         return bool(self._background_tasks)
@@ -567,7 +723,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         }
 
         self._set_remote_actions_enabled(False)
-        self._set_background_task_status(status_message, allow_cancel=True)
+        self._set_background_task_status(cancel_message or status_message, allow_cancel=True)
 
         thread.started.connect(worker.run)
         worker.finished.connect(lambda result, name=task_name: self._on_background_task_success(name, result))
@@ -693,7 +849,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
     def _get_splitter_sizes(self, layout_name):
         total_width = max(self.width(), self.splitter.size().width(), self.splitter.width(), 1)
 
-        if layout_name == 'favorites':
+        if layout_name in ('favorites', 'dashboard'):
             return [0, 0, total_width]
 
         if layout_name == 'category':
@@ -737,32 +893,40 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self.tool_container.set_layout_mode('main')
 
     def _get_current_layout_name(self):
-        if self.is_in_favorites:
-            return 'favorites'
+        if getattr(self, "current_view_mode", "") == "dashboard":
+            return 'dashboard'
         return 'category'
 
     def _apply_view_state_layout(self):
-        if self.is_in_favorites:
+        if getattr(self, "current_view_mode", "") == "dashboard":
             self.category_view.hide()
             self.subcategory_view.hide()
-            self.favorites_button.setText("返回")
-            if hasattr(self, 'tool_stack') and hasattr(self, 'favorites_container'):
-                self.tool_stack.setCurrentWidget(self.favorites_container)
+            self.is_in_favorites = False
+            if hasattr(self, "home_action"):
+                self.home_action.setText("主界面")
+                self.home_action.setEnabled(True)
+            if hasattr(self, 'tool_stack') and hasattr(self, 'dashboard_container'):
+                self.tool_stack.setCurrentWidget(self.dashboard_container)
         else:
             self.category_view.show()
             self.subcategory_view.show()
-            self.favorites_button.setText("收藏")
+            self.is_in_favorites = False
+            if hasattr(self, "home_action"):
+                self.home_action.setText("首页")
+                self.home_action.setEnabled(True)
             if hasattr(self, 'tool_stack') and hasattr(self, 'tool_container'):
                 self.tool_stack.setCurrentWidget(self.tool_container)
 
         self._apply_splitter_layout(self._get_current_layout_name())
         self._apply_card_layout_mode()
-        if not self.is_in_favorites and hasattr(self, 'tool_container'):
+        self._apply_home_button_style()
+        if not self.is_in_favorites and getattr(self, "current_view_mode", "") != "dashboard" and hasattr(self, 'tool_container'):
             QTimer.singleShot(0, lambda: self.tool_container.update_card_layout(force=True))
 
     def showEvent(self, event):
         super().showEvent(event)
-        if hasattr(self, 'tool_container') and not self.is_in_favorites:
+        self._apply_native_title_bar_theme()
+        if hasattr(self, 'tool_container') and not self.is_in_favorites and getattr(self, "current_view_mode", "") != "dashboard":
             # 首次显示后再按最终窗口宽度重排一次，避免启动时收藏页仍沿用旧列数
             QTimer.singleShot(0, lambda: self.tool_container.update_card_layout(force=True))
 
@@ -770,7 +934,9 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         super().resizeEvent(event)
         self._update_ui_scale_metrics(event.size().width(), event.size().height())
         self._apply_splitter_layout(self._get_current_layout_name())
-        if hasattr(self, 'tool_container') and not self.is_in_favorites:
+        if getattr(self, "_toast_widget", None) is not None:
+            self._toast_widget.reposition()
+        if hasattr(self, 'tool_container') and not self.is_in_favorites and getattr(self, "current_view_mode", "") != "dashboard":
             QTimer.singleShot(0, lambda: self.tool_container.update_card_layout(force=True))
 
     def apply_styles(self):
@@ -778,12 +944,28 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         theme_manager = ThemeManager()
         style = theme_manager.get_theme_style(self.current_theme)
         self.setStyleSheet(style)
+        self._apply_native_title_bar_theme()
 
         # 确保分类视图和子分类视图也应用当前主题
+        if hasattr(self, 'window_canvas'):
+            self.window_canvas.set_theme(self.current_theme)
         if hasattr(self, 'category_view'):
             self.category_view.set_theme(self.current_theme)
         if hasattr(self, 'subcategory_view'):
             self.subcategory_view.set_theme(self.current_theme)
+        self._apply_home_button_style()
+
+    def _apply_native_title_bar_theme(self):
+        try:
+            apply_native_title_bar_theme(self, self.current_theme)
+        except Exception as e:
+            logger.debug("应用原生标题栏主题失败: %s", str(e))
+
+    def _apply_home_button_style(self):
+        button = getattr(self, "home_button", None)
+        if button is None:
+            return
+        button.setStyleSheet(ThemeManager().get_home_nav_button_style(self.current_theme))
     
     def on_category_selected(self, category_id):
         """处理一级分类选择"""
@@ -818,7 +1000,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             # 保存工具
             new_tool = self.data_manager.add_tool(tool_data)
             if new_tool:
-                QMessageBox.information(self, "成功", "工具创建成功！")
+                self._notify_success("工具创建成功")
                 # 刷新当前视图
                 self.refresh_current_view()
             else:
@@ -862,7 +1044,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             return
 
         try:
-            result = self.tool_config_exchange.import_tianhu_tools(source_path)
+            result = self.import_controller.import_tianhu_tools(source_path)
         except (FileNotFoundError, ValueError, PermissionError, OSError) as e:
             logger.error("导入天狐 2.0 工具配置失败: %s", str(e))
             QMessageBox.warning(self, "导入失败", f"导入天狐 2.0 工具配置失败：{e}")
@@ -884,14 +1066,17 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             message_parts.append("")
             message_parts.append(stats_text)
 
-        QMessageBox.information(self, "导入完成", "\n".join(message_parts))
+        self._notify_success(
+            "导入完成",
+            f"新增 {result.get('imported', 0)}，跳过 {result.get('skipped', 0)}",
+        )
 
     def on_delete_tianhu_tools(self):
         """一键删除当前工具库中所有天狐 2.0 导入工具。"""
         tianhu_tools = self.tool_config_exchange.get_tianhu_tools()
         total = len(tianhu_tools)
         if total <= 0:
-            QMessageBox.information(self, "无需删除", "当前工具库中没有天狐 2.0 导入的工具。")
+            self._notify_info("无需删除", "当前没有天狐 2.0 导入的工具")
             return
 
         preview_names = [
@@ -923,13 +1108,178 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             return
 
         self.refresh_all()
-        QMessageBox.information(
-            self,
+        self._notify_success(
             "删除完成",
-            "\n".join([
-                f"已删除: {result.get('removed', 0)}",
-                f"剩余工具: {result.get('remaining', 0)}",
-            ]),
+            f"已删除 {result.get('removed', 0)}，剩余 {result.get('remaining', 0)}",
+        )
+
+    def on_show_runtime_log(self):
+        """打开当前或最新运行日志文件。"""
+        log_dir = Path(self.config_dir) / "logs"
+        candidates = [
+            get_current_log_file_path(log_dir),
+            get_latest_log_file_path(log_dir),
+        ]
+        log_path = None
+        for candidate in candidates:
+            if not candidate:
+                continue
+            candidate_path = Path(candidate)
+            if candidate_path.exists():
+                log_path = candidate_path.resolve()
+                break
+
+        if log_path is None:
+            QMessageBox.warning(self, "无法打开日志", "当前没有可用的运行日志文件。")
+            return
+
+        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(log_path))):
+            QMessageBox.warning(self, "无法打开日志", f"无法打开日志文件：{log_path}")
+
+    def on_backup_runtime_config(self):
+        """备份当前运行时配置。"""
+        default_file = self.runtime_backup_controller.get_default_backup_path()
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "备份运行时配置",
+            str(default_file),
+            "Zip Files (*.zip);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        try:
+            result = self.runtime_backup_controller.create_backup(file_path)
+        except (RuntimeBackupError, FileNotFoundError, PermissionError, OSError, ValueError) as e:
+            logger.error("备份运行时配置失败: %s", str(e))
+            QMessageBox.warning(self, "备份失败", f"备份运行时配置失败：{e}")
+            return
+
+        self._notify_success(
+            "备份完成",
+            f"包含 {result.get('file_count', 0)} 个文件",
+        )
+
+    def on_restore_runtime_config(self):
+        """从备份恢复运行时配置。"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "还原运行时配置",
+            self.config_dir,
+            "Zip Files (*.zip);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        confirm_text = (
+            "还原运行时配置会覆盖当前 .runtime 中的设置、数据、笔记和图标缓存。\n"
+            "是否继续？"
+        )
+        if self._themed_question("确认还原", confirm_text) != QMessageBox.Yes:
+            return
+
+        try:
+            result = self.runtime_backup_controller.restore_backup(file_path)
+        except (RuntimeBackupError, FileNotFoundError, PermissionError, OSError, ValueError) as e:
+            logger.error("还原运行时配置失败: %s", str(e))
+            QMessageBox.warning(self, "还原失败", f"还原运行时配置失败：{e}")
+            return
+
+        try:
+            self.data_manager.invalidate_cache()
+        except Exception as e:
+            logger.warning("清理数据缓存失败: %s", str(e))
+
+        try:
+            self.settings.sync()
+            restored_theme = str(self.settings.value("theme", self.current_theme) or self.current_theme).strip()
+            if restored_theme not in ThemeManager().themes:
+                restored_theme = "dark_green"
+            self.switch_theme(restored_theme)
+        except Exception as e:
+            logger.warning("恢复主题失败: %s", str(e))
+
+        self.refresh_all()
+        self._notify_success(
+            "还原完成",
+            f"恢复 {result.get('restored_files', 0)} 个文件",
+        )
+
+    def on_batch_delete_tools(self):
+        """批量删除选中的工具配置。"""
+        tools = self.data_manager.load_tools()
+        if not tools:
+            self._notify_info("无可删除工具", "当前工具库中没有可删除的工具")
+            return
+
+        dialog = ToolBulkDeleteDialog(
+            tools,
+            self.data_manager.load_categories(),
+            theme_name=self.current_theme,
+            parent=self,
+        )
+        if dialog.exec_() != QDialog.Accepted:
+            return
+
+        selected_ids = dialog.get_selected_tool_ids()
+        if not selected_ids:
+            return
+
+        selected_id_set = set(selected_ids)
+        preview_names = [
+            str(tool.get("name") or "").strip()
+            for tool in tools
+            if tool.get("id") in selected_id_set and str(tool.get("name") or "").strip()
+        ]
+        confirm_lines = [
+            f"即将删除 {len(selected_ids)} 个工具配置，是否继续？",
+        ]
+        if preview_names:
+            confirm_lines.append("示例：")
+            confirm_lines.extend(f"- {name}" for name in preview_names[:6])
+
+        if self._themed_question("确认删除", "\n".join(confirm_lines)) != QMessageBox.Yes:
+            return
+
+        result = self.data_manager.delete_tools(selected_ids)
+        if not result.get("success"):
+            QMessageBox.warning(self, "删除失败", "批量删除工具失败。")
+            return
+
+        self.refresh_all()
+        self._notify_success(
+            "删除完成",
+            f"已删除 {result.get('deleted', 0)} 个工具，剩余 {result.get('remaining', 0)} 个",
+        )
+
+    def on_delete_all_tools(self):
+        """删除当前工具库中的全部工具。"""
+        tools = self.data_manager.load_tools()
+        if not tools:
+            self._notify_info("无可删除工具", "当前工具库中没有工具")
+            return
+
+        if self._themed_question(
+            "确认删除全部工具",
+            "这会删除当前工具库中的全部工具配置，是否继续？",
+        ) != QMessageBox.Yes:
+            return
+
+        if self._themed_question(
+            "再次确认",
+            "此操作无法恢复，确定删除全部工具吗？",
+        ) != QMessageBox.Yes:
+            return
+
+        result = self.data_manager.delete_all_tools()
+        if not result.get("success"):
+            QMessageBox.warning(self, "删除失败", "删除全部工具失败。")
+            return
+
+        self.refresh_all()
+        self._notify_success(
+            "删除完成",
+            f"已删除 {result.get('deleted', 0)} 个工具",
         )
 
     def on_import_native_tools(self):
@@ -944,22 +1294,16 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             return
 
         try:
-            result = self.tool_config_exchange.import_native_tools(file_path)
+            result = self.import_controller.import_native_tools(file_path)
         except (FileNotFoundError, ValueError, PermissionError, OSError) as e:
             logger.error("导入本地工具配置失败: %s", str(e))
             QMessageBox.warning(self, "导入失败", f"导入本地工具配置失败：{e}")
             return
 
         self.refresh_all()
-        QMessageBox.information(
-            self,
+        self._notify_success(
             "导入完成",
-            "\n".join([
-                f"源文件: {file_path}",
-                f"总计: {result.get('total', 0)}",
-                f"新增: {result.get('imported', 0)}",
-                f"跳过重复: {result.get('skipped', 0)}",
-            ]),
+            f"新增 {result.get('imported', 0)}，跳过 {result.get('skipped', 0)}",
         )
 
     def on_export_native_tools(self):
@@ -977,20 +1321,15 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             file_path += ".json"
 
         try:
-            result = self.tool_config_exchange.export_native_tools(file_path)
+            result = self.import_controller.export_native_tools(file_path)
         except (PermissionError, OSError, TypeError, ValueError) as e:
             logger.error("导出本地工具配置失败: %s", str(e))
             QMessageBox.warning(self, "导出失败", f"导出本地工具配置失败：{e}")
             return
 
-        QMessageBox.information(
-            self,
+        self._notify_success(
             "导出完成",
-            "\n".join([
-                f"导出文件: {result.get('file_path', file_path)}",
-                f"导出数量: {result.get('exported', 0)}",
-                "导出模式: 仅配置，不包含使用次数和最近使用记录",
-            ]),
+            f"已导出 {result.get('exported', 0)} 个工具",
         )
 
     def _get_official_sync_url(self):
@@ -1021,7 +1360,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         update_existing = self._is_sync_update_existing_enabled()
         self._start_background_task(
             "sync_official_tools",
-            lambda cancel_requested=None, progress_callback=None: self.tool_config_exchange.sync_official_tools_from_url(
+            lambda cancel_requested=None, progress_callback=None: self.import_controller.sync_official_tools(
                 sync_url,
                 update_existing=update_existing,
                 cancel_requested=cancel_requested,
@@ -1036,17 +1375,9 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
     def _on_sync_official_tools_success(self, sync_url, result):
         self.refresh_all()
         self.statusBar.showMessage("官方工具库同步完成。", 5000)
-        QMessageBox.information(
-            self,
+        self._notify_success(
             "同步完成",
-            "\n".join([
-                f"源地址: {result.get('source_url', sync_url)}",
-                f"总计: {result.get('total', 0)}",
-                f"新增: {result.get('imported', 0)}",
-                f"更新: {result.get('updated', 0)}",
-                f"跳过: {result.get('skipped', 0)}",
-                f"备份: {result.get('backup_path', '')}",
-            ]),
+            f"新增 {result.get('imported', 0)}，更新 {result.get('updated', 0)}，跳过 {result.get('skipped', 0)}",
         )
 
     def _on_sync_official_tools_error(self, error):
@@ -1065,7 +1396,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
     def _check_update_once(self, show_latest_message: bool = True, show_available_message: bool = True, on_available=None):
         self._start_background_task(
             "check_updates",
-            self.update_service.check_for_updates,
+            self.update_controller.check_for_updates,
             on_success=lambda result: self._on_check_update_success(
                 result,
                 show_latest_message=show_latest_message,
@@ -1087,7 +1418,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         if update_info is None:
             if show_latest_message:
-                QMessageBox.information(self, "检查更新", message)
+                self._notify_info("检查更新", message)
             return
 
         if show_available_message:
@@ -1120,15 +1451,18 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self._check_update_once(show_latest_message=True, show_available_message=True)
 
     def on_one_click_update(self):
-        if not self.update_service.can_self_update():
-            release_url = self.update_service.get_release_page_url()
+        if not self.update_controller.can_self_update():
+            release_url = self.update_controller.get_release_page_url()
             message = "当前运行环境不支持一键更新。\n是否打开发布页手动下载最新版本？"
             if self._themed_question("无法一键更新", message, default=QMessageBox.Yes) == QMessageBox.Yes:
                 if release_url:
                     try:
-                        webbrowser.open(release_url)
+                        opened = webbrowser.open(release_url)
                     except webbrowser.Error as exc:
                         QMessageBox.warning(self, "打开链接失败", f"无法打开发布页: {exc}")
+                    else:
+                        if not opened:
+                            QMessageBox.warning(self, "打开链接失败", f"无法打开发布页: {release_url}")
             return
 
         self._check_update_once(
@@ -1142,7 +1476,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             f"将从 v{self.version} 更新到 v{update_info.latest_version}。",
             "更新程序会在确认后关闭当前窗口并自动重启。",
         ]
-        if self.update_service.get_update_mode() == "source":
+        if self.update_controller.get_update_mode() == "source":
             confirm_lines.append("当前为源码模式：将覆盖项目目录文件（保留 .runtime 目录）。")
         if update_info.release_url:
             confirm_lines.append(f"发布页: {update_info.release_url}")
@@ -1152,7 +1486,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         self._start_background_task(
             "start_one_click_update",
-            lambda cancel_requested=None, progress_callback=None: self.update_service.start_one_click_update(
+            lambda cancel_requested=None, progress_callback=None: self.update_controller.start_one_click_update(
                 update_info,
                 cancel_requested=cancel_requested,
                 progress_callback=progress_callback,
@@ -1164,7 +1498,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         )
 
     def _on_one_click_update_success(self, result_message):
-        QMessageBox.information(self, "更新流程已启动", result_message)
+        self._notify_success("更新流程已启动", result_message)
         self._run_when_background_tasks_idle(self.close)
 
     def _on_one_click_update_error(self, error):
@@ -1197,7 +1531,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             
             # 更新工具
             if self.data_manager.update_tool(updated_tool['id'], updated_tool):
-                QMessageBox.information(self, "成功", "工具更新成功！")
+                self._notify_success("工具更新成功")
                 self.refresh_current_view()
             else:
                 QMessageBox.warning(self, "失败", "工具更新失败！")
@@ -1211,12 +1545,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         run_in_terminal = tool_data.get('run_in_terminal', False)
 
         logger.info("启动工具: %s, 路径: %s", tool_name, path)
-        result = self.tool_launcher.launch_tool(
-            tool_data=tool_data,
-            path=path,
-            working_dir=working_directory,
-            run_in_terminal=run_in_terminal,
-        )
+        result = self.tool_run_controller.launch_tool(tool_data)
 
         if result.get('success'):
             launch_mode = result.get('launch_mode') or 'default'
@@ -1232,10 +1561,14 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             if tool_id:
                 try:
                     logger.info("记录工具使用统计: %s (ID: %s)", tool_name, tool_id)
-                    self.data_manager.update_tool_usage(tool_id)
-                    self._schedule_usage_flush()
+                    self.tool_run_controller.record_usage(tool_id)
                 except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
                     logger.warning("更新工具使用统计失败: %s", str(e))
+            if self.has_active_search():
+                self.clear_active_search()
+                self.refresh_current_view()
+            elif getattr(self, "current_view_mode", "") == "dashboard":
+                self.refresh_current_view()
             return
 
         error_message = result.get('error_message') or '未知错误'
@@ -1265,6 +1598,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             path=path,
             working_dir=working_dir,
             run_in_terminal=run_in_terminal,
+            base_dir=self.config_dir,
         )
         return bool(result.get('success'))
 
@@ -1300,7 +1634,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
     def on_delete_tool(self, tool_id):
         """处理删除工具"""
         if self.data_manager.delete_tool(tool_id):
-            QMessageBox.information(self, "成功", "工具删除成功！")
+            self._notify_success("工具删除成功")
             self.refresh_current_view()
         else:
             QMessageBox.warning(self, "失败", "工具删除失败！")
@@ -1324,7 +1658,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
                 "subcategories": []
             }
             if self.data_manager.add_category(category):
-                QMessageBox.information(self, "成功", "分类创建成功！")
+                self._notify_success("分类创建成功")
                 self.category_view.refresh()
             else:
                 QMessageBox.warning(self, "失败", "分类创建失败！")
@@ -1352,7 +1686,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         if ok and subcategory_name:
             subcategory = {"name": subcategory_name}
             if self.data_manager.add_subcategory(current_category, subcategory):
-                QMessageBox.information(self, "成功", "子分类创建成功！")
+                self._notify_success("子分类创建成功")
                 self.category_view.refresh()
             else:
                 QMessageBox.warning(self, "失败", "子分类创建失败！")
@@ -1380,7 +1714,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         if reply == QMessageBox.Yes:
             success, message = self.data_manager.delete_category(current_category)
             if success:
-                QMessageBox.information(self, "成功", "分类删除成功！")
+                self._notify_success("分类删除成功")
                 self.category_view.refresh()
                 self.current_category = None
                 self._display_tools([])
@@ -1405,7 +1739,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         if reply == QMessageBox.Yes:
             success, message = self.data_manager.delete_subcategory(current_subcategory)
             if success:
-                QMessageBox.information(self, "成功", "子分类删除成功！")
+                self._notify_success("子分类删除成功")
                 self.category_view.refresh()
                 self.subcategory_view.current_subcategory = None
                 self.on_category_selected(self.category_view.current_category)
@@ -1467,7 +1801,22 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
     def on_about(self):
         """显示关于信息"""
-        QMessageBox.about(self, "关于子非鱼安全工具箱", f"子非鱼安全工具箱 v{self.version}\n\n一个简单易用的本地工具管理平台")
+        github_url = "https://github.com/zifeiyu-sec/zifeiyuSec-Toolkit"
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("关于子非鱼安全工具箱")
+        dialog.setIcon(QMessageBox.Information)
+        dialog.setTextFormat(Qt.RichText)
+        dialog.setText(f"<b>子非鱼安全工具箱 v{self.version}</b>")
+        dialog.setInformativeText(
+            "一个简单易用的本地工具管理平台<br><br>"
+            f"GitHub: <a href=\"{github_url}\">{github_url}</a>"
+        )
+        open_button = dialog.addButton("打开 GitHub", QMessageBox.ActionRole)
+        dialog.addButton(QMessageBox.Ok)
+        dialog.exec_()
+        if dialog.clickedButton() == open_button:
+            if not QDesktopServices.openUrl(QUrl(github_url)):
+                QMessageBox.warning(self, "打开链接失败", f"无法打开 GitHub 链接: {github_url}")
     
     def refresh_tool_count(self):
         """刷新工具数量显示"""
@@ -1480,10 +1829,14 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
         注意：不要在这里切换收藏状态，只根据当前状态刷新内容，
         避免在收藏页运行工具或刷新时意外退出收藏页。"""
+        if hasattr(self, "_note_search_cache"):
+            self._note_search_cache.clear()
         self.handle_refresh_current_view()
 
     def refresh_all(self):
         """刷新所有视图"""
+        if hasattr(self, "invalidate_search_index"):
+            self.invalidate_search_index()
         self.handle_refresh_all()
     
     def switch_theme(self, theme_name):
@@ -1503,6 +1856,8 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
             self.dark_green_theme_action.setChecked(self.current_theme == "dark_green")
         if hasattr(self, "blue_white_theme_action"):
             self.blue_white_theme_action.setChecked(self.current_theme == "blue_white")
+        if hasattr(self, "celadon_mist_theme_action"):
+            self.celadon_mist_theme_action.setChecked(self.current_theme == "celadon_mist")
         if hasattr(self, "purple_neon_theme_action"):
             self.purple_neon_theme_action.setChecked(self.current_theme == "purple_neon")
         if hasattr(self, "red_orange_theme_action"):
@@ -1512,8 +1867,9 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         """刷新UI组件主题"""
         if hasattr(self, 'tool_container'):
             self.tool_container.set_theme(self.current_theme)
-        if hasattr(self, 'favorites_container'):
-            self.favorites_container.set_theme(self.current_theme)
+        if hasattr(self, 'dashboard_container'):
+            self.dashboard_container.set_theme(self.current_theme)
+        self._apply_home_button_style()
 
     def _schedule_usage_flush(self):
         """延迟合并写回工具使用统计。"""

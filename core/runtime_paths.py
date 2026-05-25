@@ -10,6 +10,45 @@ RUNTIME_STATE_DIRNAME = ".runtime"
 ICON_EXTENSIONS = (".svg", ".png", ".ico", ".jpg", ".jpeg")
 
 
+def _looks_like_command_name(value: str) -> bool:
+    text = str(value or "").strip()
+    if not text:
+        return False
+    if text.upper().startswith("CHANGE_ME"):
+        return False
+    if text.startswith(("http://", "https://", "\\\\", "//", ".")):
+        return False
+    if any(sep in text for sep in ("/", "\\")):
+        return False
+    if any(char.isspace() for char in text):
+        return False
+    if Path(text).suffix:
+        return False
+    return True
+
+
+def _looks_like_accessible_command_name(value: str) -> bool:
+    text = str(value or "").strip()
+    if not text:
+        return False
+    if text.upper().startswith("CHANGE_ME"):
+        return False
+    if text.startswith(("http://", "https://", "\\\\", "//", ".")):
+        return False
+    if any(sep in text for sep in ("/", "\\")):
+        return False
+    if any(char.isspace() for char in text):
+        return False
+    if ":" in text:
+        return False
+    return True
+
+
+def looks_like_command_name(value: str) -> bool:
+    """Return True for a bare command-like token that may live on PATH."""
+    return _looks_like_accessible_command_name(value)
+
+
 def is_frozen() -> bool:
     return bool(getattr(sys, "frozen", False))
 
@@ -158,6 +197,68 @@ def resolve_resource_file(relative_dir: tuple[str, ...], value: str, extensions=
         return candidate.resolve()
 
     return None
+
+
+def resolve_configured_path_value(value: str, base_dir: str | Path | None = None, allow_command_name: bool = False) -> Path | None:
+    text = str(value or "").strip()
+    if not text or text.startswith(("http://", "https://")):
+        return None
+
+    candidate = Path(text)
+    if candidate.is_absolute():
+        return candidate.resolve()
+
+    base_path = Path(base_dir).resolve() if base_dir else None
+    if base_path is not None:
+        resolved = (base_path / candidate).resolve()
+        if resolved.exists():
+            return resolved
+        if allow_command_name and _looks_like_command_name(text):
+            return None
+        return resolved
+
+    if allow_command_name and _looks_like_command_name(text):
+        return None
+
+    return candidate.resolve()
+
+
+def resolve_accessible_path_value(value: str, base_dir: str | Path | None = None) -> Path | None:
+    """Resolve local paths and PATH commands without rewriting stored config values."""
+    text = str(value or "").strip()
+    if not text or text.startswith(("http://", "https://")):
+        return None
+
+    candidate = Path(text)
+    if candidate.is_absolute():
+        return candidate.resolve()
+
+    base_path = Path(base_dir).resolve() if base_dir else None
+    if base_path is not None:
+        resolved = (base_path / candidate).resolve()
+        if resolved.exists():
+            return resolved
+
+        if _looks_like_accessible_command_name(text):
+            command_path = shutil.which(text)
+            if command_path:
+                return Path(command_path).resolve()
+            return None
+        return resolved
+
+    if candidate.exists():
+        return candidate.resolve()
+
+    if _looks_like_accessible_command_name(text):
+        command_path = shutil.which(text)
+        if command_path:
+            return Path(command_path).resolve()
+        return None
+
+    resolved = resolve_configured_path_value(text, base_dir=base_dir, allow_command_name=False)
+    if resolved is None:
+        return None
+    return resolved
 
 
 def resolve_icon_path_value(value: str) -> Path | None:

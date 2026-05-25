@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -29,6 +31,8 @@ class UpdateSession:
     preserve_paths: list[str]
     restart_cmd: list[str]
     restart_cwd: Path
+    downloaded_sha256: str
+    expected_executable: str
 
     @classmethod
     def from_file(cls, session_path: Path) -> "UpdateSession":
@@ -57,6 +61,8 @@ class UpdateSession:
 
         parent_pid = _parse_pid(payload.get("parent_pid"))
         preserve_paths = _parse_preserve_paths(payload.get("preserve_paths"))
+        downloaded_sha256 = str(payload.get("downloaded_sha256") or "").strip()
+        expected_executable = Path(str(payload.get("expected_executable") or "").strip()).name
 
         return cls(
             session_path=session_path,
@@ -69,6 +75,8 @@ class UpdateSession:
             preserve_paths=preserve_paths,
             restart_cmd=restart_cmd,
             restart_cwd=restart_cwd,
+            downloaded_sha256=downloaded_sha256,
+            expected_executable=expected_executable,
         )
 
 
@@ -122,6 +130,77 @@ def _append_log(log_file: Path, message: str) -> None:
     line = f"[{timestamp}] {message}\n"
     with log_file.open("a", encoding="utf-8", errors="replace") as f:
         f.write(line)
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _safe_zip_member_parts(name: str) -> list[str] | None:
+    normalized = str(name or "").replace("\\", "/").strip()
+    if not normalized or normalized.endswith("/"):
+        return None
+    if normalized.startswith("/") or re.match(r"^[A-Za-z]:", normalized):
+        raise UpdateWorkerError(f"更新包包含不安全路径: {name}")
+
+    parts = [part for part in normalized.split("/") if part]
+    if not parts:
+        return None
+    if any(part in {".", ".."} for part in parts):
+        raise UpdateWorkerError(f"更新包包含不安全路径: {name}")
+    if ":" in parts[0]:
+        raise UpdateWorkerError(f"更新包包含不安全路径: {name}")
+    return parts
+
+
+def _archive_payload_relative_names(member_names: list[str]) -> list[str]:
+    payload_parts = []
+    for member_name in member_names:
+        parts = _safe_zip_member_parts(member_name)
+        if not parts or parts[0] == "__MACOSX":
+            continue
+        payload_parts.append(parts)
+
+    if not payload_parts:
+        return []
+
+    top_levels = {parts[0] for parts in payload_parts}
+    strip_root = len(top_levels) == 1
+    relative_names = []
+    for parts in payload_parts:
+        relative_parts = parts[1:] if strip_root else parts
+        if relative_parts:
+            relative_names.append("/".join(relative_parts))
+    return relative_names
+
+
+def _validate_update_archive(session: UpdateSession) -> None:
+    if session.downloaded_sha256:
+        actual_sha256 = _sha256_file(session.zip_path)
+        if actual_sha256.casefold() != session.downloaded_sha256.casefold():
+            raise UpdateWorkerError("更新包校验失败: SHA256 与下载会话不匹配。")
+
+    try:
+        with zipfile.ZipFile(session.zip_path, "r") as zf:
+            relative_names = _archive_payload_relative_names(zf.namelist())
+    except zipfile.BadZipFile as exc:
+        raise UpdateWorkerError("更新包校验失败: zip 文件损坏或格式无效。") from exc
+
+    if not relative_names:
+        raise UpdateWorkerError("更新包校验失败: 更新包为空。")
+
+    if any(part.casefold() == ".runtime" for name in relative_names for part in name.split("/")):
+        raise UpdateWorkerError("更新包校验失败: 发布包不能包含 .runtime 用户数据目录。")
+
+    if session.expected_executable:
+        expected = session.expected_executable.casefold()
+        has_expected_executable = any(Path(name).name.casefold() == expected for name in relative_names)
+        if not has_expected_executable:
+            raise UpdateWorkerError(f"更新包校验失败: 未找到程序入口 {session.expected_executable}。")
 
 
 def _is_process_running(pid: int) -> bool:
@@ -316,6 +395,7 @@ def run_updater_session(session_path: str | Path) -> int:
         if not session.app_root.exists():
             raise UpdateWorkerError(f"应用目录不存在: {session.app_root}")
 
+        _validate_update_archive(session)
         _wait_for_parent_exit(session.parent_pid, session.log_file)
         payload_root = _extract_payload(session.zip_path, session.staging_dir, session.log_file)
         _append_log(session.log_file, f"更新内容根目录: {payload_root}")
