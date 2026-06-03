@@ -36,6 +36,7 @@ from core.tool_config_exchange import ToolConfigExchangeService
 from core.tool_launch_service import ToolLaunchService
 from core.update_service import UpdateService
 from core.ui_scale import metrics_for_geometry, preferred_main_window_geometry, scaled
+from core.version import get_version
 from ui.category_view import CategoryView
 from ui.subcategory_view import SubcategoryView
 from ui.tool_model_view import ToolCardContainer
@@ -69,7 +70,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         super().__init__()
         # 设置应用程序信息
         self.app_name = "子非鱼安全工具箱"
-        self.version = "3.2.3"
+        self.version = get_version()
         
         self._ui_scale = 1.0
         self.MIN_CATEGORY_WIDTH = self.BASE_MIN_CATEGORY_WIDTH
