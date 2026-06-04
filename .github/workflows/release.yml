@@ -1,0 +1,178 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: v3.2.4)'
+        required: true
+        type: string
+      create_release:
+        description: '创建 GitHub Release'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  APP_NAME: ZifeiyuSec
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win64
+            asset_name: ZifeiyuSec-win64
+            artifact_ext: .exe
+          - os: ubuntu-latest
+            platform: linux
+            asset_name: ZifeiyuSec-linux
+            artifact_ext: .AppImage
+          - os: macos-latest
+            platform: macos
+            asset_name: ZifeiyuSec-macos
+            artifact_ext: .dmg
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Write version file
+        run: echo "${{ inputs.version }}" | sed 's/^v//' > VERSION
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Generate macOS icon
+        if: matrix.platform == 'macos'
+        run: |
+          mkdir -p image.iconset
+          sips -z 16 16 image.png --out image.iconset/icon_16x16.png
+          sips -z 32 32 image.png --out image.iconset/icon_16x16@2x.png
+          sips -z 32 32 image.png --out image.iconset/icon_32x32.png
+          sips -z 64 64 image.png --out image.iconset/icon_32x32@2x.png
+          sips -z 128 128 image.png --out image.iconset/icon_128x128.png
+          sips -z 256 256 image.png --out image.iconset/icon_128x128@2x.png
+          sips -z 256 256 image.png --out image.iconset/icon_256x256.png
+          sips -z 512 512 image.png --out image.iconset/icon_256x256@2x.png
+          sips -z 512 512 image.png --out image.iconset/icon_512x512.png
+          sips -z 1024 1024 image.png --out image.iconset/icon_512x512@2x.png
+          iconutil -c icns image.iconset -o image.icns
+
+      - name: Build with PyInstaller
+        run: pyinstaller ZifeiyuSec.spec --clean
+
+      - name: Set executable permissions (Linux)
+        if: matrix.platform == 'linux'
+        run: chmod +x dist/${{ env.APP_NAME }}
+
+      - name: Rename artifact (Windows)
+        if: matrix.platform == 'win64'
+        run: |
+          cp dist/${{ env.APP_NAME }}.exe ${{ matrix.asset_name }}-${{ inputs.version }}.exe
+        shell: bash
+
+      - name: Package (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          # Create AppDir structure
+          mkdir -p AppDir/usr/bin
+          cp dist/${{ env.APP_NAME }} AppDir/usr/bin/
+          cp image.png AppDir/${{ env.APP_NAME }}.png
+
+          # Create AppRun launcher
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/ZifeiyuSec" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+          # Create desktop file
+          cat > AppDir/${{ env.APP_NAME }}.desktop << EOF
+          [Desktop Entry]
+          Type=Application
+          Name=${{ env.APP_NAME }}
+          Exec=${{ env.APP_NAME }}
+          Icon=${{ env.APP_NAME }}
+          Categories=Utility;
+          EOF
+
+          # Download appimagetool
+          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O appimagetool
+          chmod +x appimagetool
+
+          # Build AppImage
+          APPIMAGE_EXTRACT_AND_RUN=1 ./appimagetool AppDir "${{ matrix.asset_name }}-${{ inputs.version }}.AppImage"
+
+      - name: Package (macOS)
+        if: matrix.platform == 'macos'
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "${{ env.APP_NAME }}" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "${{ env.APP_NAME }}.app" 175 192 \
+            --hide-extension "${{ env.APP_NAME }}.app" \
+            --app-drop-link 425 192 \
+            "${{ matrix.asset_name }}-${{ inputs.version }}.dmg" \
+            "dist/${{ env.APP_NAME }}.app"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.asset_name }}-${{ inputs.version }}${{ matrix.artifact_ext }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: inputs.create_release == true
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: find artifacts -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ inputs.version }}
+          name: ${{ inputs.version }}
+          body: |
+            ## 子非鱼安全工具箱 ${{ inputs.version }}
+
+            ### 下载
+            - Windows: `ZifeiyuSec-win64-${{ inputs.version }}.exe`
+            - Linux: `ZifeiyuSec-linux-${{ inputs.version }}.AppImage`
+            - macOS: `ZifeiyuSec-macos-${{ inputs.version }}.dmg`
+
+            ### 使用说明
+            - Windows: 下载 .exe 文件直接运行
+            - Linux: 下载 .AppImage 文件，添加执行权限后运行
+            - macOS: 挂载 .dmg 后将应用拖入 Applications
+
+            > macOS 用户首次运行需要在"系统设置 > 隐私与安全性"中允许运行
+          files: artifacts/**/*
+          draft: false
+          prerelease: false

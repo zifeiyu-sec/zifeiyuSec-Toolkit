@@ -32,6 +32,14 @@ MOJIBAKE_MARKERS = (
 )
 
 
+def configure_console_encoding():
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8")
+
+
 def iter_text_files():
     seen = set()
     for pattern in TEXT_FILE_PATTERNS:
@@ -220,6 +228,8 @@ def check_text_encoding_artifacts(errors):
 
 
 def main():
+    configure_console_encoding()
+
     errors = []
 
     check_shipped_tool_data(errors)

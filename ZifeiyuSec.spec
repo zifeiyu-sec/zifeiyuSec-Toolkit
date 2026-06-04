@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
+import sys
 
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
@@ -19,7 +20,7 @@ datas += tree_datas('data')
 datas += tree_datas('docs')
 datas += tree_datas('images')
 datas += tree_datas('resources')
-for extra_file in ('settings.example.ini', 'run_tool.vbs', 'README.md', 'LICENSE', 'image.ico', 'image.png', 'favicon.ico'):
+for extra_file in ('settings.example.ini', 'run_tool.vbs', 'README.md', 'LICENSE', 'image.ico', 'image.png', 'favicon.ico', 'VERSION'):
     candidate = project_root / extra_file
     if candidate.exists():
         datas.append((str(candidate), '.'))
@@ -31,8 +32,12 @@ hiddenimports += collect_submodules('core')
 hiddenimports += collect_submodules('ui')
 hiddenimports += ['PyQt5.sip']
 
-icon_path = project_root / 'image.ico'
-if not icon_path.exists():
+if sys.platform == 'darwin':
+    icon_path = project_root / 'image.icns'
+else:
+    icon_path = project_root / 'image.ico'
+
+if not icon_path.exists() and sys.platform != 'darwin':
     fallback_icon = project_root / 'resources' / 'icons' / 'fox.ico'
     icon_path = fallback_icon if fallback_icon.exists() else None
 exe_icon = str(icon_path) if icon_path else None
@@ -58,6 +63,9 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
     [],
     name='ZifeiyuSec',
     debug=False,
@@ -73,16 +81,15 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=exe_icon,
-    exclude_binaries=True,
 )
 
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='ZifeiyuSec',
-)
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        exe,
+        name='ZifeiyuSec.app',
+        icon=exe_icon,
+        bundle_identifier='com.zifeiyusec.toolkit',
+        info_plist={
+            'NSHighResolutionCapable': True,
+        },
+    )
