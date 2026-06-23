@@ -1,6 +1,6 @@
 # 子非鱼安全工具箱
 
-当前版本：`v3.2.3`
+当前版本：`v3.2.4`
 
 子非鱼安全工具箱是一款面向 Windows 安全工作流的桌面工具箱，用于统一管理本地安全工具、脚本入口、目录入口、Web 平台、收藏和工具笔记。
 
@@ -28,7 +28,7 @@
 普通用户推荐直接下载打包版：
 
 1. 打开 GitHub Releases 页面。
-2. 下载 `ZifeiyuSec-win64-v3.2.3.zip`。
+2. 下载 `ZifeiyuSec-win64-v3.2.4.zip`。
 3. 解压到本地目录。
 4. 双击运行 `ZifeiyuSec.exe`。
 
@@ -118,7 +118,7 @@ python main.py
 项目提供 Windows 发布包构建脚本：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\build_release.ps1 -Version 3.2.3 -Clean -SmokeTest -StopRunningApp
+powershell -ExecutionPolicy Bypass -File scripts\build_release.ps1 -Version 3.2.4 -Clean -SmokeTest -StopRunningApp
 ```
 
 脚本会执行以下工作：
@@ -128,7 +128,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build_release.ps1 -Version 3.2.
 - 使用 `ZifeiyuSec.spec` 生成 PyInstaller 目录版产物。
 - 校验 exe、默认数据、图标、背景图和示例配置是否进入发布包。
 - 可选启动打包后的程序做冒烟测试。
-- 生成 `release/ZifeiyuSec-win64-v3.2.3.zip`。
+- 生成 `release/ZifeiyuSec-win64-v3.2.4.zip`。
 
 如果只想快速生成包，可以跳过测试：
 
