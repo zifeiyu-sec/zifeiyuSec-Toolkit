@@ -79,7 +79,6 @@ data/*bak.json
 # Local-only workspace data
 .runtime/
 /Tools/
-images/README/
 resources/notes/_attachments/
 settings.ini
 需要开发的功能.md
