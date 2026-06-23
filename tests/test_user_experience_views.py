@@ -91,7 +91,7 @@ class UserExperienceViewTests(unittest.TestCase):
         self.assertTrue(dialog.rebuild_split_btn.isEnabled())
         self.assertEqual(1, dialog.audit_result["counts"].get("split_mismatch"))
 
-    def test_dashboard_groups_recent_favorites_and_path_attention(self):
+    def test_dashboard_groups_recent_and_favorites(self):
         dashboard = DashboardContainer()
         self.addCleanup(dashboard.deleteLater)
         dashboard.display_tools([
@@ -108,16 +108,10 @@ class UserExperienceViewTests(unittest.TestCase):
                 "path": "tools/favorite.exe",
                 "is_favorite": True,
             },
-            {
-                "id": 3,
-                "name": "Needs Path",
-                "path": "",
-            },
         ])
 
         self.assertEqual(["Recent"], [tool.get("name") for tool in dashboard.recent_section.container.model.tools()])
         self.assertEqual(["Favorite"], [tool.get("name") for tool in dashboard.favorite_section.container.model.tools()])
-        self.assertEqual(["Needs Path"], [tool.get("name") for tool in dashboard.path_section.container.model.tools()])
 
     def test_dashboard_sections_fit_complete_card_rows(self):
         dashboard = DashboardContainer()
@@ -167,7 +161,7 @@ class UserExperienceViewTests(unittest.TestCase):
         self.assertTrue(force_values)
         self.assertNotIn(True, force_values)
 
-    def test_dashboard_recent_section_limits_to_four_most_used_tools(self):
+    def test_dashboard_recent_section_limits_to_four_most_recent_tools(self):
         dashboard = DashboardContainer()
         self.addCleanup(dashboard.deleteLater)
 
@@ -181,7 +175,7 @@ class UserExperienceViewTests(unittest.TestCase):
         ])
 
         self.assertEqual(
-            ["Used 9", "Used 7", "Used 5", "Used 3"],
+            ["Used 2", "Used 3", "Used 5", "Used 1"],
             [tool.get("name") for tool in dashboard.recent_section.container.model.tools()],
         )
 

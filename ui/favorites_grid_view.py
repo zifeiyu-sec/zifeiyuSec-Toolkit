@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 from core.runtime_paths import get_runtime_state_root
+from core.style_manager import ThemeManager
 from core.tool_metadata import infer_display_tool_type_label
 
 try:
@@ -1213,6 +1214,7 @@ class LegacyFavoritesGridContainer(ToolCardActionsMixin, QWidget):
 
     def _show_tool_context_menu(self, tool, global_pos):
         menu = QMenu(self)
+        menu.setStyleSheet(ThemeManager().get_context_menu_style(self.current_theme))
 
         run_action = menu.addAction("运行工具")
         run_action.triggered.connect(lambda: self.run_tool.emit(tool))

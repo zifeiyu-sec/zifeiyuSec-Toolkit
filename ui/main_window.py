@@ -71,7 +71,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         # 设置应用程序信息
         self.app_name = "子非鱼安全工具箱"
         self.version = get_version()
-        
+
         self._ui_scale = 1.0
         self.MIN_CATEGORY_WIDTH = self.BASE_MIN_CATEGORY_WIDTH
         self.MIN_SUBCATEGORY_WIDTH = self.BASE_MIN_SUBCATEGORY_WIDTH
@@ -390,25 +390,25 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
     def create_statusbar(self):
         """创建状态栏"""
-        self.statusBar = QStatusBar()
-        self.setStatusBar(self.statusBar)
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
 
         self.background_task_label = QLabel("")
         self.background_task_label.setVisible(False)
-        self.statusBar.addPermanentWidget(self.background_task_label, 1)
+        self.status_bar.addPermanentWidget(self.background_task_label, 1)
 
         self.cancel_background_task_button = QToolButton()
         self.cancel_background_task_button.setText("取消任务")
         self.cancel_background_task_button.setVisible(False)
         self.cancel_background_task_button.clicked.connect(self.on_cancel_background_task)
-        self.statusBar.addPermanentWidget(self.cancel_background_task_button)
+        self.status_bar.addPermanentWidget(self.cancel_background_task_button)
         
         # 显示工具数量
         self.tool_count_label = QLabel("工具数量: 0")
-        self.statusBar.addPermanentWidget(self.tool_count_label)
+        self.status_bar.addPermanentWidget(self.tool_count_label)
         
         # 显示状态信息
-        self.statusBar.showMessage("就绪")
+        self.status_bar.showMessage("就绪")
     
     def create_main_widget(self):
         """创建主窗口组件"""
@@ -630,7 +630,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
     def _show_toast(self, title, message="", kind="info", timeout_ms=3200):
         text = str(message or title or "").strip()
         if text:
-            self.statusBar.showMessage(text.replace("\n", "  "), max(2000, int(timeout_ms)))
+            self.status_bar.showMessage(text.replace("\n", "  "), max(2000, int(timeout_ms)))
         if self._toast_widget is None:
             self._toast_widget = ToastWidget(self)
         self._toast_widget.show_message(
@@ -662,7 +662,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         self.background_task_label.setVisible(True)
         self.cancel_background_task_button.setVisible(True)
         self.cancel_background_task_button.setEnabled(bool(allow_cancel))
-        self.statusBar.showMessage(text)
+        self.status_bar.showMessage(text)
 
     def _set_remote_actions_enabled(self, enabled: bool):
         for action_name in (
@@ -707,7 +707,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
     def _start_background_task(self, task_name, func, on_success, on_error, status_message, cancel_message=None):
         if self._has_active_background_task():
-            self.statusBar.showMessage("当前有后台任务正在运行，请稍候。", 5000)
+            self.status_bar.showMessage("当前有后台任务正在运行，请稍候。", 5000)
             return False
 
         thread = QThread(self)
@@ -763,7 +763,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
     def on_cancel_background_task(self):
         if not self._request_background_task_cancellation():
-            self.statusBar.showMessage("当前没有可取消的后台任务。", 3000)
+            self.status_bar.showMessage("当前没有可取消的后台任务。", 3000)
 
     def _on_background_task_progress(self, task_name, message):
         task = self._background_tasks.get(task_name)
@@ -797,7 +797,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         if isinstance(error, OperationCancelledError):
             logger.info("后台任务已取消(%s): %s", task_name, error)
             if not self._close_after_background_tasks:
-                self.statusBar.showMessage(str(error), 5000)
+                self.status_bar.showMessage(str(error), 5000)
             return
         if self._close_after_background_tasks:
             logger.info("后台任务在退出流程中失败(%s): %s", task_name, error)
@@ -830,7 +830,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
                 QTimer.singleShot(0, self.close)
                 return
             if task and task.get("cancel_requested"):
-                self.statusBar.showMessage("后台任务已取消。", 5000)
+                self.status_bar.showMessage("后台任务已取消。", 5000)
 
     def _stop_background_tasks(self):
         for task in list(self._background_tasks.values()):
@@ -1375,7 +1375,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
     def _on_sync_official_tools_success(self, sync_url, result):
         self.refresh_all()
-        self.statusBar.showMessage("官方工具库同步完成。", 5000)
+        self.status_bar.showMessage("官方工具库同步完成。", 5000)
         self._notify_success(
             "同步完成",
             f"新增 {result.get('imported', 0)}，更新 {result.get('updated', 0)}，跳过 {result.get('skipped', 0)}",
@@ -1383,7 +1383,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
     def _on_sync_official_tools_error(self, error):
         logger.error("同步官方工具库失败: %s", str(error))
-        self.statusBar.showMessage("官方工具库同步失败。", 5000)
+        self.status_bar.showMessage("官方工具库同步失败。", 5000)
         QMessageBox.warning(self, "同步失败", f"同步官方工具库失败：{error}")
 
     def _truncate_update_notes(self, notes: str, limit: int = 800) -> str:
@@ -1415,7 +1415,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
     def _on_check_update_success(self, result, show_latest_message=True, show_available_message=True, on_available=None):
         update_info, message = result
         self._latest_update_info = update_info
-        self.statusBar.showMessage(message, 5000)
+        self.status_bar.showMessage(message, 5000)
 
         if update_info is None:
             if show_latest_message:
@@ -1443,7 +1443,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         logger.warning("检查更新失败: %s", error)
         if show_latest_message:
             QMessageBox.warning(self, "检查更新失败", str(error))
-        self.statusBar.showMessage("检查更新失败", 5000)
+        self.status_bar.showMessage("检查更新失败", 5000)
 
     def _check_updates_on_startup(self):
         self._check_update_once(show_latest_message=False, show_available_message=False)
@@ -1504,7 +1504,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
 
     def _on_one_click_update_error(self, error):
         logger.error("一键更新失败: %s", error)
-        self.statusBar.showMessage("一键更新失败", 5000)
+        self.status_bar.showMessage("一键更新失败", 5000)
         QMessageBox.warning(self, "一键更新失败", str(error))
 
     def on_edit_tool(self, tool_data):
@@ -1551,7 +1551,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
         if result.get('success'):
             launch_mode = result.get('launch_mode') or 'default'
             command_preview = result.get('command_preview') or result.get('path') or path
-            self.statusBar.showMessage(f"已启动 {tool_name}（{launch_mode}）", 5000)
+            self.status_bar.showMessage(f"已启动 {tool_name}（{launch_mode}）", 5000)
             logger.info(
                 "工具启动成功: %s, 模式: %s, 工作目录: %s, 命令: %s",
                 tool_name,
@@ -1896,7 +1896,7 @@ class MainWindow(MainWindowViewMixin, MainWindowNavigationMixin, MainWindowSearc
                 self._close_after_background_tasks = True
                 self.hide()
             else:
-                self.statusBar.showMessage("后台任务正在运行，请稍候后再关闭。", 5000)
+                self.status_bar.showMessage("后台任务正在运行，请稍候后再关闭。", 5000)
             event.ignore()
             return
 

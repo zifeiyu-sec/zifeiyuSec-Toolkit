@@ -278,6 +278,37 @@ class ThemeManager:
             }}
         """
 
+    def get_context_menu_style(self, theme_name):
+        """Shared theme style for transient context menus."""
+        palette = self.get_dialog_list_palette(theme_name)
+        return f"""
+            QMenu {{
+                background: {palette['bg']};
+                color: {palette['text']};
+                border: 1px solid {palette['border']};
+                border-radius: 14px;
+                padding: 7px;
+            }}
+            QMenu::item {{
+                background: transparent;
+                color: {palette['text']};
+                border-radius: 9px;
+                padding: 7px 18px;
+            }}
+            QMenu::item:selected {{
+                background: {palette['selected']};
+                color: {palette['text']};
+            }}
+            QMenu::item:disabled {{
+                color: {palette['muted']};
+            }}
+            QMenu::separator {{
+                height: 1px;
+                margin: 6px 9px;
+                background: {palette['border']};
+            }}
+        """
+
     def get_toast_style(self, theme_name, kind="info"):
         """Shared non-blocking toast style."""
         palette = self.get_dialog_list_palette(theme_name)

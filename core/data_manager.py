@@ -698,7 +698,7 @@ class DataManager:
 
     def add_tool(self, tool_data):
         tools = self.load_tools()
-        new_id = max(tool['id'] for tool in tools) + 1 if tools else 1
+        new_id = max((tool.get('id') or 0) for tool in tools) + 1 if tools else 1
         tool_data['id'] = new_id
         tool_data['usage_count'] = 0
         tool_data['last_used'] = None
@@ -867,14 +867,14 @@ class DataManager:
         keyword = keyword.lower()
         results = []
         for tool in tools:
-            if (keyword in tool['name'].lower() or
-                keyword in tool.get('description', '').lower()):
+            if (keyword in (tool.get('name') or '').lower() or
+                keyword in (tool.get('description') or '').lower()):
                 results.append(tool)
         return results
 
     def add_category(self, category_data):
         categories = self.load_categories()
-        new_id = max(cat['id'] for cat in categories) + 1 if categories else 1
+        new_id = max((cat.get('id') or 0) for cat in categories) + 1 if categories else 1
         category_data['id'] = new_id
         if 'subcategories' not in category_data:
             category_data['subcategories'] = []

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Startup dashboard with recent, favorite, and path attention sections."""
+"""Startup dashboard with recent and favorite tool sections."""
 
 from datetime import datetime
 from math import ceil
@@ -122,9 +122,7 @@ class DashboardContainer(QWidget):
 
         self.recent_section = DashboardSection("最近使用", "还没有最近使用记录，运行一次工具后会出现在这里。", self.page)
         self.favorite_section = DashboardSection("收藏工具", "还没有收藏工具，可以在工具卡片上点击星标收藏。", self.page)
-        self.path_section = DashboardSection("路径提醒", "没有发现明显路径配置问题。", self.page)
-
-        for section in (self.recent_section, self.favorite_section, self.path_section):
+        for section in (self.recent_section, self.favorite_section):
             layout.addWidget(section)
             self._connect_section(section)
         layout.addStretch(1)
@@ -143,7 +141,7 @@ class DashboardContainer(QWidget):
     def set_theme(self, theme_name):
         self.current_theme = theme_name or "dark_green"
         self.apply_theme_styles()
-        for section in (self.recent_section, self.favorite_section, self.path_section):
+        for section in (self.recent_section, self.favorite_section):
             section.set_theme(self.current_theme)
 
     def apply_theme_styles(self):
@@ -153,16 +151,19 @@ class DashboardContainer(QWidget):
         self._tools = [tool for tool in (tools_data or []) if isinstance(tool, dict)]
         self.recent_section.display_tools(self._recent_tools(self._tools))
         self.favorite_section.display_tools(self._favorite_tools(self._tools))
-        self.path_section.display_tools(self._path_attention_tools(self._tools))
 
     def get_tool_count(self):
         return len(self._tools)
 
     def _recent_tools(self, tools, limit=4):
         candidates = [tool for tool in tools if tool.get("last_used") or int(tool.get("usage_count", 0) or 0) > 0]
-        candidates.sort(key=lambda tool: str(tool.get("name") or "").casefold())
-        candidates.sort(key=lambda tool: self._last_used_sort_key(tool.get("last_used")), reverse=True)
-        candidates.sort(key=lambda tool: int(tool.get("usage_count", 0) or 0), reverse=True)
+        candidates.sort(
+            key=lambda tool: (
+                self._last_used_sort_key(tool.get("last_used")),
+                int(tool.get("usage_count", 0) or 0),
+            ),
+            reverse=True,
+        )
         return [self._copy_with_description(tool, self._recent_description(tool)) for tool in candidates[:limit]]
 
     def _favorite_tools(self, tools, limit=8):
@@ -175,17 +176,6 @@ class DashboardContainer(QWidget):
             )
         )
         return [self._copy_with_description(tool, tool.get("description") or "收藏工具") for tool in favorites[:limit]]
-
-    def _path_attention_tools(self, tools, limit=8):
-        results = []
-        for tool in tools:
-            reason = self._path_attention_reason(tool)
-            if not reason:
-                continue
-            results.append(self._copy_with_description(tool, reason))
-            if len(results) >= limit:
-                break
-        return results
 
     @staticmethod
     def _copy_with_description(tool, description):
@@ -211,16 +201,3 @@ class DashboardContainer(QWidget):
         if count > 0:
             return f"已使用 {count} 次"
         return "最近使用"
-
-    @staticmethod
-    def _path_attention_reason(tool):
-        path = str(tool.get("path") or "").strip()
-        if not path:
-            return "未配置路径或 URL"
-        if bool(tool.get("is_web_tool", False)) and not path.lower().startswith(("http://", "https://")):
-            return "网页工具 URL 不是 http/https"
-        if tool.get("_is_path_available") is False:
-            return "本地路径不可用"
-        if "CHANGE_ME" in path or "TODO" in path.upper():
-            return "路径仍是占位值"
-        return ""

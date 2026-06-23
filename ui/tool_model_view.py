@@ -30,6 +30,7 @@ except Exception:
     MarkdownNoteDialog = None
 
 from ui.icon_loader import get_icon_cache_key, icon_loader
+from core.style_manager import ThemeManager
 from ui.tool_card_action_icons import (
     ACTION_BUTTON_OPEN_DIRECTORY,
     ACTION_BUTTON_OPEN_NOTES,
@@ -1410,7 +1411,8 @@ class ToolCardContainer(ToolCardActionsMixin, QWidget):
         visible_tools = []
         fallback_tools = []
         seen = set()
-        for tool in self.model.tools() if hasattr(self, "model") else []:
+        tools = self.model.tools() if hasattr(self, "model") else []
+        for row_idx, tool in enumerate(tools):
             if not isinstance(tool, dict):
                 continue
             if tool.get("_path_status") not in (None, PathStatus.UNKNOWN, PathStatus.LOADING):
@@ -1419,10 +1421,8 @@ class ToolCardContainer(ToolCardActionsMixin, QWidget):
             if cache_key in seen:
                 continue
             seen.add(cache_key)
-            row = len(visible_tools) + len(fallback_tools)
             try:
-                actual_row = self.model.tools().index(tool)
-                rect = self.view.visualRect(self.model.index(actual_row, 0))
+                rect = self.view.visualRect(self.model.index(row_idx, 0))
             except Exception:
                 rect = QRect()
             if rect.isValid() and viewport_rect.intersects(rect):
@@ -1638,6 +1638,7 @@ class ToolCardContainer(ToolCardActionsMixin, QWidget):
         """显示工具列表"""
         # Model/View 模式下，直接给 Model 数据，Qt 负责极速渲染
         self.model.update_data(self._prepare_tools_for_display(tools_data))
+        self.delegate._button_rects.clear()
         self.update_card_layout()
         self._schedule_path_status_warmup()
         self._request_icon_warmup()
@@ -1988,6 +1989,7 @@ class ToolCardContainer(ToolCardActionsMixin, QWidget):
             return
 
         menu = QMenu(self)
+        menu.setStyleSheet(ThemeManager().get_context_menu_style(self.current_theme))
 
         run_action = menu.addAction("运行工具")
         run_action.triggered.connect(lambda: self.run_tool.emit(tool))

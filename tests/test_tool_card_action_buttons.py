@@ -12,7 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QApplication, QListView, QStyleOptionViewItem, QToolButton
+from PyQt5.QtWidgets import QApplication, QListView, QMenu, QStyleOptionViewItem, QToolButton
 
 from ui.favorites_grid_view import FavoriteToolCard, FavoritesGridContainer
 from ui.tool_card_action_icons import (
@@ -23,6 +23,7 @@ from ui.tool_card_action_icons import (
     ACTION_BUTTON_TOGGLE_FAVORITE,
 )
 from core.path_status_service import PathStatus, PathStatusResult
+from core.style_manager import ThemeManager
 from ui.tool_model_view import ToolCardContainer, ToolDelegate
 
 
@@ -205,6 +206,37 @@ class ToolCardActionButtonTests(unittest.TestCase):
 
         self.assertIs(first, second)
         self.assertEqual(5, load_icon_mock.call_count)
+
+    def test_tool_context_menu_uses_current_theme_style(self):
+        container = ToolCardContainer()
+        self.addCleanup(container.deleteLater)
+        container.set_theme("blue_white")
+        container.display_tools([{"id": 1, "name": "Demo", "path": "tools/demo.exe"}])
+        container.show()
+        self.app.processEvents()
+
+        captured_menus = []
+
+        def fake_exec(menu, *_args, **_kwargs):
+            captured_menus.append(menu)
+
+        with patch.object(QMenu, "exec_", fake_exec):
+            container.show_context_menu(container.view.visualRect(container.model.index(0, 0)).center())
+
+        self.assertEqual(1, len(captured_menus))
+        self.assertIn("#edf8fc", captured_menus[0].styleSheet())
+        self.assertIn("rgba(184,241,250,0.72)", captured_menus[0].styleSheet())
+
+    def test_context_menu_style_matches_light_themes(self):
+        manager = ThemeManager()
+
+        blue_style = manager.get_context_menu_style("blue_white")
+        celadon_style = manager.get_context_menu_style("celadon_mist")
+
+        self.assertIn("#edf8fc", blue_style)
+        self.assertIn("rgba(184,241,250,0.72)", blue_style)
+        self.assertIn("#eef6f3", celadon_style)
+        self.assertIn("rgba(174,220,214,0.26)", celadon_style)
 
     def test_favorites_grid_columns_follow_available_width(self):
         container = FavoritesGridContainer()
